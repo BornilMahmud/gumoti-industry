@@ -1,4 +1,4 @@
-import { html, raw } from 'hono/html'
+import { html } from 'hono/html'
 import { companyProfile as co } from '../data/company'
 
 export const PortalPage = () => html`
@@ -6,7 +6,6 @@ export const PortalPage = () => html`
   <div class="max-w-[1440px] mx-auto px-5 lg:px-10">
     <p class="text-[11px] tracking-widest2 uppercase text-sand mb-5 flex items-center gap-3"><span class="w-10 h-px bg-sand inline-block"></span>Buyer Portal</p>
     <h1 class="font-serif text-4xl lg:text-[56px]">Your Sourcing Workspace</h1>
-    <p class="mt-5 max-w-xl text-white/60 text-sm">Sign in with Google to track RFQs, quotations and sample requests linked to your account.</p>
   </div>
 </section>
 
@@ -16,13 +15,15 @@ export const PortalPage = () => html`
     <!-- Signed OUT state -->
     <div id="portal-signed-out" class="bg-white border border-sand/40 p-10 lg:p-16 text-center max-w-xl mx-auto">
       <span class="inline-flex w-14 h-14 items-center justify-center bg-navy text-sand text-xl"><i class="fa-regular fa-user"></i></span>
-      <h2 class="font-serif text-3xl text-navy mt-6">Sign In to Continue</h2>
-      <p class="text-sm text-mutedgt mt-3 leading-relaxed">Authentication is handled securely by Firebase with your Google account. Your account links your RFQs and inquiries.</p>
-      <button data-google-signin class="mt-8 inline-flex items-center gap-3 border border-navy/30 bg-white text-navy font-semibold px-8 py-4 text-sm hover:border-navy transition-colors cursor-pointer">
+      <h2 class="font-serif text-3xl text-navy mt-6">Sign in to Continue</h2>
+      <p class="text-sm text-mutedgt mt-3 leading-relaxed">Access RFQs, samples and buyer records linked to your email.</p>
+      <div class="mt-8 flex flex-col sm:flex-row justify-center gap-3">
+      <a href="/login" class="inline-flex items-center justify-center bg-navy text-white font-semibold px-8 py-4 text-sm hover:bg-ink transition-colors">Email Login</a>
+      <button data-google-signin class="inline-flex items-center justify-center gap-3 border border-navy/30 bg-white text-navy font-semibold px-8 py-4 text-sm hover:border-navy transition-colors cursor-pointer">
         <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C41 35.4 44 30.2 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
-        Continue with Google
+        Google
       </button>
-      <p class="text-[11px] text-mutedgt mt-6">By signing in you agree to the <a href="/privacy" class="underline underline-offset-2">privacy policy</a>.</p>
+      </div>
     </div>
 
     <!-- Signed IN state -->
@@ -41,26 +42,16 @@ export const PortalPage = () => html`
         </div>
       </div>
 
-      <div class="mt-8 grid lg:grid-cols-12 gap-8">
-        <div class="lg:col-span-8">
-          <h2 class="font-serif text-2xl text-navy mb-5">Your RFQs</h2>
+      <div class="mt-8">
+        <div>
+          <div class="flex items-center justify-between gap-4 mb-5">
+            <h2 class="font-serif text-2xl text-navy">Your RFQs</h2>
+            <a href="/contact" class="text-sm text-navy underline underline-offset-4">Contact Sales</a>
+          </div>
           <div id="portal-rfq-list" class="space-y-4">
-            <div class="border border-dashed border-sand/60 p-8 text-center text-sm text-mutedgt"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Loading your RFQs…</div>
+            <div class="border border-dashed border-sand/60 p-8 text-center text-sm text-mutedgt"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Loading RFQs…</div>
           </div>
         </div>
-        <aside class="lg:col-span-4 space-y-5">
-          <div class="bg-white border border-sand/40 p-6">
-            <p class="text-[10px] tracking-widest2 uppercase text-mutedgt">Quotation workflow</p>
-            <ol class="mt-4 space-y-2 text-xs text-ink/70">
-              ${raw(['NEW', 'UNDER REVIEW', 'PRICING', 'QUOTATION SENT', 'CUSTOMER REVIEW', 'APPROVED / REJECTED', 'ORDER'].map((s, i) => `<li class="flex items-center gap-3"><span class="w-5 h-5 shrink-0 flex items-center justify-center text-[9px] ${i === 0 ? 'bg-sand text-navy' : 'bg-navy/10 text-navy/60'}">${i + 1}</span>${s}</li>`).join(''))}
-            </ol>
-          </div>
-          <div class="bg-navy text-white p-6">
-            <p class="text-[10px] tracking-widest2 uppercase text-sand">Need help?</p>
-            <p class="text-sm text-white/70 mt-3 leading-relaxed">Contact our sales team quoting your RFQ ID for status updates and document exchange.</p>
-            <a href="/contact" class="mt-4 inline-flex items-center gap-2 text-sm text-sand hover:text-white">Contact Sales <i class="fa-solid fa-arrow-right text-xs"></i></a>
-          </div>
-        </aside>
       </div>
     </div>
   </div>

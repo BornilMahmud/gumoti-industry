@@ -27,7 +27,7 @@ export const LoginPage = () => html`
     <div class="auth-panel">
       <p class="text-[11px] tracking-widest2 uppercase text-mutedgt mb-3">Buyer / Admin Access</p>
       <h1 class="auth-title">Log in</h1>
-      <p class="auth-copy">Use Firebase Authentication for Gumti portal access. Admin data opens only for <strong>bonrilmahmud56@gmail.com</strong>.</p>
+      <p class="auth-copy">Secure Firebase access for buyers and authorized admins.</p>
       <form data-auth-login class="auth-form" autocomplete="on">
         <label class="auth-input-wrap">
           <i class="fa-regular fa-envelope"></i>
@@ -63,7 +63,7 @@ export const RegisterPage = () => html`
     <div class="auth-panel">
       <p class="text-[11px] tracking-widest2 uppercase text-mutedgt mb-3">Create Firebase Account</p>
       <h1 class="auth-title">Register</h1>
-      <p class="auth-copy">Create a Gumti buyer profile in Firebase Auth. A matching Firestore profile is saved under <code>users/{uid}</code>.</p>
+      <p class="auth-copy">Create a secure buyer profile for RFQs, samples and sourcing activity.</p>
       <form data-auth-register class="auth-form" autocomplete="on">
         <label class="auth-input-wrap">
           <i class="fa-regular fa-user"></i>
@@ -90,7 +90,7 @@ export const RegisterPage = () => html`
         <button data-google-signin aria-label="Continue with Google"><i class="fa-brands fa-google"></i></button>
       </div>
       <p class="auth-switch">Already have an account? <a href="/login">Log in</a></p>
-      <p class="auth-footnote">Firestore rules must be published in Firebase Console before profile writes are accepted.</p>
+      <p class="auth-footnote">Already registered with Google? Use the Google button on the login page.</p>
     </div>
     ${AuthVisual()}
   </div>

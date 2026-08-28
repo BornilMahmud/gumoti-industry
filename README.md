@@ -32,7 +32,7 @@
 - **Sample requests** (`/request-sample` → `POST /api/sample`).
 - **Contact inquiries** (`POST /api/contact`) and **Job applications** (`POST /api/apply`).
 - **Product catalog**: instant filtering with URL query persistence, compare up to 3 products, product detail pages, spec sheet download (`/api/products/:slug/spec`).
-- **Buyer Portal** (`/portal`): Firebase Auth (`gumoti-tex`) with Google Sign-In plus Email/Password login/register, RFQ tracking by account email, Firestore mirror writes, Firebase Analytics.
+- **Buyer Portal** (`/portal`): Firebase Auth (`gumoti-tex`) with Google Sign-In plus Email/Password login/register, RFQ tracking by account email, Firestore mirror writes, Firebase Analytics. Latest UI pass removes extra explanatory blocks for a cleaner professional workspace.
 - SEO: meta/OG, Organization JSON-LD, `/sitemap.xml`, `/robots.txt`.
 
 ### GUMTI AI assistant
@@ -47,7 +47,7 @@
 - `/admin` built with Firebase Google Sign-In UI and D1-backed admin overview API.
 - Admin API endpoint: `GET /api/admin/overview`.
 - Authorization: Firebase ID token is verified server-side against the `gumoti-tex` project and checked against `ADMIN_EMAILS` in `src/index.tsx`.
-- Current default admin allowlist: `bonrilmahmud56@gmail.com`.
+- Current admin allowlist: `bornilmahmud56@gmail.com` and `bonrilmahmud56@gmail.com` (covers the email visible in the portal screenshot and the earlier requested spelling).
 - Admin link is visible in the header and mobile menu. Email/password users can sign in at `/login`; Google users can sign in from `/admin`.
 
 ## Functional Entry URIs
@@ -73,9 +73,9 @@
 2. Add the sandbox/deployed domain to **Authentication → Settings → Authorized domains**.
 3. Default admin is already set in `src/index.tsx`:
    ```ts
-   const ADMIN_EMAILS = ['bonrilmahmud56@gmail.com']
+   const ADMIN_EMAILS = ['bornilmahmud56@gmail.com', 'bonrilmahmud56@gmail.com']
    ```
-4. Open `/login` and sign in with `bonrilmahmud56@gmail.com` (if you created that Firebase Auth user), or open `/admin` and use Google sign-in with the same email.
+4. Open `/login` or `/admin` and sign in with `bornilmahmud56@gmail.com` (the email shown in the latest portal screenshot) or `bonrilmahmud56@gmail.com` (the earlier requested spelling).
 5. Open `/admin`.
 6. Click **Load / Refresh Admin Data** to view RFQs, contact inquiries, sample requests and job applications.
 
@@ -104,7 +104,7 @@ Important: `firestore.rules` does **not** store data by itself. It only controls
 ## User Guide
 1. **Buyers**: Browse `/products`, filter/compare, open a product → **Request Quote** → receive an `RFQ-GT-…` tracking ID. Sign in at `/login`, `/register`, or with Google to see RFQs tied to your email in `/portal`.
 2. **Visitors**: Use **ASK GUMTI AI** for verified product search, GSM/material guidance, certification summaries and RFQ handoff.
-3. **Admins/Ops**: Log in as `bonrilmahmud56@gmail.com` at `/login` or `/admin` to view D1 records.
+3. **Admins/Ops**: Log in as `bornilmahmud56@gmail.com` or `bonrilmahmud56@gmail.com` at `/login` or `/admin` to view D1 records.
 4. **Content editors/developers**: Update company facts in `src/data/company.ts`, products in `src/data/products.ts`, jobs/news in `src/pages/careers-news.tsx`.
 
 ## Features Not Yet Implemented

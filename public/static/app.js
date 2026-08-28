@@ -200,7 +200,7 @@
   // Admin page loader (Firebase token supplied by firebase-app.js helper).
   window.gtLoadAdmin = async function () {
     const root = $('#admin-data'); if (!root) return;
-    if (!window.gtUser) { root.innerHTML = '<div class="admin-card p-8 text-center text-mutedgt">Please sign in first using Google or the /login page.</div>'; return; }
+    if (!window.gtUser) { root.innerHTML = '<div class="admin-card p-8 text-center text-mutedgt">Please sign in with an authorized admin email.</div>'; return; }
     if (!window.gtAdminToken) { root.innerHTML = '<div class="admin-card p-8 text-center text-mutedgt">Firebase is still loading. Try again in a moment.</div>'; return; }
     root.innerHTML = '<div class="admin-card p-8 text-center text-mutedgt">Loading admin records…</div>';
     try {
@@ -208,7 +208,7 @@
       const res = await fetch('/api/admin/overview', { headers: { Authorization: 'Bearer ' + token } });
       const data = await res.json(); if (!res.ok) throw new Error(data.error || 'Admin access denied');
       root.innerHTML = ['rfqs','contact_inquiries','sample_requests','job_applications'].map((k) => adminTable(k, data[k] || [])).join('');
-    } catch (err) { root.innerHTML = `<div class="admin-card p-8"><h2 class="font-serif text-2xl text-navy">Admin access unavailable</h2><p class="mt-3 text-sm text-mutedgt">${esc(err.message)}</p><p class="mt-3 text-xs text-mutedgt">Default admin is bonrilmahmud56@gmail.com. Sign in with that Firebase account, then refresh.</p></div>`; }
+    } catch (err) { root.innerHTML = `<div class="admin-card p-8"><h2 class="font-serif text-2xl text-navy">Admin access unavailable</h2><p class="mt-3 text-sm text-mutedgt">${esc(err.message)}</p><p class="mt-3 text-xs text-mutedgt">Authorized admin emails are bornilmahmud56@gmail.com and bonrilmahmud56@gmail.com. Sign in with one of these Firebase accounts, then refresh.</p></div>`; }
   };
   function adminTable(title, rows) {
     if (!rows.length) return `<section class="admin-card p-6 mb-6"><h2 class="font-serif text-2xl text-navy">${title.replace('_',' ')}</h2><p class="text-sm text-mutedgt mt-2">No records yet.</p></section>`;

@@ -32,7 +32,9 @@ try {
 } catch (_) { /* analytics unavailable in this context */ }
 
 const provider = new GoogleAuthProvider()
-const DEFAULT_ADMIN_EMAIL = 'bonrilmahmud56@gmail.com'
+const ADMIN_EMAILS = ['bornilmahmud56@gmail.com', 'bonrilmahmud56@gmail.com']
+const DEFAULT_ADMIN_EMAIL = ADMIN_EMAILS[0]
+const isAdminEmail = (email = '') => ADMIN_EMAILS.includes(String(email).toLowerCase())
 
 // ---------- Auth state ----------
 onAuthStateChanged(auth, (user) => {
@@ -43,8 +45,11 @@ onAuthStateChanged(auth, (user) => {
 
   const account = document.getElementById('nav-account')
   const label = document.getElementById('nav-account-label')
-  if (account) account.href = user ? '/portal' : '/login'
-  if (label) label.textContent = user ? (user.displayName ? user.displayName.split(' ')[0] : 'Portal') : 'Login'
+  const register = document.getElementById('nav-register')
+  document.querySelectorAll('[data-mobile-register]').forEach((el) => el.classList.toggle('hidden', !!user))
+  if (account) account.href = user ? (isAdminEmail(user.email) ? '/admin' : '/portal') : '/login'
+  if (label) label.textContent = user ? (isAdminEmail(user.email) ? 'Admin' : 'Portal') : 'Login'
+  if (register) register.classList.toggle('hidden', !!user)
 
   // Portal page elements
   const signedOut = document.getElementById('portal-signed-out')
@@ -107,7 +112,7 @@ async function ensureUserProfile(user, extra = {}) {
       email: user.email || '',
       displayName: user.displayName || '',
       photoURL: user.photoURL || '',
-      isDefaultAdminEmail: (user.email || '').toLowerCase() === DEFAULT_ADMIN_EMAIL,
+      isDefaultAdminEmail: isAdminEmail(user.email),
       updatedAt: serverTimestamp(),
       ...extra,
     }, { merge: true })
@@ -150,7 +155,7 @@ async function authSubmit(form, action) {
     }
     window.gtToast && window.gtToast('Firebase sign-in successful.')
     setTimeout(() => {
-      const isAdmin = (credential.user.email || '').toLowerCase() === DEFAULT_ADMIN_EMAIL
+      const isAdmin = isAdminEmail(credential.user.email)
       window.location.assign(isAdmin ? '/admin' : '/portal')
     }, 700)
   } catch (err) {

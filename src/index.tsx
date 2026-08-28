@@ -14,7 +14,7 @@ import { companyProfile as co } from './data/company'
 
 type Bindings = { DB?: D1Database }
 
-const ADMIN_EMAILS = ['bonrilmahmud56@gmail.com']
+const ADMIN_EMAILS = ['bornilmahmud56@gmail.com', 'bonrilmahmud56@gmail.com']
 const FIREBASE_PROJECT_ID = 'gumoti-tex'
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -212,7 +212,7 @@ app.get('/api/products/:slug/spec', (c) => {
 // ---------------- API: admin ----------------
 app.get('/api/admin/overview', async (c) => {
   const admin = await verifyFirebaseAdmin(c)
-  if (!admin) return c.json({ error: `Admin access denied. Sign in with a Google account listed in ADMIN_EMAILS: ${ADMIN_EMAILS.join(', ')}` }, 403)
+  if (!admin) return c.json({ error: `Admin access denied. Sign in with an authorized Firebase account: ${ADMIN_EMAILS.join(', ')}` }, 403)
   const db = c.env?.DB
   if (!db) return c.json({ error: 'D1 database binding is not available.' }, 500)
   try {
