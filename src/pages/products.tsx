@@ -3,16 +3,17 @@ import { products, categories, filterProducts, type Product } from '../data/prod
 
 export function productCardHtml(p: Product): string {
   return `
-  <article class="product-card bg-white border border-sand/40 flex flex-col">
-    <a href="/products/${p.slug}" class="block overflow-hidden aspect-[4/3]">
+  <article class="product-card bg-white border border-sand/40 flex flex-col" data-cursor="EXPLORE">
+    <a href="/products/${p.slug}" class="block overflow-hidden aspect-[3/4] relative" data-cursor="VIEW">
       <img src="${p.image}" alt="${p.name}" class="pc-img w-full h-full object-cover" loading="lazy" />
+      <span class="absolute right-4 top-4 font-serif text-4xl text-white/55">${p.code.split('-').pop()}</span>
     </a>
     <div class="p-6 flex flex-col flex-1">
       <div class="flex items-center justify-between gap-3">
         <p class="text-[10px] tracking-widest2 uppercase text-mutedgt">${p.category}</p>
         <p class="text-[10px] tracking-widest uppercase text-sand">${p.code}</p>
       </div>
-      <a href="/products/${p.slug}" class="font-serif text-2xl text-navy mt-2 hover:text-sand transition-colors">${p.name}</a>
+      <a href="/products/${p.slug}" class="font-serif text-3xl leading-tight text-navy mt-2 hover:text-sand transition-colors">${p.name}</a>
       <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-mutedgt">
         <div><dt class="uppercase tracking-widest text-[9px]">Construction</dt><dd class="text-ink/75 mt-0.5">${p.construction}</dd></div>
         <div><dt class="uppercase tracking-widest text-[9px]">Composition</dt><dd class="text-ink/75 mt-0.5">${p.composition}</dd></div>
@@ -23,7 +24,7 @@ export function productCardHtml(p: Product): string {
         ${p.certifications.map((c) => `<span class="text-[9px] tracking-widest uppercase bg-sand/25 text-navy px-2 py-1">${c}</span>`).join('')}
       </div>
       <div class="mt-auto pt-5 flex items-center justify-between gap-3">
-        <a href="/products/${p.slug}" class="inline-flex items-center gap-2 text-sm font-semibold text-navy hover:text-sand transition-colors">View Product <i class="fa-solid fa-arrow-right text-xs"></i></a>
+        <a href="/products/${p.slug}" class="inline-flex items-center gap-2 text-sm font-semibold text-navy hover:text-sand transition-colors">View Product <i class="explore-arrow fa-solid fa-arrow-right text-xs"></i></a>
         <button data-compare="${p.slug}" class="text-[11px] tracking-wide uppercase border border-sand/60 px-3 py-1.5 hover:border-navy transition-colors cursor-pointer"><span>Compare</span></button>
       </div>
     </div>

@@ -1,0 +1,57 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function ownsNewDoc() {
+      return signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.userEmail == request.auth.token.email;
+    }
+
+    function ownsExistingDoc() {
+      return signedIn()
+        && resource.data.uid == request.auth.uid;
+    }
+
+    // Buyer-created mirror records from the Gumti website.
+    // The Cloudflare D1 database remains the operational source of truth.
+    match /rfqs/{docId} {
+      allow create: if ownsNewDoc();
+      allow read: if ownsExistingDoc();
+      allow update, delete: if false;
+    }
+
+    match /contact_inquiries/{docId} {
+      allow create: if ownsNewDoc();
+      allow read: if ownsExistingDoc();
+      allow update, delete: if false;
+    }
+
+    match /sample_requests/{docId} {
+      allow create: if ownsNewDoc();
+      allow read: if ownsExistingDoc();
+      allow update, delete: if false;
+    }
+
+    match /job_applications/{docId} {
+      allow create: if ownsNewDoc();
+      allow read: if ownsExistingDoc();
+      allow update, delete: if false;
+    }
+
+    // Optional future admin-managed AI settings. Keep locked until an admin auth
+    // strategy is configured in Firebase custom claims or a backend API.
+    match /ai_settings/{docId} {
+      allow read, write: if false;
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -7,10 +7,14 @@ import { ProductsPage, ProductDetailPage, ComparePage, productCardHtml } from '.
 import { RequestQuotePage, RequestSamplePage, ContactPage } from './pages/forms'
 import { CareersPage, JobDetailPage, NewsPage, ArticlePage, jobs, news } from './pages/careers-news'
 import { PortalPage, PrivacyPage, TermsPage, NotFoundPage, ErrorPage } from './pages/portal'
+import { AdminPage } from './pages/admin'
 import { products, filterProducts } from './data/products'
 import { companyProfile as co } from './data/company'
 
 type Bindings = { DB?: D1Database }
+
+const ADMIN_EMAILS = ['info@gumtitextiles.com']
+const FIREBASE_PROJECT_ID = 'gumoti-tex'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
@@ -30,6 +34,45 @@ function refId(prefix: string): string {
   const n = Math.floor(1000 + Math.random() * 9000)
   const t = Date.now().toString(36).slice(-4).toUpperCase()
   return `${prefix}-GT-${year}-${n}${t}`
+}
+
+function b64urlToUint8Array(input: string): Uint8Array {
+  const b64 = input.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - input.length % 4) % 4)
+  const raw = atob(b64)
+  return Uint8Array.from(raw, (c) => c.charCodeAt(0))
+}
+
+function pemToArrayBuffer(pem: string): ArrayBuffer {
+  const b64 = pem.replace(/-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|\s/g, '')
+  const raw = atob(b64)
+  const bytes = new Uint8Array(raw.length)
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i)
+  return bytes.buffer
+}
+
+async function verifyFirebaseAdmin(c: any): Promise<{ email: string } | null> {
+  const auth = c.req.header('Authorization') || ''
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : ''
+  if (!token) return null
+  const [h, p, s] = token.split('.')
+  if (!h || !p || !s) return null
+  try {
+    const header = JSON.parse(new TextDecoder().decode(b64urlToUint8Array(h)))
+    const payload = JSON.parse(new TextDecoder().decode(b64urlToUint8Array(p)))
+    if (payload.aud !== FIREBASE_PROJECT_ID || payload.iss !== `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`) return null
+    if (!payload.email || !ADMIN_EMAILS.map((x) => x.toLowerCase()).includes(String(payload.email).toLowerCase())) return null
+    if (payload.exp && payload.exp * 1000 < Date.now()) return null
+    const jwksRes = await fetch('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com')
+    const jwks = await jwksRes.json() as { keys?: JsonWebKey[] }
+    const jwk = (jwks.keys || []).find((x: any) => x.kid === header.kid)
+    if (!jwk) return null
+    const key = await crypto.subtle.importKey('jwk', jwk, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify'])
+    const ok = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, b64urlToUint8Array(s), new TextEncoder().encode(`${h}.${p}`))
+    return ok ? { email: payload.email } : null
+  } catch (e) {
+    console.error('Admin token verification failed', e)
+    return null
+  }
 }
 
 // D1-backed rate limiting (10 submissions / 10 min / IP) with in-memory fallback
@@ -102,6 +145,7 @@ app.get('/news/:slug', (c) => {
 })
 
 app.get('/portal', (c) => c.html(Layout({ title: 'Buyer Portal', children: PortalPage() })))
+app.get('/admin', (c) => c.html(Layout({ title: 'Admin Panel', path: '/admin', children: AdminPage() })))
 app.get('/privacy', (c) => c.html(Layout({ title: 'Privacy Policy', children: PrivacyPage() })))
 app.get('/terms', (c) => c.html(Layout({ title: 'Terms of Use', children: TermsPage() })))
 
@@ -125,6 +169,27 @@ app.get('/api/products', (c) => {
   return c.json({ count: list.length, html: list.length ? list.map(productCardHtml).join('') : `<div class="col-span-full border border-dashed border-sand/70 p-16 text-center"><p class="font-serif text-2xl text-navy">No products match those filters</p><p class="text-sm text-mutedgt mt-2">Try clearing a filter, or <a href="/contact" class="underline underline-offset-4 text-navy">contact our sales team</a>.</p></div>` })
 })
 
+app.get('/api/ai', (c) => {
+  const q = clean(c.req.query('q'), 240).toLowerCase()
+  const terms = q.split(/\s+/).filter(Boolean)
+  const wantsContact = /contact|sales|specialist|email|phone/.test(q)
+  const wantsCert = /cert|oeko|gots|sedex|bci/.test(q)
+  const wantsQuote = /quote|rfq|sample|request/.test(q)
+  const list = products.filter((p) => {
+    const hay = `${p.name} ${p.category} ${p.composition} ${p.construction} ${p.gsm} ${p.certifications.join(' ')} ${p.application}`.toLowerCase()
+    return terms.some((t) => hay.includes(t))
+  }).slice(0, 4)
+  if (list.length) {
+    const html = `<p>Based on the verified Gumti product database, these may match your requirement.</p>${list.map((p) => `<div class="ai-product"><a href="/products/${p.slug}">${p.name}</a><p>${p.composition} · GSM ${p.gsm}</p><p>${p.certifications.join(' · ')}</p><div class="mt-2"><a href="/request-quote?product=${encodeURIComponent(p.name)}">Request Quote</a> · <a href="/request-sample?product=${encodeURIComponent(p.name)}">Request Sample</a></div></div>`).join('')}<small>Source: Gumti Product Database</small>`
+    return c.json({ html, source: 'Gumti Product Database' })
+  }
+  if (wantsCert) return c.json({ message: `Verified certification references: ${co.certifications.map((x) => x.code).join(', ')}. Certificate numbers and validity are shown only when confirmed by Gumti Textiles Ltd.`, source: 'Gumti Company Information' })
+  if (wantsContact || wantsQuote) return c.json({ html: `<p>I can help route this to the right workflow.</p><div class="ai-product"><a href="/request-quote">Generate RFQ</a><p>Open a pre-filled quotation request flow with a Gumti tracking ID.</p></div><div class="ai-product"><a href="/contact">Talk to a Gumti specialist</a><p>Contact sales for requirements not covered by the verified database.</p></div><small>Source: Gumti Company Information</small>`, source: 'Gumti Company Information' })
+  return c.json({ message: `I don't have verified information for that requirement. Please contact our sales team.`, source: 'Gumti Company Information' })
+})
+
+app.post('/api/analytics', async (c) => c.json({ ok: true }))
+
 app.get('/api/products/:slug/spec', (c) => {
   const p = products.find((x) => x.slug === c.req.param('slug'))
   if (!p) return c.notFound()
@@ -139,6 +204,26 @@ app.get('/api/products/:slug/spec', (c) => {
     `BGMEA Reg. ${co.bgmeaRegistration} · EPB Reg. ${co.epbRegistration}`,
   ].join('\n')
   return c.text(spec, 200, { 'Content-Disposition': `attachment; filename="${p.code}-specification.txt"` })
+})
+
+// ---------------- API: admin ----------------
+app.get('/api/admin/overview', async (c) => {
+  const admin = await verifyFirebaseAdmin(c)
+  if (!admin) return c.json({ error: `Admin access denied. Sign in with a Google account listed in ADMIN_EMAILS: ${ADMIN_EMAILS.join(', ')}` }, 403)
+  const db = c.env?.DB
+  if (!db) return c.json({ error: 'D1 database binding is not available.' }, 500)
+  try {
+    const [rfqs, contact, samples, apps] = await Promise.all([
+      db.prepare('SELECT rfq_id, company_name, contact_person, email, product, quantity, unit, status, created_at FROM rfqs ORDER BY created_at DESC LIMIT 50').all(),
+      db.prepare('SELECT ref_id, name, company, email, inquiry_type, status, created_at FROM contact_inquiries ORDER BY created_at DESC LIMIT 50').all(),
+      db.prepare('SELECT ref_id, product, email, quantity, country, status, created_at FROM sample_requests ORDER BY created_at DESC LIMIT 50').all(),
+      db.prepare('SELECT ref_id, position, name, email, phone, status, created_at FROM job_applications ORDER BY created_at DESC LIMIT 50').all(),
+    ])
+    return c.json({ admin: admin.email, rfqs: rfqs.results || [], contact_inquiries: contact.results || [], sample_requests: samples.results || [], job_applications: apps.results || [] })
+  } catch (e) {
+    console.error('Admin overview failed', e)
+    return c.json({ error: 'Unable to load admin records.' }, 500)
+  }
 })
 
 // ---------------- API: RFQ ----------------

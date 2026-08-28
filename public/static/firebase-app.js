@@ -35,6 +35,7 @@ const provider = new GoogleAuthProvider()
 // ---------- Auth state ----------
 onAuthStateChanged(auth, (user) => {
   window.gtUser = user || null
+  window.gtAdminToken = user ? (() => user.getIdToken(true)) : null
   document.dispatchEvent(new CustomEvent('gt:auth', { detail: user }))
 
   const label = document.getElementById('nav-account-label')
@@ -56,6 +57,11 @@ onAuthStateChanged(auth, (user) => {
       loadPortalData(user)
     }
   }
+
+  // Admin page elements
+  const adminEmail = document.getElementById('admin-user-email')
+  if (adminEmail) adminEmail.textContent = user ? (user.email || '') : 'Not signed in'
+  if (user && window.gtLoadAdmin) window.gtLoadAdmin()
 })
 
 // ---------- Google Sign-In ----------

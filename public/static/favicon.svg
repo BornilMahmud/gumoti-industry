@@ -1,1 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#071A2B"/><text x="32" y="42" font-family="Georgia,serif" font-size="32" fill="#C7B79C" text-anchor="middle" font-weight="600">G</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Gumti Textiles favicon">
+  <rect width="64" height="64" rx="12" fill="#071A2B"/>
+  <path d="M10 27 31.5 13 54 27" fill="none" stroke="#B3362D" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M16 30h31v18H16z" fill="none" stroke="#C7B79C" stroke-width="2.5"/>
+  <path d="M24 30v18M33 25v23M42 33v15" stroke="#F5F1E8" stroke-width="2" opacity=".8"/>
+  <path d="M12 47c11 7 24 7 37-2" fill="none" stroke="#2D7A45" stroke-width="4" stroke-linecap="round"/>
+  <path d="M43 19c6-5 12-3 14 2-6 2-10 2-14-2z" fill="#72A84D"/>
+</svg>
