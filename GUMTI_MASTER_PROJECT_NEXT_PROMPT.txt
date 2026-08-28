@@ -1,0 +1,227 @@
+GUMTI TEXTILES LTD. — MASTER PROJECT UPDATE PROMPT
+Version: 2026-08-28
+Project repo: https://github.com/BornilMahmud/gumoti-industry
+Target stack: Hono + TypeScript + Vite + Cloudflare Pages/Workers + Cloudflare D1 + Firebase Auth/Firestore mirror
+
+============================================================
+1) WHAT HAS BEEN COMPLETED SO FAR
+============================================================
+
+Build a premium B2B textile manufacturing website for Gumti Textiles Ltd., using only verified company facts and no fabricated price, MOQ, capacity, buyer, export market, certificate-number, or production-volume claims.
+
+Completed public website modules:
+- Premium Gumti Textiles Ltd. homepage with cinematic factory hero, verified company positioning, trust strip, capability highlights, product previews, quality/compliance section, global-reach messaging, and final CTA.
+- Full responsive site shell with Gumti-inspired original SVG brand mark, SVG favicon, premium navigation, oversized footer, Facebook link, contact details, privacy/terms links, and mobile menu.
+- Company pages: About, Capabilities, Products, Product Compare, Quality, Sustainability, Global Reach, News, Careers, Contact, Privacy, Terms, RFQ.
+- Product catalog with filters and comparison using verified/internal product database only.
+- RFQ request flow with generated tracking/reference IDs.
+- Contact inquiry, sample request, and job application flows.
+- Buyer portal that loads the signed-in user's RFQs from Cloudflare D1 and can fall back to Firestore mirror data.
+- GUMTI AI assistant with bottom-right ASK GUMTI AI button, quick actions, product recommendations from verified product DB, source labels, and escalation behavior when information is unknown.
+- Premium motion system: loader, scroll progress, nav hide/reveal, section reveals, image reveals, magnetic buttons, cinematic hero, pinned manufacturing journey, editorial product cards, horizontal capabilities, certification-card expansion, reduced-motion rules, and performance-aware behavior.
+- Custom cursor removed and normal browser cursor restored.
+- Animated login and register pages inspired by the provided reference image but adapted to Gumti's own theme.
+- Firebase initialized for project gumoti-tex.
+- Firebase Auth supports Google sign-in plus Email/Password login/register.
+- Firestore writes user profiles to users/{uid} and mirrors signed-in RFQ/contact/sample/job records when rules allow.
+- firestore.rules created for copy-paste into Firebase Console.
+- Cloudflare D1 is used as the operational source of truth.
+- Admin access uses Firebase ID token verification server-side and only allows approved admin emails.
+- Approved admin emails currently include:
+  - bornilmahmud56@gmail.com
+  - bonrilmahmud56@gmail.com
+- /admin upgraded from a basic record viewer into Gumti Admin Control Center with real D1-backed KPIs, recent activity, and enterprise module cards.
+- Admin modules are clearly marked as available now / partial or planned workflow to avoid fake data.
+- Header/auth issue fixed: logged-in users no longer see Register/Login as if signed out; admin link no longer duplicates as Admin Register Admin.
+- Hero contrast issue fixed: black/low-contrast hero copy is forced into readable white/sand text over a darker premium overlay.
+
+Current database architecture:
+- Cloudflare D1 is the main operational database.
+- Existing D1 tables include rfqs, contact_inquiries, sample_requests, job_applications, and rate_limits.
+- Firestore is used for authenticated user profiles and mirror writes only.
+- Firestore rules control access; they do not store data by themselves.
+
+============================================================
+2) WHAT STILL NEEDS TO BE DONE TO MAKE IT A COMPLETE INDUSTRY-LEVEL MASTER PROJECT
+============================================================
+
+A) Production deployment readiness
+- Decide final Cloudflare deployment path:
+  1. User-owned Cloudflare account with wrangler/API token, or
+  2. Genspark-hosted Cloudflare deployment.
+- Create the production Cloudflare D1 database and apply migrations.
+- Confirm wrangler.jsonc uses the final Cloudflare project name and final D1 database_id.
+- Configure production environment variables/secrets if future APIs are added.
+- Enable Firebase Authentication providers in Firebase Console:
+  - Google
+  - Email/Password
+- Paste firestore.rules into Firebase Console and publish them.
+- Add production domain to Firebase Authorized Domains.
+- Test production login, register, admin token verification, RFQ save, Firestore mirror save, and buyer portal.
+- Add final domain/custom domain and SSL.
+- Replace development preview URLs in README after production deployment.
+
+B) Database expansion for real industry operations
+Add new Cloudflare D1 migrations for:
+- users / buyer_profiles
+- companies / customer_accounts
+- product_categories
+- products
+- product_media
+- rfq_items
+- quotations
+- quotation_items
+- samples
+- orders
+- order_milestones
+- production_batches
+- quality_checks
+- certificates
+- sustainability_metrics
+- factory_assets
+- news_posts
+- career_openings
+- media_assets
+- notifications
+- audit_logs
+- admin_settings
+
+Important rule: every table must support real data entry and workflow status. Do not hardcode fake KPIs or fake production numbers.
+
+C) Admin Control Center completion
+Convert planned admin cards into working modules:
+- Dashboard:
+  - Real KPI widgets from D1.
+  - RFQ funnel.
+  - Inquiry funnel.
+  - Sample/order pipeline.
+  - Latest activity.
+- RFQ Management:
+  - Open RFQ, assign status, add notes, request more details, convert to quotation.
+- Quotation Management:
+  - Create quotation from RFQ.
+  - Add line items.
+  - Export PDF.
+  - Save quotation revision history.
+- Sample Management:
+  - Track sample request stages: received, reviewed, sample in progress, dispatched, completed.
+- Order Management:
+  - Create order from accepted quotation.
+  - Track confirmed, fabric, production, QC, packing, shipment, delivered.
+- Product Management:
+  - CRUD products and categories.
+  - Upload/manage product images through approved storage.
+  - Maintain verified material/GSM/capability fields.
+- CRM:
+  - Customer company profiles.
+  - Contact people.
+  - Communication timeline.
+- Content CMS:
+  - News, career openings, sustainability updates, media gallery.
+- Quality/Certification:
+  - Store certificate documents, numbers, validity dates only when provided by management.
+- Sustainability:
+  - Store verified sustainability indicators only.
+- User & Role Management:
+  - Admin, sales, merchandising, production, viewer roles.
+  - Server-side permission checks for every protected endpoint.
+- Audit Logs:
+  - Log admin actions with actor email, action, record type, record ID, timestamp.
+
+D) Buyer portal completion
+- Let registered buyers view their RFQs, quotations, samples, and orders.
+- Add buyer profile page.
+- Add RFQ status timeline.
+- Add quotation acceptance/rejection workflow.
+- Add secure document download links only when documents exist.
+- Never reveal other customers' records.
+
+E) Frontend polish and UX QA
+- Review every page for unreadable text on dark/image backgrounds.
+- Any text over photography must be white/sand with strong overlay and text shadow.
+- Remove placeholder/error-like text from production pages.
+- Keep all public copy confident but fact-safe.
+- Test mobile header, nav, auth state, sticky CTA, forms, AI assistant, and admin UI.
+- Use reduced-motion mode to verify accessibility.
+- Add ARIA labels and keyboard focus states where missing.
+- Optimize hero images and lazy loading.
+
+F) AI assistant enhancement
+- Keep GUMTI AI grounded only in verified product/company data.
+- Add admin-manageable knowledge base in D1.
+- Add source citations for every answer.
+- Add escalation form when the AI does not know.
+- Never output invented pricing, MOQ, lead time, capacity, buyers, export markets, or certificate numbers.
+
+G) Security hardening
+- Keep API tokens out of frontend code.
+- Validate every server endpoint.
+- Rate-limit public submission endpoints.
+- Keep Firebase rules strict.
+- Verify Firebase ID tokens server-side for all admin APIs.
+- Add role-based permissions beyond email allowlist before adding multiple admin users.
+- Add audit logging for every admin mutation.
+- Sanitize all user-generated text before display.
+
+H) Production QA checklist
+- npm run build passes.
+- Local wrangler preview works on port 3000.
+- Public pages return 200.
+- RFQ/contact/sample/career forms write to D1.
+- Signed-in form submissions mirror to Firestore.
+- Login/register works.
+- Logged-in users do not see Login/Register buttons.
+- Admin user sees Admin link and can load /admin.
+- Non-admin users cannot access /api/admin/overview.
+- Mobile nav works.
+- No fake data appears anywhere.
+- README updated with final production URL and deployment status.
+- GitHub main branch is updated.
+
+============================================================
+3) COPY-PASTE PROMPT FOR THE NEXT DEVELOPER/AI AGENT
+============================================================
+
+Continue the Gumti Textiles Ltd. project in /home/user/webapp. This is a Hono + TypeScript + Vite app for Cloudflare Pages/Workers with Cloudflare D1 as the operational database and Firebase Auth/Firestore mirror for user accounts. Keep all code in /home/user/webapp and commit changes to GitHub repo https://github.com/BornilMahmud/gumoti-industry on the main branch.
+
+Primary rules:
+1. Use only verified Gumti facts already in src/data/company.ts and verified/internal product data in src/data/products.ts.
+2. Never fabricate price, MOQ, capacity, buyers, certificate numbers, export countries, lead times, production volume, or sustainability metrics.
+3. Cloudflare D1 is the source of truth for operational records. Firestore is only for user profiles and signed-in mirror writes.
+4. Admin APIs must verify Firebase ID tokens server-side and enforce admin email/roles.
+5. Do not expose API secrets in frontend code.
+6. Keep the visual style premium: luxury fashion brand meets advanced industrial manufacturing.
+7. Fix text contrast anywhere text appears over dark or photographic backgrounds.
+8. Logged-in users must not see Login/Register CTAs; admin links must not duplicate.
+9. Mark incomplete modules as planned unless fully implemented with real database-backed data.
+10. After every major change: run npm run build, smoke test, update README if needed, commit, and push to GitHub.
+
+Next implementation target:
+Build the next admin milestone: real D1-backed Product Management + Category Management + RFQ status workflow.
+
+Detailed tasks:
+- Add D1 migrations for product_categories, products_admin, rfq_status_events, admin_audit_logs, and buyer_profiles if missing.
+- Build admin API endpoints for listing, creating, updating, and deleting product categories and admin-managed products.
+- Build RFQ status update endpoint that records every status change in rfq_status_events and admin_audit_logs.
+- Update /admin UI to include working tabs/forms for Products, Categories, and RFQ workflow instead of only planned cards.
+- Keep all admin actions protected by Firebase admin verification.
+- Add validation and safe error messages.
+- Update buyer portal to show RFQ status timeline from rfq_status_events.
+- Keep existing public catalog stable until admin products are fully verified and ready to publish.
+- Run build and smoke tests.
+- Commit with a clear message and push to GitHub.
+
+Deployment target:
+Prepare for Cloudflare Pages deployment. Before production deployment, choose either user-owned Cloudflare BYOK deploy or Genspark-hosted deploy. Create/apply production D1 migrations, confirm Firebase authorized domains, publish Firestore rules, test admin auth and all forms, then update README with final production URL.
+
+============================================================
+4) LATEST FIXES MADE FOR HEADER/TEXT CLEANUP
+============================================================
+
+- Header auth controls are now Firebase-auth-aware.
+- Signed-out visitors see Login/Register.
+- Signed-in buyers see Portal, not Login/Register.
+- Signed-in admins see Portal + one Admin link, not duplicate Admin/Register/Admin.
+- Mobile menu uses the same auth rules.
+- Hero image overlay is darker and hero text is forced to high-contrast white/sand.
+- The unreadable black hero copy shown in screenshots has been corrected.

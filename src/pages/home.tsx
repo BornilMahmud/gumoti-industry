@@ -6,8 +6,8 @@ export const HomePage = () => html`
 <!-- ================= CINEMATIC HERO ================= -->
 <section id="hero-section" class="cinematic-hero relative min-h-screen flex items-end bg-midnight overflow-hidden textile-texture">
   <div class="absolute inset-0" data-parallax="0.18">
-    <img src="${media.hero}" alt="Garment production floor with rows of sewing stations" class="hero-media w-full h-full object-cover opacity-55" fetchpriority="high" />
-    <div class="hero-overlay absolute inset-0 bg-gradient-to-t from-[#0B1117] via-navy/72 to-navy/30"></div>
+    <img src="${media.hero}" alt="Garment production floor with rows of sewing stations" class="hero-media w-full h-full object-cover opacity-40" fetchpriority="high" />
+    <div class="hero-overlay absolute inset-0 bg-gradient-to-t from-[#070B10] via-navy/86 to-navy/58"></div>
   </div>
   <div class="relative z-10 max-w-[1440px] mx-auto px-5 lg:px-10 pb-24 lg:pb-32 pt-40 w-full">
     <p class="hero-kicker text-[11px] tracking-widest2 uppercase text-sand mb-7 flex items-center gap-3"><span class="inline-block w-10 h-px bg-sand"></span>Knit Composite Manufacturer · Bangladesh · Est. ${co.established}</p>
@@ -15,7 +15,7 @@ export const HomePage = () => html`
       <span class="hero-line"><span>ENGINEERING</span></span><br/>
       <span class="hero-line text-sand"><span>QUALITY.</span></span>
     </h1>
-    <p class="hero-copy mt-8 max-w-2xl text-white/72 text-base lg:text-xl leading-relaxed">${co.subTagline}</p>
+    <p class="hero-copy mt-8 max-w-2xl text-white/88 text-base lg:text-xl leading-relaxed">${co.subTagline}</p>
     <div class="hero-actions mt-10 flex flex-wrap gap-4">
       <a href="/capabilities" class="luxury-btn magnetic inline-flex items-center gap-3 bg-sand text-navy font-semibold px-8 py-4 text-sm tracking-wide hover:bg-white" data-cursor="EXPLORE"><span>Explore Capabilities</span> <i class="fa-solid fa-arrow-right text-xs"></i></a>
       <a href="/request-quote" class="luxury-btn magnetic inline-flex items-center gap-3 border border-white/35 text-white px-8 py-4 text-sm tracking-wide hover:border-sand hover:text-sand" data-cursor="QUOTE"><span>Request a Quote</span></a>

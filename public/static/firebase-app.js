@@ -46,10 +46,20 @@ onAuthStateChanged(auth, (user) => {
   const account = document.getElementById('nav-account')
   const label = document.getElementById('nav-account-label')
   const register = document.getElementById('nav-register')
+  const admin = document.getElementById('nav-admin')
+  const isAdmin = !!user && isAdminEmail(user.email)
+  document.documentElement.classList.add('auth-ready')
+  document.querySelectorAll('[data-mobile-login]').forEach((el) => el.classList.toggle('hidden', !!user))
   document.querySelectorAll('[data-mobile-register]').forEach((el) => el.classList.toggle('hidden', !!user))
-  if (account) account.href = user ? (isAdminEmail(user.email) ? '/admin' : '/portal') : '/login'
-  if (label) label.textContent = user ? (isAdminEmail(user.email) ? 'Admin' : 'Portal') : 'Login'
-  if (register) register.classList.toggle('hidden', !!user)
+  document.querySelectorAll('[data-mobile-portal]').forEach((el) => el.classList.toggle('hidden', !user))
+  document.querySelectorAll('[data-mobile-admin]').forEach((el) => el.classList.toggle('hidden', !isAdmin))
+  if (account) {
+    account.href = user ? '/portal' : '/login'
+    account.setAttribute('aria-label', user ? 'Buyer portal' : 'Login')
+  }
+  if (label) label.textContent = user ? 'Portal' : 'Login'
+  if (register) register.classList.toggle('auth-hidden', !!user)
+  if (admin) admin.classList.toggle('auth-hidden', !isAdmin)
 
   // Portal page elements
   const signedOut = document.getElementById('portal-signed-out')

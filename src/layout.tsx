@@ -103,11 +103,11 @@ export const Layout = (props: LayoutProps) => {
         ${raw(NAV.map((n) => `<li><a href="${n.href}" class="nav-link text-white/85 hover:text-sand transition-colors ${props.path === n.href ? 'text-sand nav-active' : ''}">${n.label}</a></li>`).join(''))}
       </ul>
       <div class="flex items-center gap-3">
-        <a href="/login" id="nav-account" class="hidden md:inline-flex items-center gap-2 text-[13px] text-white/85 hover:text-sand transition-colors" aria-label="Login">
+        <a href="/login" id="nav-account" class="desktop-auth-link items-center gap-2 text-[13px] text-white/85 hover:text-sand transition-colors" aria-label="Login">
           <i class="fa-regular fa-user"></i><span id="nav-account-label">Login</span>
         </a>
-        <a href="/register" id="nav-register" class="hidden lg:inline-flex items-center gap-2 text-[13px] text-white/70 hover:text-sand transition-colors" aria-label="Register account">Register</a>
-        <a href="/admin" class="inline-flex items-center gap-2 text-[13px] text-white/80 hover:text-sand transition-colors" aria-label="Admin panel">Admin</a>
+        <a href="/register" id="nav-register" class="desktop-register-link auth-hidden items-center gap-2 text-[13px] text-white/70 hover:text-sand transition-colors" aria-label="Register account">Register</a>
+        <a href="/admin" id="nav-admin" class="desktop-admin-link auth-hidden items-center gap-2 text-[13px] text-white/80 hover:text-sand transition-colors" aria-label="Admin panel">Admin</a>
         <a href="/request-quote" class="magnetic hidden md:inline-flex items-center gap-2 bg-sand text-navy text-[13px] font-semibold tracking-wide px-5 py-2.5 hover:bg-white transition-colors" data-cursor="QUOTE">
           Request a Quote <i class="fa-solid fa-arrow-right text-[10px]"></i>
         </a>
@@ -127,10 +127,10 @@ export const Layout = (props: LayoutProps) => {
       <ul class="space-y-1">
         ${raw(NAV.map((n, i) => `<li><a href="${n.href}" class="block font-serif text-3xl text-white/90 hover:text-sand py-3 border-b border-white/10" style="animation-delay:${i * 40}ms">${n.label}</a></li>`).join(''))}
         <li><a href="/contact" class="block font-serif text-3xl text-white/90 hover:text-sand py-3 border-b border-white/10">Contact</a></li>
-        <li><a href="/login" class="block font-serif text-3xl text-white/90 hover:text-sand py-3 border-b border-white/10">Login</a></li>
-        <li><a href="/register" data-mobile-register class="block font-serif text-3xl text-white/90 hover:text-sand py-3 border-b border-white/10">Register</a></li>
-        <li><a href="/portal" class="block font-serif text-3xl text-white/90 hover:text-sand py-3 border-b border-white/10">Buyer Portal</a></li>
-        <li><a href="/admin" class="block font-serif text-3xl text-white/90 hover:text-sand py-3">Admin Panel</a></li>
+        <li><a href="/login" data-mobile-login class="block font-serif text-3xl text-white/90 hover:text-sand py-3 border-b border-white/10">Login</a></li>
+        <li><a href="/register" data-mobile-register class="hidden block font-serif text-3xl text-white/90 hover:text-sand py-3 border-b border-white/10">Register</a></li>
+        <li><a href="/portal" data-mobile-portal class="hidden block font-serif text-3xl text-white/90 hover:text-sand py-3 border-b border-white/10">Buyer Portal</a></li>
+        <li><a href="/admin" data-mobile-admin class="hidden block font-serif text-3xl text-white/90 hover:text-sand py-3">Admin Panel</a></li>
       </ul>
       <a href="/request-quote" class="mt-8 block text-center bg-sand text-navy font-semibold px-6 py-4">Request a Quote</a>
     </nav>

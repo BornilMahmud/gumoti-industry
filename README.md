@@ -18,6 +18,8 @@
 - Cinematic homepage hero with staged reveal timing, textile texture overlay, parallax-ready image depth, scroll indicator, magnetic CTAs and premium typography.
 - Global motion tokens and easing system in `public/static/style.css` (`instant`, `fast`, `standard`, `cinematic`, `dramatic`; luxury/cinematic/expo easings).
 - Normal native browser mouse/cursor restored across the website per latest request.
+- Header auth visibility cleaned up: signed-in users no longer see Login/Register, and admin users see one controlled Admin link instead of duplicate `Admin Register Admin` navigation.
+- Homepage hero contrast hardened with darker overlay and forced white/sand text so no black/low-contrast copy appears over factory imagery.
 - Premium loader (~1 second), thin scroll progress bar, hide-on-scroll/reveal-on-up navigation, image mask reveals, blur-to-sharp text reveals, form focus animations and animated success states.
 - Signature scroll-driven **Manufacturing Journey**: `FROM FIBER TO FINISHED GARMENT` with stage number/image/text/progress updates.
 - Horizontal capabilities rail, editorial product cards, animated filter transitions, certification wall hover expansion, masked quality headline, dramatic final CTA and oversized footer wordmark.
@@ -50,7 +52,7 @@
 - Current admin allowlist: `bornilmahmud56@gmail.com` and `bonrilmahmud56@gmail.com` (covers the email visible in the portal screenshot and the earlier requested spelling).
 - Dashboard includes live D1 counts for RFQs, pending RFQs, contact inquiries, sample requests and job applications; verified product/category counts from the product database; recent activity from live records; and live record tables.
 - Enterprise admin modules are visible in the correct industry structure: Business, Products, Manufacturing, Content/CMS, AI/Analytics and Governance. Modules that still need their own database/workflow are clearly marked as planned, avoiding fake numbers or fake functionality.
-- Admin link is visible in the header and mobile menu. Email/password users can sign in at `/login`; Google users can sign in from `/admin`.
+- Admin link is auth-aware: it appears for allowlisted signed-in admin users and is hidden from signed-out/non-admin visitors to prevent duplicated or confusing header labels. Email/password users can sign in at `/login`; Google users can sign in from `/admin`.
 
 ## Functional Entry URIs
 | Method | Path | Params |
@@ -115,6 +117,10 @@ Important: `firestore.rules` does **not** store data by itself. It only controls
 - Email notifications (requires transactional email provider API key).
 - File uploads for tech packs/media/certificates (requires R2 bucket binding).
 - Multilingual EN/BN content system.
+
+## Master Next-Step Prompt
+- A deployment-focused master prompt has been created at `GUMTI_MASTER_PROJECT_NEXT_PROMPT.txt`.
+- It documents what has been completed, what remains for a complete industry-level master project, deployment QA, security requirements and the next recommended implementation milestone.
 
 ## Recommended Next Steps
 1. Replace CC/public-domain placeholder imagery with official Gumti factory/product photography.
