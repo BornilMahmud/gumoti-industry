@@ -8,12 +8,13 @@ import { RequestQuotePage, RequestSamplePage, ContactPage } from './pages/forms'
 import { CareersPage, JobDetailPage, NewsPage, ArticlePage, jobs, news } from './pages/careers-news'
 import { PortalPage, PrivacyPage, TermsPage, NotFoundPage, ErrorPage } from './pages/portal'
 import { AdminPage } from './pages/admin'
+import { LoginPage, RegisterPage } from './pages/auth'
 import { products, filterProducts } from './data/products'
 import { companyProfile as co } from './data/company'
 
 type Bindings = { DB?: D1Database }
 
-const ADMIN_EMAILS = ['info@gumtitextiles.com']
+const ADMIN_EMAILS = ['bonrilmahmud56@gmail.com']
 const FIREBASE_PROJECT_ID = 'gumoti-tex'
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -144,15 +145,17 @@ app.get('/news/:slug', (c) => {
   return c.html(Layout({ title: n.title, path: '/news', description: n.excerpt, children: ArticlePage(n) }))
 })
 
-app.get('/portal', (c) => c.html(Layout({ title: 'Buyer Portal', children: PortalPage() })))
-app.get('/admin', (c) => c.html(Layout({ title: 'Admin Panel', path: '/admin', children: AdminPage() })))
+app.get('/portal', (c) => c.html(Layout({ title: 'Buyer Portal', path: '/portal', children: PortalPage() })))
+app.get('/login', (c) => c.html(Layout({ title: 'Login', path: '/login', darkNav: true, children: LoginPage() })))
+app.get('/register', (c) => c.html(Layout({ title: 'Register', path: '/register', darkNav: true, children: RegisterPage() })))
+app.get('/admin', (c) => c.html(Layout({ title: 'Admin Panel', path: '/admin', darkNav: true, children: AdminPage() })))
 app.get('/privacy', (c) => c.html(Layout({ title: 'Privacy Policy', children: PrivacyPage() })))
 app.get('/terms', (c) => c.html(Layout({ title: 'Terms of Use', children: TermsPage() })))
 
 // ---------------- SEO ----------------
 app.get('/sitemap.xml', (c) => {
   const base = new URL(c.req.url).origin
-  const urls = ['/', '/about', '/capabilities', '/products', '/quality', '/sustainability', '/global-reach', '/facilities', '/careers', '/news', '/contact', '/request-quote',
+  const urls = ['/', '/about', '/capabilities', '/products', '/quality', '/sustainability', '/global-reach', '/facilities', '/careers', '/news', '/contact', '/request-quote', '/login', '/register', '/portal', '/admin',
     ...products.map((p) => `/products/${p.slug}`), ...jobs.map((j) => `/careers/${j.slug}`), ...news.map((n) => `/news/${n.slug}`)]
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${base}${u}</loc></url>`).join('\n')}\n</urlset>`
   return c.text(xml, 200, { 'Content-Type': 'application/xml' })

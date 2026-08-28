@@ -17,13 +17,14 @@
 - New SVG favicon in the same Gumti-inspired visual language.
 - Cinematic homepage hero with staged reveal timing, textile texture overlay, parallax-ready image depth, scroll indicator, magnetic CTAs and premium typography.
 - Global motion tokens and easing system in `public/static/style.css` (`instant`, `fast`, `standard`, `cinematic`, `dramatic`; luxury/cinematic/expo easings).
-- Desktop-only custom cursor with contextual labels (`VIEW`, `EXPLORE`, `QUOTE`, `ASK`) and reduced-motion/touch-device opt-out.
+- Normal native browser mouse/cursor restored across the website per latest request.
 - Premium loader (~1 second), thin scroll progress bar, hide-on-scroll/reveal-on-up navigation, image mask reveals, blur-to-sharp text reveals, form focus animations and animated success states.
 - Signature scroll-driven **Manufacturing Journey**: `FROM FIBER TO FINISHED GARMENT` with stage number/image/text/progress updates.
 - Horizontal capabilities rail, editorial product cards, animated filter transitions, certification wall hover expansion, masked quality headline, dramatic final CTA and oversized footer wordmark.
 
 ### Public website
-- Pages: `/`, `/about`, `/capabilities`, `/products`, `/products/:slug`, `/products/compare`, `/quality`, `/sustainability`, `/global-reach`, `/facilities`, `/careers`, `/careers/:slug`, `/news`, `/news/:slug`, `/contact`, `/portal`, `/admin`, `/privacy`, `/terms`.
+- Pages: `/`, `/about`, `/capabilities`, `/products`, `/products/:slug`, `/products/compare`, `/quality`, `/sustainability`, `/global-reach`, `/facilities`, `/careers`, `/careers/:slug`, `/news`, `/news/:slug`, `/contact`, `/portal`, `/login`, `/register`, `/admin`, `/privacy`, `/terms`.
+- Animated Gumti-themed `/login` and `/register` pages inspired by the supplied split-card reference image, without directly using or embedding that image.
 - Professional 404 / 500 error pages; sticky mobile Request-Quote CTA; full responsive design; reduced-motion support; skip links; keyboard-accessible navigation.
 
 ### B2B systems (real, connected — no fake functionality)
@@ -31,7 +32,7 @@
 - **Sample requests** (`/request-sample` → `POST /api/sample`).
 - **Contact inquiries** (`POST /api/contact`) and **Job applications** (`POST /api/apply`).
 - **Product catalog**: instant filtering with URL query persistence, compare up to 3 products, product detail pages, spec sheet download (`/api/products/:slug/spec`).
-- **Buyer Portal** (`/portal`): Firebase Google Sign-In (`gumoti-tex`), RFQ tracking by account email, Firestore mirror writes, Firebase Analytics.
+- **Buyer Portal** (`/portal`): Firebase Auth (`gumoti-tex`) with Google Sign-In plus Email/Password login/register, RFQ tracking by account email, Firestore mirror writes, Firebase Analytics.
 - SEO: meta/OG, Organization JSON-LD, `/sitemap.xml`, `/robots.txt`.
 
 ### GUMTI AI assistant
@@ -46,12 +47,13 @@
 - `/admin` built with Firebase Google Sign-In UI and D1-backed admin overview API.
 - Admin API endpoint: `GET /api/admin/overview`.
 - Authorization: Firebase ID token is verified server-side against the `gumoti-tex` project and checked against `ADMIN_EMAILS` in `src/index.tsx`.
-- Current default allowlist: `info@gumtitextiles.com`.
+- Current default admin allowlist: `bonrilmahmud56@gmail.com`.
+- Admin link is visible in the header and mobile menu. Email/password users can sign in at `/login`; Google users can sign in from `/admin`.
 
 ## Functional Entry URIs
 | Method | Path | Params |
 |---|---|---|
-| GET | `/` `/about` `/capabilities` `/quality` `/sustainability` `/global-reach` `/facilities` `/news` `/contact` `/portal` `/admin` `/privacy` `/terms` | — |
+| GET | `/` `/about` `/capabilities` `/quality` `/sustainability` `/global-reach` `/facilities` `/news` `/contact` `/portal` `/login` `/register` `/admin` `/privacy` `/terms` | — |
 | GET | `/products` | `category, composition, construction, certification, search` |
 | GET | `/products/:slug`, `/products/compare?items=a,b,c` | — |
 | GET | `/careers?department=…`, `/careers/:slug` | — |
@@ -67,34 +69,42 @@
 | POST | `/api/apply` | position*, name*, email*, phone*, experience*, linkedin, education, cover_letter |
 
 ## Admin Login Guide
-1. In Firebase Console for project `gumoti-tex`, enable **Authentication → Sign-in method → Google**.
+1. In Firebase Console for project `gumoti-tex`, enable **Authentication → Sign-in method → Google** and **Email/Password**.
 2. Add the sandbox/deployed domain to **Authentication → Settings → Authorized domains**.
-3. In `src/index.tsx`, edit `ADMIN_EMAILS` so it contains the Google email(s) that should be allowed to manage the site, for example:
+3. Default admin is already set in `src/index.tsx`:
    ```ts
-   const ADMIN_EMAILS = ['your-google-admin-email@gmail.com']
+   const ADMIN_EMAILS = ['bonrilmahmud56@gmail.com']
    ```
-4. Rebuild/redeploy the site after editing the allowlist.
+4. Open `/login` and sign in with `bonrilmahmud56@gmail.com` (if you created that Firebase Auth user), or open `/admin` and use Google sign-in with the same email.
 5. Open `/admin`.
-6. Click **Sign in with Google**.
-7. Choose the allowlisted Google account.
-8. Click **Load / Refresh Admin Data** to view RFQs, contact inquiries, sample requests and job applications.
+6. Click **Load / Refresh Admin Data** to view RFQs, contact inquiries, sample requests and job applications.
 
 If the email is not allowlisted, the admin API returns `403 Admin access denied`.
 
 ## Firestore Rules
-Copy-paste ready rules are committed in `firestore.rules`. These rules allow signed-in users to create mirror records and read only their own records; all other access is denied.
+Copy-paste ready rules are committed in `firestore.rules`. These rules allow:
+- signed-in users to create/read their own `users/{uid}` profile from `/register`, `/login`, or Google sign-in;
+- signed-in users to create/read their own mirror documents in `rfqs`, `contact_inquiries`, `sample_requests`, and `job_applications`;
+- everything else is denied by default.
+
+Important: `firestore.rules` does **not** store data by itself. It only controls who may read/write Firestore. The website code in `public/static/firebase-app.js` performs the actual Firebase Auth and Firestore writes.
+
+## What database saves the website data?
+- **Cloudflare D1 is the primary operational database.** RFQ/contact/sample/job form submissions are first saved by the Hono backend into D1 so Gumti operations/admin can reliably view them in `/admin`.
+- **Firestore is also initialized and used.** When a visitor is signed in with Firebase, the frontend mirrors their submissions into Firestore collections and saves user profiles at `users/{uid}`. This gives the buyer a Firebase-linked account record.
+- **Admin reads currently come from D1**, protected by a verified Firebase ID token and the `ADMIN_EMAILS` server allowlist.
 
 ## Data Architecture
 - **D1 (SQLite)** — operational source of truth: `rfqs`, `contact_inquiries`, `sample_requests`, `job_applications`, `rate_limits`.
-- **Firebase** (`gumoti-tex` project): Google Authentication, Firestore mirror of submissions linked to `uid`, Analytics.
+- **Firebase** (`gumoti-tex` project): Google Authentication, Email/Password Authentication, Firestore user profiles + signed-in submission mirror, Analytics.
 - **Single source of truth** for company facts: `src/data/company.ts`.
 - **Product database**: `src/data/products.ts`.
 - **Data accuracy policy**: unverified figures render as *“Information to be confirmed by Gumti Textiles Ltd.”*; product specs are CMS-managed templates; no invented statistics, buyers or certificate metadata.
 
 ## User Guide
-1. **Buyers**: Browse `/products`, filter/compare, open a product → **Request Quote** → receive an `RFQ-GT-…` tracking ID. Sign in with Google at `/portal` to see RFQs tied to your email.
+1. **Buyers**: Browse `/products`, filter/compare, open a product → **Request Quote** → receive an `RFQ-GT-…` tracking ID. Sign in at `/login`, `/register`, or with Google to see RFQs tied to your email in `/portal`.
 2. **Visitors**: Use **ASK GUMTI AI** for verified product search, GSM/material guidance, certification summaries and RFQ handoff.
-3. **Admins/Ops**: Log in at `/admin` with an allowlisted Google account to view D1 records.
+3. **Admins/Ops**: Log in as `bonrilmahmud56@gmail.com` at `/login` or `/admin` to view D1 records.
 4. **Content editors/developers**: Update company facts in `src/data/company.ts`, products in `src/data/products.ts`, jobs/news in `src/pages/careers-news.tsx`.
 
 ## Features Not Yet Implemented
@@ -107,8 +117,8 @@ Copy-paste ready rules are committed in `firestore.rules`. These rules allow sig
 ## Recommended Next Steps
 1. Replace CC/public-domain placeholder imagery with official Gumti factory/product photography.
 2. Add the production domain to Firebase Authorized Domains.
-3. Update `ADMIN_EMAILS` to the real Gumti admin Google accounts.
-4. Deploy Firestore rules from `firestore.rules` in Firebase Console.
+3. Keep `ADMIN_EMAILS` updated with the real Gumti admin Firebase emails.
+4. Deploy Firestore rules from `firestore.rules` in Firebase Console and enable Email/Password auth if using `/register`.
 5. Add email notifications and tech-pack uploads when API keys/R2 are available.
 
 ## Deployment

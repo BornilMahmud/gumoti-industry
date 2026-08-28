@@ -15,9 +15,10 @@ export const AdminPage = () => html`
       <aside class="lg:col-span-4 admin-card p-8">
         <p class="text-[11px] tracking-widest2 uppercase text-mutedgt">Login mechanism</p>
         <h2 class="font-serif text-3xl text-navy mt-3">Google Admin Sign-In</h2>
-        <p class="text-sm text-mutedgt leading-relaxed mt-4">Only Google accounts listed in the server-side <code>ADMIN_EMAILS</code> allowlist can load admin data. Default allowlist includes <strong>info@gumtitextiles.com</strong>; edit it before production if your admin Google email is different.</p>
+        <p class="text-sm text-mutedgt leading-relaxed mt-4">Only Firebase accounts listed in the server-side <code>ADMIN_EMAILS</code> allowlist can load admin data. Default admin is <strong>bonrilmahmud56@gmail.com</strong>. You can sign in with Google here or use the animated <a href="/login" class="text-navy underline underline-offset-4 font-semibold">/login</a> page first.</p>
         <div class="mt-7 flex flex-wrap gap-3">
           <button data-google-signin class="magnetic bg-navy text-white font-semibold px-6 py-3 text-sm tracking-wide hover:bg-ink"><i class="fa-brands fa-google mr-2"></i>Sign in with Google</button>
+          <a href="/login" class="border border-navy/30 text-navy px-6 py-3 text-sm tracking-wide hover:border-navy">Email Login</a>
           <button data-signout class="border border-navy/30 text-navy px-6 py-3 text-sm tracking-wide hover:border-navy">Sign out</button>
         </div>
         <button id="admin-refresh" class="mt-4 w-full bg-sand text-navy font-semibold px-6 py-3 text-sm tracking-wide hover:bg-white">Load / Refresh Admin Data</button>
@@ -26,7 +27,7 @@ export const AdminPage = () => html`
           <ol class="list-decimal ml-4 mt-2 space-y-1">
             <li>Open <code>/admin</code>.</li>
             <li>Click <strong>Sign in with Google</strong>.</li>
-            <li>Use a Google account listed in <code>ADMIN_EMAILS</code>.</li>
+            <li>Use <code>bonrilmahmud56@gmail.com</code> or another Firebase account later added to <code>ADMIN_EMAILS</code>.</li>
             <li>Click <strong>Load / Refresh Admin Data</strong>.</li>
           </ol>
         </div>

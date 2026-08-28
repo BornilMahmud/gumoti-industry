@@ -4,10 +4,11 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js'
 import {
   getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile,
   onAuthStateChanged, signOut,
 } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js'
 import {
-  getFirestore, collection, addDoc, query, where, orderBy, getDocs, serverTimestamp,
+  getFirestore, collection, addDoc, doc, setDoc, query, where, orderBy, getDocs, serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js'
 
 const firebaseConfig = {
@@ -31,15 +32,19 @@ try {
 } catch (_) { /* analytics unavailable in this context */ }
 
 const provider = new GoogleAuthProvider()
+const DEFAULT_ADMIN_EMAIL = 'bonrilmahmud56@gmail.com'
 
 // ---------- Auth state ----------
 onAuthStateChanged(auth, (user) => {
   window.gtUser = user || null
   window.gtAdminToken = user ? (() => user.getIdToken(true)) : null
+  if (user) ensureUserProfile(user, { provider: user.providerData?.[0]?.providerId || 'firebase' })
   document.dispatchEvent(new CustomEvent('gt:auth', { detail: user }))
 
+  const account = document.getElementById('nav-account')
   const label = document.getElementById('nav-account-label')
-  if (label) label.textContent = user ? (user.displayName ? user.displayName.split(' ')[0] : 'Portal') : 'Sign In'
+  if (account) account.href = user ? '/portal' : '/login'
+  if (label) label.textContent = user ? (user.displayName ? user.displayName.split(' ')[0] : 'Portal') : 'Login'
 
   // Portal page elements
   const signedOut = document.getElementById('portal-signed-out')
@@ -67,7 +72,8 @@ onAuthStateChanged(auth, (user) => {
 // ---------- Google Sign-In ----------
 async function googleSignIn() {
   try {
-    await signInWithPopup(auth, provider)
+    const result = await signInWithPopup(auth, provider)
+    if (result.user) await ensureUserProfile(result.user, { provider: 'google.com' })
     window.gtToast && window.gtToast('Signed in successfully.')
   } catch (err) {
     if (err && (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment')) {
@@ -81,7 +87,91 @@ async function googleSignIn() {
 document.addEventListener('click', (e) => {
   if (e.target.closest('[data-google-signin]')) { e.preventDefault(); googleSignIn() }
   if (e.target.closest('[data-signout]')) { e.preventDefault(); signOut(auth).then(() => window.gtToast && window.gtToast('Signed out.')) }
+  const toggle = e.target.closest('[data-toggle-password]')
+  if (toggle) {
+    e.preventDefault()
+    const input = toggle.closest('.auth-input-wrap')?.querySelector('input')
+    if (!input) return
+    input.type = input.type === 'password' ? 'text' : 'password'
+    const icon = toggle.querySelector('i')
+    if (icon) icon.className = input.type === 'password' ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'
+  }
 })
+
+async function ensureUserProfile(user, extra = {}) {
+  if (!user) return false
+  try {
+    await setDoc(doc(db, 'users', user.uid), {
+      uid: user.uid,
+      userEmail: user.email || '',
+      email: user.email || '',
+      displayName: user.displayName || '',
+      photoURL: user.photoURL || '',
+      isDefaultAdminEmail: (user.email || '').toLowerCase() === DEFAULT_ADMIN_EMAIL,
+      updatedAt: serverTimestamp(),
+      ...extra,
+    }, { merge: true })
+    return true
+  } catch (err) {
+    console.warn('User profile save skipped:', err.message)
+    return false
+  }
+}
+
+function setAuthStatus(form, msg, ok) {
+  const el = form.querySelector('[data-auth-status]')
+  if (!el) return
+  el.textContent = msg
+  el.classList.toggle('ok', ok === true)
+  el.classList.toggle('bad', ok === false)
+}
+
+async function authSubmit(form, action) {
+  const btn = form.querySelector('[type="submit"]')
+  const original = btn ? btn.textContent : ''
+  if (btn) { btn.disabled = true; btn.textContent = action === 'register' ? 'Creating account…' : 'Signing in…' }
+  setAuthStatus(form, '', true)
+  const fd = new FormData(form)
+  const email = String(fd.get('email') || '').trim()
+  const password = String(fd.get('password') || '')
+  const name = String(fd.get('name') || '').trim()
+  const company = String(fd.get('company') || '').trim()
+  try {
+    let credential
+    if (action === 'register') {
+      credential = await createUserWithEmailAndPassword(auth, email, password)
+      if (name) await updateProfile(credential.user, { displayName: name })
+      await ensureUserProfile(credential.user, { displayName: name, company, provider: 'password', role: 'buyer', createdAt: serverTimestamp() })
+      setAuthStatus(form, 'Account created and saved to Firestore users/{uid}. Redirecting…', true)
+    } else {
+      credential = await signInWithEmailAndPassword(auth, email, password)
+      await ensureUserProfile(credential.user, { provider: 'password', lastLoginAt: serverTimestamp() })
+      setAuthStatus(form, 'Signed in successfully. Redirecting…', true)
+    }
+    window.gtToast && window.gtToast('Firebase sign-in successful.')
+    setTimeout(() => {
+      const isAdmin = (credential.user.email || '').toLowerCase() === DEFAULT_ADMIN_EMAIL
+      window.location.assign(isAdmin ? '/admin' : '/portal')
+    }, 700)
+  } catch (err) {
+    console.error('Auth form error:', err)
+    setAuthStatus(form, firebaseFriendlyError(err), false)
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = original }
+  }
+}
+
+document.querySelectorAll('form[data-auth-login]').forEach((form) => form.addEventListener('submit', (e) => { e.preventDefault(); authSubmit(form, 'login') }))
+document.querySelectorAll('form[data-auth-register]').forEach((form) => form.addEventListener('submit', (e) => { e.preventDefault(); authSubmit(form, 'register') }))
+
+function firebaseFriendlyError(err) {
+  const code = err?.code || ''
+  if (code.includes('email-already-in-use')) return 'This email is already registered. Please log in instead.'
+  if (code.includes('invalid-credential') || code.includes('wrong-password')) return 'Invalid email or password.'
+  if (code.includes('weak-password')) return 'Password must be at least 6 characters.'
+  if (code.includes('operation-not-allowed')) return 'Enable Email/Password provider in Firebase Console → Authentication → Sign-in method.'
+  return err?.message || 'Firebase authentication failed.'
+}
 
 // ---------- Firestore save (RFQs, contacts, samples, applications) ----------
 window.gtFirestoreSave = async function (collectionName, data) {

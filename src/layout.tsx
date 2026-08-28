@@ -92,8 +92,6 @@ export const Layout = (props: LayoutProps) => {
 <body class="bg-ivory text-ink font-sans antialiased motion-ready">
   <div id="gt-loader" class="gt-loader" aria-hidden="true"><div class="gt-loader-inner">${BrandMark()}<span></span></div></div>
   <div id="scroll-progress" aria-hidden="true"></div>
-  <div id="cursor-dot" aria-hidden="true"></div>
-  <div id="cursor-ring" aria-hidden="true"><span></span></div>
   <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-navy focus:text-white focus:px-4 focus:py-2">Skip to main content</a>
 
   <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${props.darkNav ? 'nav-solid' : ''}" data-dark-nav="${props.darkNav ? '1' : '0'}">
@@ -105,10 +103,11 @@ export const Layout = (props: LayoutProps) => {
         ${raw(NAV.map((n) => `<li><a href="${n.href}" class="nav-link text-white/85 hover:text-sand transition-colors ${props.path === n.href ? 'text-sand nav-active' : ''}">${n.label}</a></li>`).join(''))}
       </ul>
       <div class="flex items-center gap-3">
-        <a href="/portal" id="nav-account" class="hidden md:inline-flex items-center gap-2 text-[13px] text-white/85 hover:text-sand transition-colors" aria-label="Buyer portal">
-          <i class="fa-regular fa-user"></i><span id="nav-account-label">Sign In</span>
+        <a href="/login" id="nav-account" class="hidden md:inline-flex items-center gap-2 text-[13px] text-white/85 hover:text-sand transition-colors" aria-label="Login">
+          <i class="fa-regular fa-user"></i><span id="nav-account-label">Login</span>
         </a>
-        <a href="/admin" class="hidden lg:inline-flex items-center gap-2 text-[13px] text-white/70 hover:text-sand transition-colors" aria-label="Admin panel">Admin</a>
+        <a href="/register" class="hidden lg:inline-flex items-center gap-2 text-[13px] text-white/70 hover:text-sand transition-colors" aria-label="Register account">Register</a>
+        <a href="/admin" class="inline-flex items-center gap-2 text-[13px] text-white/80 hover:text-sand transition-colors" aria-label="Admin panel">Admin</a>
         <a href="/request-quote" class="magnetic hidden md:inline-flex items-center gap-2 bg-sand text-navy text-[13px] font-semibold tracking-wide px-5 py-2.5 hover:bg-white transition-colors" data-cursor="QUOTE">
           Request a Quote <i class="fa-solid fa-arrow-right text-[10px]"></i>
         </a>
@@ -128,6 +127,8 @@ export const Layout = (props: LayoutProps) => {
       <ul class="space-y-1">
         ${raw(NAV.map((n, i) => `<li><a href="${n.href}" class="block font-serif text-3xl text-white/90 hover:text-sand py-3 border-b border-white/10" style="animation-delay:${i * 40}ms">${n.label}</a></li>`).join(''))}
         <li><a href="/contact" class="block font-serif text-3xl text-white/90 hover:text-sand py-3 border-b border-white/10">Contact</a></li>
+        <li><a href="/login" class="block font-serif text-3xl text-white/90 hover:text-sand py-3 border-b border-white/10">Login</a></li>
+        <li><a href="/register" class="block font-serif text-3xl text-white/90 hover:text-sand py-3 border-b border-white/10">Register</a></li>
         <li><a href="/portal" class="block font-serif text-3xl text-white/90 hover:text-sand py-3 border-b border-white/10">Buyer Portal</a></li>
         <li><a href="/admin" class="block font-serif text-3xl text-white/90 hover:text-sand py-3">Admin Panel</a></li>
       </ul>

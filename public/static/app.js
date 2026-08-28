@@ -49,21 +49,7 @@
   btnClose && btnClose.addEventListener('click', () => setMenu(false));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { setMenu(false); closeAI(); } });
 
-  // Custom cursor (desktop only).
-  if (!reduced && !touch) {
-    document.documentElement.classList.add('has-custom-cursor');
-    const dot = $('#cursor-dot'), ring = $('#cursor-ring'), label = ring && ring.querySelector('span');
-    let mx = innerWidth / 2, my = innerHeight / 2, rx = mx, ry = my;
-    document.addEventListener('mousemove', (e) => { mx = e.clientX; my = e.clientY; if (dot) { dot.style.left = mx + 'px'; dot.style.top = my + 'px'; } }, { passive: true });
-    (function loop() { rx += (mx - rx) * 0.18; ry += (my - ry) * 0.18; if (ring) { ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; } requestAnimationFrame(loop); })();
-    document.addEventListener('mouseover', (e) => {
-      const target = e.target.closest('[data-cursor], a, button, .product-card, img');
-      if (!ring || !label || !target) return;
-      const text = target.dataset.cursor || (target.classList.contains('product-card') ? 'EXPLORE' : target.tagName === 'IMG' ? 'VIEW' : '');
-      ring.classList.toggle('active', !!text); label.textContent = text;
-    });
-    document.addEventListener('mouseout', (e) => { if (e.target.closest('[data-cursor], a, button, .product-card, img')) { $('#cursor-ring')?.classList.remove('active'); } });
-  }
+  // Native cursor: requested normal browser mouse; no custom cursor is initialized.
 
   // Magnetic buttons, subtle 5–10px.
   if (!reduced && !touch) {
@@ -214,7 +200,7 @@
   // Admin page loader (Firebase token supplied by firebase-app.js helper).
   window.gtLoadAdmin = async function () {
     const root = $('#admin-data'); if (!root) return;
-    if (!window.gtUser) { root.innerHTML = '<div class="admin-card p-8 text-center text-mutedgt">Please sign in with Google first.</div>'; return; }
+    if (!window.gtUser) { root.innerHTML = '<div class="admin-card p-8 text-center text-mutedgt">Please sign in first using Google or the /login page.</div>'; return; }
     if (!window.gtAdminToken) { root.innerHTML = '<div class="admin-card p-8 text-center text-mutedgt">Firebase is still loading. Try again in a moment.</div>'; return; }
     root.innerHTML = '<div class="admin-card p-8 text-center text-mutedgt">Loading admin records…</div>';
     try {
@@ -222,7 +208,7 @@
       const res = await fetch('/api/admin/overview', { headers: { Authorization: 'Bearer ' + token } });
       const data = await res.json(); if (!res.ok) throw new Error(data.error || 'Admin access denied');
       root.innerHTML = ['rfqs','contact_inquiries','sample_requests','job_applications'].map((k) => adminTable(k, data[k] || [])).join('');
-    } catch (err) { root.innerHTML = `<div class="admin-card p-8"><h2 class="font-serif text-2xl text-navy">Admin access unavailable</h2><p class="mt-3 text-sm text-mutedgt">${esc(err.message)}</p><p class="mt-3 text-xs text-mutedgt">Add your Google email to ADMIN_EMAILS in src/index.tsx, then rebuild and deploy.</p></div>`; }
+    } catch (err) { root.innerHTML = `<div class="admin-card p-8"><h2 class="font-serif text-2xl text-navy">Admin access unavailable</h2><p class="mt-3 text-sm text-mutedgt">${esc(err.message)}</p><p class="mt-3 text-xs text-mutedgt">Default admin is bonrilmahmud56@gmail.com. Sign in with that Firebase account, then refresh.</p></div>`; }
   };
   function adminTable(title, rows) {
     if (!rows.length) return `<section class="admin-card p-6 mb-6"><h2 class="font-serif text-2xl text-navy">${title.replace('_',' ')}</h2><p class="text-sm text-mutedgt mt-2">No records yet.</p></section>`;

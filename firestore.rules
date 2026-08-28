@@ -17,6 +17,13 @@ service cloud.firestore {
         && resource.data.uid == request.auth.uid;
     }
 
+    // Firebase Auth user profiles created by /register or Google sign-in.
+    match /users/{userId} {
+      allow create: if signedIn() && userId == request.auth.uid;
+      allow read, update: if signedIn() && userId == request.auth.uid;
+      allow delete: if false;
+    }
+
     // Buyer-created mirror records from the Gumti website.
     // The Cloudflare D1 database remains the operational source of truth.
     match /rfqs/{docId} {
