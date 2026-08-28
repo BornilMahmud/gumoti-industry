@@ -76,3 +76,118 @@ a,button,[role="button"],input[type="submit"]{cursor:pointer}
 @media(max-width:900px){.auth-card,.auth-card-register{grid-template-columns:1fr}.auth-visual,.auth-card-register .auth-visual{order:0;min-height:360px}.auth-panel{order:1}.auth-book{right:28px;bottom:34px;width:220px;height:180px}.auth-fabric-card{left:28px;right:auto;top:34px;width:260px}.auth-card::before{inset:10px}}
 @media(max-width:768px){.gumti-ai{right:12px;bottom:74px}.gumti-ai-button span:last-child{display:none}.gumti-ai-panel{position:fixed;left:10px;right:10px;bottom:70px;width:auto;height:min(620px,calc(100vh - 92px))}.journey-pin{min-height:auto}.journey-sticky{position:relative;height:auto;min-height:820px}.journey-bg img.active{opacity:.34}.journey-copy{padding-top:120px;padding-bottom:80px}.auth-shell{padding:92px 12px 44px}.auth-panel{padding:34px 24px}.auth-title{font-size:44px}.auth-row{align-items:flex-start;flex-direction:column}.auth-fabric-card{width:230px}.auth-leaf{width:58px;height:25px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.reveal,.reveal-img,.word-mask>span{opacity:1!important;transform:none!important;filter:none!important;clip-path:none!important;transition:none!important}.hero-headline .hero-line span,.hero-media,.scroll-line,.gt-loader-inner>span,.hero-kicker,.hero-copy,.hero-actions,.hero-scroll,.hero-overlay,.auth-orbit,.auth-leaf,.auth-page-left{animation:none!important;opacity:1!important;transform:none!important;filter:none!important}.journey-bg img{transition:none!important}.gt-loader{display:none!important}*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+
+/* ============================================================
+   Admin Control Center v2 — animated panels, tabs, drawer
+   ============================================================ */
+@keyframes adminIn{from{opacity:0;transform:translateY(22px);filter:blur(5px)}to{opacity:1;transform:none;filter:blur(0)}}
+@keyframes adminRowOut{to{opacity:0;transform:translateX(24px);height:0}}
+@keyframes adminPulse{0%{background:rgba(199,183,156,.4)}100%{background:transparent}}
+@keyframes spinnerSpin{to{transform:rotate(360deg)}}
+.admin-anim-in{animation:adminIn var(--motion-standard) var(--ease-luxury) both}
+.admin-row-pulse{animation:adminPulse 1.2s var(--ease-luxury)}
+.admin-row-out{animation:adminRowOut 320ms var(--ease-luxury) forwards}
+.admin-loading{display:grid;place-items:center}
+.admin-spinner{display:inline-block;width:34px;height:34px;border:2px solid rgba(199,183,156,.4);border-top-color:var(--navy);border-radius:50%;animation:spinnerSpin .8s linear infinite}
+
+/* Tab bar */
+.admin-tabbar{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+.admin-tab{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;border:1px solid rgba(199,183,156,.55);background:#fff;color:var(--navy);font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:11px 15px;position:relative;overflow:hidden;transition:background var(--motion-fast) var(--ease-luxury),color var(--motion-fast),border-color var(--motion-fast),transform var(--motion-fast)}
+.admin-tab i{color:var(--sand);transition:color var(--motion-fast),transform var(--motion-fast) var(--ease-expo)}
+.admin-tab:hover{transform:translateY(-2px);border-color:var(--navy)}
+.admin-tab:hover i{transform:scale(1.2)}
+.admin-tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.admin-tab.active i{color:var(--sand)}
+.admin-tab.active::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--sand);animation:adminIn var(--motion-fast) var(--ease-luxury)}
+
+/* Status pills */
+.admin-status{display:inline-flex;padding:5px 9px;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;animation:adminIn var(--motion-fast) var(--ease-luxury)}
+.admin-status--new{background:rgba(199,183,156,.28);color:var(--navy)}
+.admin-status--progress{background:#DBEAFE;color:#1E3A8A}
+.admin-status--warn{background:#FEF3C7;color:#92400E}
+.admin-status--info{background:#E0E7FF;color:#3730A3}
+.admin-status--ok{background:#D1FAE5;color:#065F46}
+.admin-status--bad{background:#FEE2E2;color:#991B1B}
+
+/* Controls */
+.admin-select{border:1px solid rgba(199,183,156,.6);background:#fff;color:var(--navy);font-size:11px;font-weight:700;letter-spacing:.04em;padding:7px 8px;max-width:190px;transition:border-color var(--motion-fast),box-shadow var(--motion-fast),transform var(--motion-fast)}
+.admin-select:hover{border-color:var(--navy)}
+.admin-select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(199,183,156,.35);transform:translateY(-1px)}
+.admin-link{color:var(--navy);font-weight:800;font-size:12px;border-bottom:1px solid var(--sand);padding-bottom:1px;transition:color var(--motion-fast),border-color var(--motion-fast)}
+.admin-link:hover{color:#8a6d3b;border-color:var(--navy)}
+.admin-mini-btn{display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:32px;padding:0 9px;border:1px solid rgba(199,183,156,.6);background:#fff;color:var(--navy);font-size:12px;transition:all var(--motion-fast) var(--ease-luxury)}
+.admin-mini-btn:hover{background:var(--navy);color:#fff;border-color:var(--navy);transform:translateY(-2px)}
+.admin-primary-btn{display:inline-flex;align-items:center;justify-content:center;background:var(--navy);color:#fff;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:13px 20px;position:relative;overflow:hidden;transition:background var(--motion-fast),transform var(--motion-fast) var(--ease-luxury),box-shadow var(--motion-fast)}
+.admin-primary-btn::before{content:'';position:absolute;inset:0;background:rgba(255,255,255,.16);transform:translateX(-110%) skewX(-12deg);transition:transform var(--motion-standard) var(--ease-expo)}
+.admin-primary-btn:hover::before{transform:translateX(110%) skewX(-12deg)}
+.admin-primary-btn:hover{transform:translateY(-2px);box-shadow:0 14px 34px -18px rgba(7,26,43,.7)}
+.admin-quick{display:flex;flex-wrap:wrap;gap:8px}
+.admin-quick button,.admin-quick a{border:1px solid rgba(199,183,156,.6);background:#fff;color:var(--navy);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:11px 14px;transition:all var(--motion-fast) var(--ease-luxury)}
+.admin-quick button:hover,.admin-quick a:hover{background:var(--navy);color:#fff;border-color:var(--navy);transform:translateY(-2px)}
+
+/* Chart bars with labels */
+.admin-chart{display:flex;align-items:flex-end;gap:14px;height:190px}
+.admin-bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:8px}
+.admin-bar span{display:block;width:100%;max-width:64px;background:linear-gradient(180deg,var(--navy),#0E2A42);border-top:3px solid var(--sand);transition:height 900ms var(--ease-expo)}
+.admin-bar em{font-style:normal;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:center}
+
+/* Toggle switch */
+.admin-toggle{width:42px;height:22px;border-radius:99px;border:1px solid rgba(199,183,156,.7);background:#eee;position:relative;transition:background var(--motion-fast),border-color var(--motion-fast)}
+.admin-toggle span{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:transform var(--motion-fast) var(--ease-expo)}
+.admin-toggle.on{background:#065F46;border-color:#065F46}
+.admin-toggle.on span{transform:translateX(20px)}
+
+/* Detail drawer */
+.admin-drawer{position:fixed;inset:0;z-index:95;background:rgba(7,26,43,.55);backdrop-filter:blur(3px);opacity:0;transition:opacity 320ms var(--ease-luxury)}
+.admin-drawer.open{opacity:1}
+.admin-drawer-panel{position:absolute;top:0;right:0;bottom:0;width:min(560px,94vw);background:#fff;box-shadow:-30px 0 90px -40px rgba(0,0,0,.6);padding:34px 30px 60px;overflow-y:auto;transform:translateX(100%);transition:transform 380ms var(--ease-expo)}
+.admin-drawer.open .admin-drawer-panel{transform:none}
+.admin-drawer-close{position:sticky;top:0;float:right;width:38px;height:38px;display:grid;place-items:center;background:var(--ivory);color:var(--navy);border:1px solid rgba(199,183,156,.55);z-index:2;transition:all var(--motion-fast)}
+.admin-drawer-close:hover{background:var(--navy);color:#fff;transform:rotate(90deg)}
+.admin-dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.admin-dl dt{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.admin-dl dd{font-size:13px;color:var(--navy);font-weight:600;margin-top:3px;word-break:break-word}
+.admin-event{border:1px solid rgba(199,183,156,.5);padding:11px 13px;font-size:12px;color:var(--ink);margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+/* Timeline (drawer) */
+.admin-timeline{position:relative;padding-left:4px}
+.admin-timeline-item{position:relative;display:flex;gap:14px;padding:0 0 20px 0}
+.admin-timeline-item::before{content:'';position:absolute;left:5px;top:14px;bottom:0;width:1px;background:rgba(199,183,156,.6)}
+.admin-timeline-item:last-child::before{display:none}
+.admin-timeline-dot{flex:none;width:11px;height:11px;border-radius:50%;background:var(--sand);border:2px solid var(--navy);margin-top:4px;animation:checkPop var(--motion-standard) var(--ease-expo)}
+
+/* Order stage track (drawer) */
+.admin-stage-track{display:flex;gap:4px}
+.admin-stage{flex:1;text-align:center}
+.admin-stage span{display:block;height:5px;background:rgba(199,183,156,.35);transition:background var(--motion-standard) var(--ease-luxury)}
+.admin-stage.done span{background:var(--navy)}
+.admin-stage em{display:block;font-style:normal;font-size:8px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.admin-stage.done em{color:var(--navy);font-weight:700}
+@media(max-width:640px){.admin-stage em{display:none}.admin-dl{grid-template-columns:1fr}}
+
+/* ============================================================
+   Buyer Portal v2 — stats, tabs, animated status timelines
+   ============================================================ */
+@keyframes portalIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.portal-anim-in{animation:portalIn var(--motion-standard) var(--ease-luxury) both}
+.portal-stat{background:#fff;border:1px solid rgba(199,183,156,.5);padding:18px;display:grid;gap:6px;transition:transform var(--motion-fast) var(--ease-luxury),box-shadow var(--motion-fast)}
+.portal-stat:hover{transform:translateY(-4px);box-shadow:0 22px 46px -30px rgba(7,26,43,.5)}
+.portal-stat i{color:var(--sand);font-size:16px}
+.portal-stat strong{font-family:Fraunces,serif;font-size:34px;line-height:.9;color:var(--navy);font-weight:500}
+.portal-stat span{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.portal-tabbar{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.portal-tab{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;border:1px solid rgba(199,183,156,.55);background:#fff;color:var(--navy);font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:11px 16px;transition:all var(--motion-fast) var(--ease-luxury)}
+.portal-tab i{color:var(--sand)}
+.portal-tab:hover{transform:translateY(-2px);border-color:var(--navy)}
+.portal-tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.portal-track{display:flex;gap:3px;margin-top:16px}
+.portal-track-step{flex:1;text-align:center}
+.portal-track-step span{display:block;height:4px;background:rgba(199,183,156,.32);transition:background 600ms var(--ease-luxury)}
+.portal-track-step.done span{background:var(--navy)}
+.portal-track-step.now span{background:var(--sand);box-shadow:0 0 10px rgba(199,183,156,.8);animation:portalNow 1.8s ease-in-out infinite}
+@keyframes portalNow{0%,100%{opacity:1}50%{opacity:.55}}
+.portal-track-step em{display:block;font-style:normal;font-size:8px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.portal-track-step.done em{color:var(--navy);font-weight:700}
+@media(max-width:640px){.portal-track-step em{display:none}}
+
+@media(prefers-reduced-motion:reduce){.admin-anim-in,.portal-anim-in,.admin-status,.admin-timeline-dot{animation:none!important;opacity:1!important;transform:none!important}.admin-bar span{transition:none!important}.portal-track-step.now span{animation:none!important}}

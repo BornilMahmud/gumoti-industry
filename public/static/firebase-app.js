@@ -204,47 +204,169 @@ window.gtFirestoreSave = async function (collectionName, data) {
   }
 }
 
-// ---------- Portal: load user's RFQs / inquiries ----------
+// ---------- Buyer Portal: secured, token-verified workspace ----------
+let portalData = null
+let portalTab = 'rfqs'
+
 async function loadPortalData(user) {
-  const rfqList = document.getElementById('portal-rfq-list')
-  if (!rfqList) return
-  // Primary source: server D1 API
+  const list = document.getElementById('portal-rfq-list')
+  if (!list) return
   try {
-    const res = await fetch('/api/rfq?email=' + encodeURIComponent(user.email || ''))
-    const data = await res.json()
-    if (data.rfqs && data.rfqs.length) {
-      rfqList.innerHTML = data.rfqs.map((r) => `
-        <article class="bg-white border border-sand/40 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <p class="font-semibold text-navy text-sm">${r.rfq_id}</p>
-            <p class="text-xs text-mutedgt mt-1">${escapeHtml(r.product || '')} · Qty: ${escapeHtml(String(r.quantity || '—'))} ${escapeHtml(r.unit || '')}</p>
-            <p class="text-xs text-mutedgt">${new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-          </div>
-          <span class="inline-flex self-start sm:self-center text-[11px] tracking-widest uppercase px-3 py-1.5 ${statusColor(r.status)}">${r.status}</span>
-        </article>`).join('')
-      return
-    }
-  } catch (_) { /* fall through to Firestore */ }
-  // Secondary: Firestore mirror
-  try {
-    const qs = await getDocs(query(collection(db, 'rfqs'), where('uid', '==', user.uid), orderBy('createdAt', 'desc')))
-    if (!qs.empty) {
-      rfqList.innerHTML = ''
-      qs.forEach((doc) => {
-        const r = doc.data()
-        rfqList.innerHTML += `<article class="bg-white border border-sand/40 p-5">
-          <p class="font-semibold text-navy text-sm">${escapeHtml(r.refId || doc.id)}</p>
-          <p class="text-xs text-mutedgt mt-1">${escapeHtml(r.product || '')} · Qty: ${escapeHtml(String(r.quantity || '—'))}</p>
-        </article>`
-      })
-      return
-    }
-  } catch (_) {}
-  rfqList.innerHTML = '<div class="border border-dashed border-sand/60 p-8 text-center text-sm text-mutedgt">No RFQs yet. <a href="/request-quote" class="text-navy underline underline-offset-4">Submit your first RFQ</a>.</div>'
+    const token = await user.getIdToken()
+    const res = await fetch('/api/portal/me', { headers: { Authorization: 'Bearer ' + token } })
+    portalData = await res.json()
+    if (!res.ok) throw new Error(portalData.error || 'Unable to load your workspace')
+    renderPortalStats()
+    renderPortalTab()
+    bindPortalTabs()
+  } catch (err) {
+    list.innerHTML = `<div class="border border-dashed border-sand/60 p-8 text-center text-sm text-mutedgt">${escapeHtml(err.message || 'Unable to load your records right now.')}</div>`
+  }
 }
 
-function statusColor(s) {
-  const m = { NEW: 'bg-sand/30 text-navy', 'UNDER REVIEW': 'bg-blue-100 text-blue-900', PRICING: 'bg-amber-100 text-amber-900', 'QUOTATION SENT': 'bg-emerald-100 text-emerald-900', APPROVED: 'bg-emerald-200 text-emerald-900', REJECTED: 'bg-red-100 text-red-900' }
-  return m[s] || 'bg-sand/30 text-navy'
+function renderPortalStats() {
+  const box = document.getElementById('portal-stats')
+  if (!box || !portalData) return
+  const items = [
+    ['RFQs', (portalData.rfqs || []).length, 'fa-file-signature'],
+    ['Quotations', (portalData.quotations || []).length, 'fa-file-invoice-dollar'],
+    ['Samples', (portalData.samples || []).length, 'fa-box-open'],
+    ['Orders', (portalData.orders || []).length, 'fa-truck-fast'],
+  ]
+  box.innerHTML = items.map(([l, v, i], idx) => `
+    <article class="portal-stat portal-anim-in" style="animation-delay:${idx * 70}ms">
+      <i class="fa-solid ${i}"></i><strong>${v}</strong><span>${l}</span>
+    </article>`).join('')
 }
-function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])) }
+
+function bindPortalTabs() {
+  document.querySelectorAll('[data-portal-tab]').forEach((b) => {
+    if (b.dataset.bound) return
+    b.dataset.bound = '1'
+    b.addEventListener('click', () => {
+      portalTab = b.dataset.portalTab
+      document.querySelectorAll('[data-portal-tab]').forEach((x) => x.classList.toggle('active', x === b))
+      renderPortalTab()
+    })
+  })
+  document.getElementById('portal-rfq-list')?.addEventListener('click', portalQuoteDecision)
+}
+
+const PORTAL_STAGES = {
+  rfq: ['NEW', 'UNDER_REVIEW', 'ASSIGNED', 'PRICING', 'QUOTATION_SENT', 'CUSTOMER_REVIEW', 'APPROVED'],
+  sample: ['REQUESTED', 'REVIEWED', 'APPROVED', 'IN_PROGRESS', 'DISPATCHED', 'DELIVERED', 'COMPLETED'],
+  order: ['CONFIRMED', 'MATERIAL_PLANNING', 'PRODUCTION', 'QUALITY', 'PACKING', 'SHIPMENT', 'DELIVERED'],
+}
+
+function portalTimeline(stages, current) {
+  const cur = String(current || '').toUpperCase().replace(/\s+/g, '_')
+  let idx = stages.indexOf(cur)
+  if (cur === 'REJECTED') idx = -2
+  if (cur === 'CONVERTED_TO_ORDER') idx = stages.length - 1
+  return `<div class="portal-track" aria-hidden="true">${stages.map((s, i) => `
+    <div class="portal-track-step ${i <= idx ? 'done' : ''} ${i === idx ? 'now' : ''}"><span></span><em>${s.replace(/_/g, ' ')}</em></div>`).join('')}</div>
+  ${cur === 'REJECTED' ? '<p class="text-xs text-red-700 mt-2">This request was closed. Contact sales for details.</p>' : ''}`
+}
+
+function portalStatusPill(s) {
+  const t = String(s || '').toUpperCase().replace(/\s+/g, '_')
+  const good = ['APPROVED', 'ACCEPTED', 'DELIVERED', 'COMPLETED', 'CONVERTED_TO_ORDER']
+  const bad = ['REJECTED', 'EXPIRED']
+  const cls = good.includes(t) ? 'bg-emerald-100 text-emerald-900' : bad.includes(t) ? 'bg-red-100 text-red-900' : 'bg-sand/30 text-navy'
+  return `<span class="inline-flex self-start text-[11px] tracking-widest uppercase px-3 py-1.5 ${cls}">${escapeHtml(t.replace(/_/g, ' '))}</span>`
+}
+
+function fmtD(d) { try { return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) } catch { return '' } }
+
+function renderPortalTab() {
+  const list = document.getElementById('portal-rfq-list')
+  const title = document.getElementById('portal-section-title')
+  if (!list || !portalData) return
+  const empty = (msg, link) => `<div class="border border-dashed border-sand/60 p-8 text-center text-sm text-mutedgt portal-anim-in">${msg}${link || ''}</div>`
+  if (portalTab === 'rfqs') {
+    if (title) title.textContent = 'Your RFQs'
+    const rows = portalData.rfqs || []
+    list.innerHTML = rows.length ? rows.map((r, i) => `
+      <article class="bg-white border border-sand/40 p-6 portal-anim-in" style="animation-delay:${Math.min(i * 60, 400)}ms">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p class="font-semibold text-navy text-sm">${escapeHtml(r.rfq_id)}</p>
+            <p class="text-xs text-mutedgt mt-1">${escapeHtml(r.product || '')} · Qty: ${escapeHtml(String(r.quantity || '—'))} ${escapeHtml(r.unit || '')} · ${fmtD(r.created_at)}</p>
+          </div>
+          ${portalStatusPill(r.status)}
+        </div>
+        ${portalTimeline(PORTAL_STAGES.rfq, r.status)}
+      </article>`).join('') : empty('No RFQs yet. ', '<a href="/request-quote" class="text-navy underline underline-offset-4">Submit your first RFQ</a>.')
+  } else if (portalTab === 'quotations') {
+    if (title) title.textContent = 'Your Quotations'
+    const rows = portalData.quotations || []
+    list.innerHTML = rows.length ? rows.map((q, i) => `
+      <article class="bg-white border border-sand/40 p-6 portal-anim-in" style="animation-delay:${Math.min(i * 60, 400)}ms">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p class="font-semibold text-navy text-sm">${escapeHtml(q.quotation_id)}</p>
+            <p class="text-xs text-mutedgt mt-1">${q.rfq_id ? 'RFQ ' + escapeHtml(q.rfq_id) + ' · ' : ''}Total: <strong class="text-navy">${escapeHtml(String(q.total))} ${escapeHtml(q.currency || 'USD')}</strong>${q.validity ? ' · Validity: ' + escapeHtml(q.validity) : ''} · ${fmtD(q.created_at)}</p>
+          </div>
+          ${portalStatusPill(q.status)}
+        </div>
+        ${q.status === 'SENT' ? `
+        <div class="mt-4 flex gap-3">
+          <button data-quote-decision="ACCEPTED" data-quote-id="${escapeHtml(q.quotation_id)}" class="bg-navy text-white text-xs font-semibold px-5 py-2.5 hover:bg-ink transition-colors">Accept Quotation</button>
+          <button data-quote-decision="REJECTED" data-quote-id="${escapeHtml(q.quotation_id)}" class="border border-navy/30 text-navy text-xs px-5 py-2.5 hover:border-navy transition-colors">Reject</button>
+        </div>` : ''}
+      </article>`).join('') : empty('No quotations yet. Quotations appear here when Gumti sales sends pricing for your RFQ.')
+  } else if (portalTab === 'samples') {
+    if (title) title.textContent = 'Your Sample Requests'
+    const rows = portalData.samples || []
+    list.innerHTML = rows.length ? rows.map((r, i) => `
+      <article class="bg-white border border-sand/40 p-6 portal-anim-in" style="animation-delay:${Math.min(i * 60, 400)}ms">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p class="font-semibold text-navy text-sm">${escapeHtml(r.ref_id)}</p>
+            <p class="text-xs text-mutedgt mt-1">${escapeHtml(r.product || '')} · ${fmtD(r.created_at)}</p>
+          </div>
+          ${portalStatusPill(r.status)}
+        </div>
+        ${portalTimeline(PORTAL_STAGES.sample, r.status)}
+      </article>`).join('') : empty('No sample requests yet. ', '<a href="/request-sample" class="text-navy underline underline-offset-4">Request a sample</a>.')
+  } else {
+    if (title) title.textContent = 'Your Orders'
+    const rows = portalData.orders || []
+    list.innerHTML = rows.length ? rows.map((r, i) => `
+      <article class="bg-white border border-sand/40 p-6 portal-anim-in" style="animation-delay:${Math.min(i * 60, 400)}ms">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p class="font-semibold text-navy text-sm">${escapeHtml(r.order_id)}</p>
+            <p class="text-xs text-mutedgt mt-1">${escapeHtml(r.product || '')} · Qty: ${escapeHtml(String(r.quantity || '—'))} · ${fmtD(r.created_at)}</p>
+          </div>
+          ${portalStatusPill(r.status)}
+        </div>
+        ${portalTimeline(PORTAL_STAGES.order, r.status)}
+      </article>`).join('') : empty('No confirmed orders yet. Orders appear here once your quotation is approved and confirmed.')
+  }
+}
+
+async function portalQuoteDecision(e) {
+  const btn = e.target.closest('[data-quote-decision]')
+  if (!btn || !auth.currentUser) return
+  const decision = btn.dataset.quoteDecision
+  const id = btn.dataset.quoteId
+  if (!confirm((decision === 'ACCEPTED' ? 'Accept' : 'Reject') + ' quotation ' + id + '?')) return
+  btn.disabled = true
+  try {
+    const token = await auth.currentUser.getIdToken()
+    const res = await fetch('/api/portal/quotations/' + encodeURIComponent(id) + '/decision', {
+      method: 'POST', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ decision }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Unable to update quotation')
+    window.gtToast && window.gtToast('Quotation ' + id + ' ' + decision.toLowerCase() + '.')
+    loadPortalData(auth.currentUser)
+  } catch (err) {
+    window.gtToast && window.gtToast(err.message, false)
+    btn.disabled = false
+  }
+}
+
+function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])) }

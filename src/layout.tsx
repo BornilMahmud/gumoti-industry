@@ -40,6 +40,7 @@ interface LayoutProps {
   path?: string
   darkNav?: boolean
   children?: any
+  scripts?: string[]
 }
 
 export const Layout = (props: LayoutProps) => {
@@ -212,6 +213,8 @@ export const Layout = (props: LayoutProps) => {
         <button data-ai-q="Find by material organic cotton">Find by Material</button>
         <button data-ai-q="Request a quote for polo shirts">Request Quote</button>
         <button data-ai-q="What certifications are verified?">Certification</button>
+        <button data-ai-q="Explore manufacturing capabilities">Explore Capabilities</button>
+        <button data-ai-q="Request a sample">Request Sample</button>
         <button data-ai-q="Contact sales">Contact Sales</button>
       </div>
       <form id="ai-form" class="ai-form">
@@ -222,6 +225,7 @@ export const Layout = (props: LayoutProps) => {
   </aside>
 
   <script src="/static/app.js" defer></script>
+  ${raw((props.scripts || []).map((s) => `<script src="${s}" defer></script>`).join(''))}
   <script type="module" src="/static/firebase-app.js"></script>
 </body>
 </html>`
