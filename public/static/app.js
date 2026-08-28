@@ -198,22 +198,126 @@
   $$('.ai-quick [data-ai-q]').forEach((b) => b.addEventListener('click', () => { openAI(); askAI(b.dataset.aiQ); }));
 
   // Admin page loader (Firebase token supplied by firebase-app.js helper).
+  const adminModules = [
+    { group: 'Business', id: 'admin-business', items: [
+      ['Customers / CRM', 'Registered buyer profiles, RFQ history and communication timeline.', false],
+      ['RFQ Management', 'Live RFQ intake from D1 with status tracking and sales review.', true],
+      ['Quotation Management', 'Create quotation PDFs from RFQs and send to customers.', false],
+      ['Sample Management', 'Sample requests, approval stages and shipment progress.', true],
+      ['Order Management', 'Confirmed orders, delivery milestones and customer portal progress.', false],
+    ]},
+    { group: 'Products', id: 'admin-products', items: [
+      ['Product Management', 'Verified catalog, specs, publish status and product media.', true],
+      ['Category Management', 'Catalog categories, ordering, SEO and visibility.', true],
+      ['Certification Management', 'Certificate records, status, expiry and public display control.', false],
+    ]},
+    { group: 'Manufacturing', id: 'admin-manufacturing', items: [
+      ['Production Management', 'Knitting, dyeing, finishing, garment, quality and packing stages.', false],
+      ['Quality Management', 'Inspection results, test reports and quality documents.', false],
+      ['Factory Management', 'Facilities, machinery, factory media and capability information.', false],
+      ['Sustainability Management', 'Verified sustainability metrics and source references.', false],
+      ['Global Market Management', 'Interactive market map and country visibility controls.', false],
+    ]},
+    { group: 'Content & CMS', id: 'admin-content', items: [
+      ['News Management', 'Company news, announcements, scheduling and SEO.', true],
+      ['Career Management', 'Job posts and application intake.', true],
+      ['Media Library', 'Factory, product, certificate, video and document assets.', false],
+      ['Website CMS', 'Homepage, about, capabilities, quality and contact content editing.', false],
+    ]},
+    { group: 'AI & Analytics', id: 'admin-intelligence', items: [
+      ['AI Assistant Management', 'Knowledge sources, FAQs, escalation and AI analytics.', false],
+      ['Search Management', 'Keywords, synonyms, featured products and ranking.', false],
+      ['Analytics', 'Traffic, product views, RFQ conversion and AI performance.', false],
+      ['Notifications', 'New RFQ, sample, quotation, application and certificate alerts.', false],
+    ]},
+    { group: 'Governance', id: 'admin-governance', items: [
+      ['Users & Permissions', 'Super admin, sales, production, quality, HR and content roles.', false],
+      ['Audit Logs', 'Who changed what, previous value, new value and timestamp.', false],
+      ['Global Settings', 'Company info, social links, SEO, AI and security controls.', false],
+      ['Verification Center', 'Draft, internal review, verification, approval and publishing workflow.', false],
+    ]},
+  ];
   window.gtLoadAdmin = async function () {
     const root = $('#admin-data'); if (!root) return;
     if (!window.gtUser) { root.innerHTML = '<div class="admin-card p-8 text-center text-mutedgt">Please sign in with an authorized admin email.</div>'; return; }
     if (!window.gtAdminToken) { root.innerHTML = '<div class="admin-card p-8 text-center text-mutedgt">Firebase is still loading. Try again in a moment.</div>'; return; }
-    root.innerHTML = '<div class="admin-card p-8 text-center text-mutedgt">Loading admin records…</div>';
+    root.innerHTML = '<div class="admin-card p-8 text-center text-mutedgt">Loading Gumti admin dashboard…</div>';
     try {
       const token = await window.gtAdminToken();
       const res = await fetch('/api/admin/overview', { headers: { Authorization: 'Bearer ' + token } });
       const data = await res.json(); if (!res.ok) throw new Error(data.error || 'Admin access denied');
-      root.innerHTML = ['rfqs','contact_inquiries','sample_requests','job_applications'].map((k) => adminTable(k, data[k] || [])).join('');
+      root.innerHTML = renderAdminDashboard(data);
     } catch (err) { root.innerHTML = `<div class="admin-card p-8"><h2 class="font-serif text-2xl text-navy">Admin access unavailable</h2><p class="mt-3 text-sm text-mutedgt">${esc(err.message)}</p><p class="mt-3 text-xs text-mutedgt">Authorized admin emails are bornilmahmud56@gmail.com and bonrilmahmud56@gmail.com. Sign in with one of these Firebase accounts, then refresh.</p></div>`; }
   };
+  function renderAdminDashboard(data) {
+    const s = data.stats || {};
+    return `
+      <section id="admin-dashboard" class="space-y-8">
+        <div class="admin-card p-7 flex flex-col lg:flex-row lg:items-end justify-between gap-5">
+          <div>
+            <p class="text-[11px] tracking-widest2 uppercase text-mutedgt">Dashboard</p>
+            <h2 class="font-serif text-4xl lg:text-5xl text-navy mt-2">Good ${adminDayPart()}, Admin</h2>
+            <p class="mt-3 text-sm text-mutedgt">This dashboard currently shows live D1 records plus planned enterprise modules without fabricated numbers.</p>
+          </div>
+          <div class="admin-quick">
+            <a href="/request-quote">New RFQ</a>
+            <button type="button" disabled title="Requires product CMS database">+ Add Product</button>
+            <button type="button" disabled title="Requires quotation database">+ Create Quotation</button>
+            <button type="button" disabled title="Requires CMS database">+ Add News</button>
+          </div>
+        </div>
+        <div class="admin-kpi-grid">
+          ${kpi('Total RFQs', s.rfqs)}${kpi('Pending RFQs', s.pending_rfqs)}${kpi('Quotations', s.quotations, 'Planned')}${kpi('Samples', s.samples)}
+          ${kpi('Orders', (s.active_orders || 0) + (s.completed_orders || 0), 'Planned')}${kpi('Customers', s.customers, 'Planned CRM')}${kpi('Inquiries', s.inquiries)}${kpi('Jobs', s.job_applications)}
+          ${kpi('Products', s.products, 'Verified DB')}${kpi('Categories', s.product_categories, 'Verified DB')}${kpi('AI Conversations', s.ai_conversations, 'Planned')}${kpi('Visitors', s.website_visitors, 'Planned')}
+        </div>
+        <div class="grid lg:grid-cols-2 gap-6">
+          <section class="admin-card p-6">
+            <div class="flex items-center justify-between gap-4 mb-6"><h3 class="admin-section-title">RFQ / Sales Analytics</h3><span class="admin-pill">Live + planned</span></div>
+            ${adminChart([['RFQ', s.rfqs], ['Pending', s.pending_rfqs], ['Samples', s.samples], ['Inquiries', s.inquiries], ['Jobs', s.job_applications]])}
+            <p class="mt-10 text-xs text-mutedgt">Chart uses only available D1 counts. Quotation, order and visitor analytics will activate when their databases are added.</p>
+          </section>
+          <section class="admin-card p-6">
+            <div class="flex items-center justify-between gap-4 mb-3"><h3 class="admin-section-title">Recent Activity</h3><span class="admin-pill">Latest</span></div>
+            ${recentActivity(data.recent_activity || [])}
+          </section>
+        </div>
+        ${adminModules.map(moduleSection).join('')}
+        <section class="space-y-6">
+          <h3 class="admin-section-title">Live Records</h3>
+          ${['rfqs','contact_inquiries','sample_requests','job_applications'].map((k) => adminTable(k, data[k] || [])).join('')}
+        </section>
+      </section>`;
+  }
+  function kpi(label, value, note) {
+    return `<article class="admin-kpi"><strong>${esc(value ?? 0)}</strong><span>${esc(label)}</span>${note ? `<p class="mt-3 text-[11px] text-mutedgt">${esc(note)}</p>` : ''}</article>`;
+  }
+  function adminChart(items) {
+    const max = Math.max(1, ...items.map((x) => Number(x[1]) || 0));
+    return `<div class="admin-chart">${items.map(([label, value]) => `<span style="height:${Math.max(4, ((Number(value) || 0) / max) * 100)}%" data-label="${esc(label)}" title="${esc(label)}: ${esc(value || 0)}"></span>`).join('')}</div>`;
+  }
+  function recentActivity(rows) {
+    if (!rows.length) return '<p class="text-sm text-mutedgt mt-5">No recent activity yet.</p>';
+    return `<div class="admin-activity">${rows.map((r) => `<article><span class="type">${esc(r.type)}</span><div><p class="ref">${esc(r.ref || '—')}</p><p class="meta">${esc(r.title || '')}${r.party ? ' · ' + esc(r.party) : ''}${r.country ? ' · ' + esc(r.country) : ''}</p></div><span class="admin-pill">${esc(r.status || 'NEW')}</span></article>`).join('')}</div>`;
+  }
+  function moduleSection(section) {
+    return `<section id="${section.id}" class="space-y-5 scroll-mt-28"><div class="flex items-center justify-between"><h3 class="admin-section-title">${esc(section.group)}</h3><span class="admin-pill">${section.items.length} modules</span></div><div class="admin-module-grid">${section.items.map((it) => adminModule(it)).join('')}</div></section>`;
+  }
+  function adminModule(item) {
+    const [title, desc, live] = item;
+    return `<article class="admin-module" data-live="${live}"><h3>${esc(title)}</h3><p>${esc(desc)}</p><small>${live ? 'Available now / partial' : 'Planned workflow'}</small></article>`;
+  }
   function adminTable(title, rows) {
-    if (!rows.length) return `<section class="admin-card p-6 mb-6"><h2 class="font-serif text-2xl text-navy">${title.replace('_',' ')}</h2><p class="text-sm text-mutedgt mt-2">No records yet.</p></section>`;
+    const label = title.replace(/_/g, ' ');
+    if (!rows.length) return `<section class="admin-card p-6 mb-6"><h2 class="font-serif text-2xl text-navy capitalize">${label}</h2><p class="text-sm text-mutedgt mt-2">No records yet.</p></section>`;
     const keys = Object.keys(rows[0]).slice(0, 8);
-    return `<section class="admin-card p-0 mb-8 overflow-hidden"><div class="p-6 flex items-center justify-between"><h2 class="font-serif text-2xl text-navy capitalize">${title.replace('_',' ')}</h2><span class="admin-pill">${rows.length} latest</span></div><div class="table-wrap"><table class="admin-table"><thead><tr>${keys.map(k=>`<th>${esc(k)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${keys.map(k=>`<td>${esc(r[k])}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`;
+    return `<section class="admin-card p-0 mb-8 overflow-hidden"><div class="p-6 flex items-center justify-between"><h2 class="font-serif text-2xl text-navy capitalize">${label}</h2><span class="admin-pill">${rows.length} latest</span></div><div class="table-wrap"><table class="admin-table"><thead><tr>${keys.map(k=>`<th>${esc(k)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${keys.map(k=>`<td>${esc(r[k])}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`;
+  }
+  function adminDayPart() {
+    const h = new Date().getHours();
+    if (h < 12) return 'morning';
+    if (h < 17) return 'afternoon';
+    return 'evening';
   }
   document.addEventListener('gt:auth', () => { if ($('#admin-data')) window.gtLoadAdmin(); });
   $('#admin-refresh')?.addEventListener('click', () => window.gtLoadAdmin());

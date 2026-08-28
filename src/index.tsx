@@ -216,13 +216,51 @@ app.get('/api/admin/overview', async (c) => {
   const db = c.env?.DB
   if (!db) return c.json({ error: 'D1 database binding is not available.' }, 500)
   try {
-    const [rfqs, contact, samples, apps] = await Promise.all([
+    const [rfqs, contact, samples, apps, rfqCount, pendingRfqCount, contactCount, sampleCount, appCount] = await Promise.all([
       db.prepare('SELECT rfq_id, company_name, contact_person, email, product, quantity, unit, status, created_at FROM rfqs ORDER BY created_at DESC LIMIT 50').all(),
       db.prepare('SELECT ref_id, name, company, email, inquiry_type, status, created_at FROM contact_inquiries ORDER BY created_at DESC LIMIT 50').all(),
       db.prepare('SELECT ref_id, product, email, quantity, country, status, created_at FROM sample_requests ORDER BY created_at DESC LIMIT 50').all(),
       db.prepare('SELECT ref_id, position, name, email, phone, status, created_at FROM job_applications ORDER BY created_at DESC LIMIT 50').all(),
+      db.prepare('SELECT COUNT(*) AS count FROM rfqs').first<{ count: number }>(),
+      db.prepare("SELECT COUNT(*) AS count FROM rfqs WHERE status IN ('NEW','UNDER REVIEW','PRICING')").first<{ count: number }>(),
+      db.prepare('SELECT COUNT(*) AS count FROM contact_inquiries').first<{ count: number }>(),
+      db.prepare('SELECT COUNT(*) AS count FROM sample_requests').first<{ count: number }>(),
+      db.prepare('SELECT COUNT(*) AS count FROM job_applications').first<{ count: number }>(),
     ])
-    return c.json({ admin: admin.email, rfqs: rfqs.results || [], contact_inquiries: contact.results || [], sample_requests: samples.results || [], job_applications: apps.results || [] })
+    const rfqRows = rfqs.results || []
+    const contactRows = contact.results || []
+    const sampleRows = samples.results || []
+    const appRows = apps.results || []
+    const recent_activity = [
+      ...rfqRows.map((r: any) => ({ type: 'RFQ', ref: r.rfq_id, title: r.product, party: r.company_name, country: r.country || '', status: r.status, created_at: r.created_at })),
+      ...contactRows.map((r: any) => ({ type: 'Inquiry', ref: r.ref_id, title: r.inquiry_type, party: r.company || r.name, country: '', status: r.status, created_at: r.created_at })),
+      ...sampleRows.map((r: any) => ({ type: 'Sample', ref: r.ref_id, title: r.product, party: r.email, country: r.country || '', status: r.status, created_at: r.created_at })),
+      ...appRows.map((r: any) => ({ type: 'Career', ref: r.ref_id, title: r.position, party: r.name, country: '', status: r.status, created_at: r.created_at })),
+    ].sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || ''))).slice(0, 10)
+    return c.json({
+      admin: admin.email,
+      stats: {
+        rfqs: rfqCount?.count || 0,
+        pending_rfqs: pendingRfqCount?.count || 0,
+        quotations: 0,
+        approved_quotations: 0,
+        samples: sampleCount?.count || 0,
+        active_orders: 0,
+        completed_orders: 0,
+        customers: 0,
+        inquiries: contactCount?.count || 0,
+        job_applications: appCount?.count || 0,
+        products: products.length,
+        product_categories: Array.from(new Set(products.map((p) => p.category))).length,
+        ai_conversations: 0,
+        website_visitors: 0,
+      },
+      recent_activity,
+      rfqs: rfqRows,
+      contact_inquiries: contactRows,
+      sample_requests: sampleRows,
+      job_applications: appRows,
+    })
   } catch (e) {
     console.error('Admin overview failed', e)
     return c.json({ error: 'Unable to load admin records.' }, 500)

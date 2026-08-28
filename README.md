@@ -44,10 +44,12 @@
 - No prices, MOQ, capacity, buyers, certificate numbers or export markets are fabricated.
 
 ### Admin panel
-- `/admin` built with Firebase Google Sign-In UI and D1-backed admin overview API.
+- `/admin` now renders a premium **Gumti Admin Control Center** instead of only raw tables.
 - Admin API endpoint: `GET /api/admin/overview`.
 - Authorization: Firebase ID token is verified server-side against the `gumoti-tex` project and checked against `ADMIN_EMAILS` in `src/index.tsx`.
 - Current admin allowlist: `bornilmahmud56@gmail.com` and `bonrilmahmud56@gmail.com` (covers the email visible in the portal screenshot and the earlier requested spelling).
+- Dashboard includes live D1 counts for RFQs, pending RFQs, contact inquiries, sample requests and job applications; verified product/category counts from the product database; recent activity from live records; and live record tables.
+- Enterprise admin modules are visible in the correct industry structure: Business, Products, Manufacturing, Content/CMS, AI/Analytics and Governance. Modules that still need their own database/workflow are clearly marked as planned, avoiding fake numbers or fake functionality.
 - Admin link is visible in the header and mobile menu. Email/password users can sign in at `/login`; Google users can sign in from `/admin`.
 
 ## Functional Entry URIs
@@ -108,10 +110,10 @@ Important: `firestore.rules` does **not** store data by itself. It only controls
 4. **Content editors/developers**: Update company facts in `src/data/company.ts`, products in `src/data/products.ts`, jobs/news in `src/pages/careers-news.tsx`.
 
 ## Features Not Yet Implemented
+- Writable admin workflows for product CRUD, categories, quotations, customers/CRM, orders, production stages, quality inspections, certifications, sustainability metrics, media library, CMS editing, AI controls, search tuning, notifications, users/roles, audit logs, global settings and verification workflow.
 - Admin status update controls and quotation pipeline actions beyond read-only overview.
 - Email notifications (requires transactional email provider API key).
-- File uploads for tech packs (requires R2 bucket binding).
-- Admin controls for AI system instructions/knowledge settings/analytics dashboards.
+- File uploads for tech packs/media/certificates (requires R2 bucket binding).
 - Multilingual EN/BN content system.
 
 ## Recommended Next Steps
