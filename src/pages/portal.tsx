@@ -42,15 +42,21 @@ export const PortalPage = () => html`
         </div>
       </div>
 
+      <div id="portal-stats" class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+
       <div class="mt-8">
-        <div>
-          <div class="flex items-center justify-between gap-4 mb-5">
-            <h2 class="font-serif text-2xl text-navy">Your RFQs</h2>
-            <a href="/contact" class="text-sm text-navy underline underline-offset-4">Contact Sales</a>
-          </div>
-          <div id="portal-rfq-list" class="space-y-4">
-            <div class="border border-dashed border-sand/60 p-8 text-center text-sm text-mutedgt"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Loading RFQs…</div>
-          </div>
+        <div class="portal-tabbar" role="tablist">
+          <button class="portal-tab active" data-portal-tab="rfqs" role="tab"><i class="fa-solid fa-file-signature"></i> RFQs</button>
+          <button class="portal-tab" data-portal-tab="quotations" role="tab"><i class="fa-solid fa-file-invoice-dollar"></i> Quotations</button>
+          <button class="portal-tab" data-portal-tab="samples" role="tab"><i class="fa-solid fa-box-open"></i> Samples</button>
+          <button class="portal-tab" data-portal-tab="orders" role="tab"><i class="fa-solid fa-truck-fast"></i> Orders</button>
+        </div>
+        <div class="flex items-center justify-between gap-4 mt-6 mb-5">
+          <h2 id="portal-section-title" class="font-serif text-2xl text-navy">Your RFQs</h2>
+          <a href="/contact" class="text-sm text-navy underline underline-offset-4">Contact Sales</a>
+        </div>
+        <div id="portal-rfq-list" class="space-y-4">
+          <div class="border border-dashed border-sand/60 p-8 text-center text-sm text-mutedgt"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Loading your workspace…</div>
         </div>
       </div>
     </div>

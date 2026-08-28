@@ -158,7 +158,10 @@ ${raw(PageHero('Quality & Compliance', 'QUALITY IS BUILT<br/>INTO THE PROCESS.',
 `
 
 // ============ SUSTAINABILITY ============
-export const SustainabilityPage = () => html`
+export interface VerifiedMetricRow { category: string; label: string; value?: string | null; unit?: string | null; year?: string | null; source?: string | null; status?: string }
+export interface ExportMarketRow { country: string; region?: string | null; products?: string | null; description?: string | null }
+
+export const SustainabilityPage = (verifiedMetrics: VerifiedMetricRow[] = []) => html`
 ${raw(PageHero('Sustainability', 'Responsible<br/>Manufacturing', 'Environmental and social performance data is CMS-managed with verification status. Only verified metrics are published — no figures are invented.'))}
 
 <section class="bg-ivory py-20 lg:py-28">
@@ -192,12 +195,24 @@ ${raw(PageHero('Sustainability', 'Responsible<br/>Manufacturing', 'Environmental
           <tr>${['Metric', 'Value', 'Unit', 'Year', 'Source', 'Verification'].map((h) => `<th scope="col" class="px-5 py-3.5 text-[11px] tracking-widest uppercase font-medium">${h}</th>`).join('')}</tr>
         </thead>
         <tbody class="divide-y divide-sand/40 bg-ivory">
-          ${['Water consumption per kg fabric', 'Renewable energy share', 'Recycled material share', 'Wastewater treatment coverage'].map((m) => `
+          ${raw(verifiedMetrics.filter((m) => m.category === 'sustainability' && m.value).map((m) => `
+          <tr class="reveal">
+            <td class="px-5 py-4 text-navy font-medium">${m.label}</td>
+            <td class="px-5 py-4 text-ink/75">${m.value}</td>
+            <td class="px-5 py-4 text-mutedgt">${m.unit || '—'}</td>
+            <td class="px-5 py-4 text-mutedgt">${m.year || '—'}</td>
+            <td class="px-5 py-4 text-mutedgt">${m.source || '—'}</td>
+            <td class="px-5 py-4"><span class="text-[10px] tracking-widest uppercase bg-emerald-100 text-emerald-900 px-2.5 py-1">Verified</span></td>
+          </tr>`).join(''))}
+          ${raw(['Water consumption per kg fabric', 'Renewable energy share', 'Recycled material share', 'Wastewater treatment coverage']
+            .filter((label) => !verifiedMetrics.some((m) => m.label === label && m.value))
+            .map((m) => `
             <tr>
               <td class="px-5 py-4 text-navy font-medium">${m}</td>
               <td class="px-5 py-4 text-mutedgt italic" colspan="4">Information to be confirmed by Gumti Textiles Ltd.</td>
               <td class="px-5 py-4"><span class="text-[10px] tracking-widest uppercase bg-amber-100 text-amber-900 px-2.5 py-1">Pending verification</span></td>
-            </tr>`).join('')}
+            </tr>`).join(''))}
+          ${raw(verifiedMetrics.some((m) => m.label === 'Certified memberships') ? '' : `
           <tr>
             <td class="px-5 py-4 text-navy font-medium">Certified memberships</td>
             <td class="px-5 py-4 text-ink/75">BCI · SEDEX · OEKO-TEX · GOTS</td>
@@ -205,7 +220,7 @@ ${raw(PageHero('Sustainability', 'Responsible<br/>Manufacturing', 'Environmental
             <td class="px-5 py-4 text-mutedgt">Current</td>
             <td class="px-5 py-4 text-mutedgt">BGMEA public listing</td>
             <td class="px-5 py-4"><span class="text-[10px] tracking-widest uppercase bg-emerald-100 text-emerald-900 px-2.5 py-1">Verified</span></td>
-          </tr>
+          </tr>`)}
         </tbody>
       </table>
     </div>
@@ -214,7 +229,7 @@ ${raw(PageHero('Sustainability', 'Responsible<br/>Manufacturing', 'Environmental
 `
 
 // ============ GLOBAL REACH ============
-export const GlobalReachPage = () => html`
+export const GlobalReachPage = (markets: ExportMarketRow[] = []) => html`
 ${raw(PageHero('Global Reach', 'MADE IN BANGLADESH.<br/><span class="text-sand">READY FOR THE WORLD.</span>', 'Export-oriented manufacturing registered with the Export Promotion Bureau (Reg. ' + co.epbRegistration + '). Market-level details are published only when verified.'))}
 
 <section class="bg-ivory py-20 lg:py-28">
@@ -245,7 +260,7 @@ ${raw(PageHero('Global Reach', 'MADE IN BANGLADESH.<br/><span class="text-sand">
           ${raw([
             ['EPB Registration', co.epbRegistration + ' — Export Promotion Bureau, Bangladesh'],
             ['BGMEA Membership', 'Reg. ' + co.bgmeaRegistration + ' — Bangladesh Garment Manufacturers & Exporters Association'],
-            ['Export Markets', 'Country-level market data to be confirmed by Gumti Textiles Ltd. (CMS-managed)'],
+            ['Export Markets', markets.length ? 'Verified markets managed through the Gumti admin verification workflow.' : 'Serving international markets from Bangladesh. Country-level data is published only when verified by Gumti Textiles Ltd.'],
           ].map(([k, v]) => `
             <div class="border-l-2 border-sand pl-5 py-1">
               <p class="text-[10px] tracking-widest2 uppercase text-mutedgt">${k}</p>
@@ -255,6 +270,21 @@ ${raw(PageHero('Global Reach', 'MADE IN BANGLADESH.<br/><span class="text-sand">
         <a href="/request-quote" class="mt-9 inline-flex items-center gap-3 text-sm font-semibold text-navy border-b border-sand pb-1 hover:text-sand transition-colors">Source From Bangladesh <i class="fa-solid fa-arrow-right text-xs"></i></a>
       </div>
     </div>
+
+    ${raw(markets.length ? `
+    <div class="mt-16">
+      <p class="text-[11px] tracking-widest2 uppercase text-mutedgt mb-4 flex items-center gap-3 reveal"><span class="w-8 h-px bg-sand inline-block"></span>Verified Export Markets</p>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        ${markets.map((m) => `
+        <article class="bg-white border border-sand/40 p-7 reveal">
+          <p class="font-serif text-2xl text-navy">${m.country}</p>
+          ${m.region ? `<p class="text-xs tracking-widest uppercase text-sand mt-1">${m.region}</p>` : ''}
+          ${m.products ? `<p class="text-sm text-mutedgt mt-3">${m.products}</p>` : ''}
+          ${m.description ? `<p class="text-sm text-ink/70 mt-2 leading-relaxed">${m.description}</p>` : ''}
+          <p class="mt-4 text-[11px] text-emerald-700"><i class="fa-solid fa-circle-check mr-1"></i> Verified by Gumti Textiles Ltd.</p>
+        </article>`).join('')}
+      </div>
+    </div>` : '')}
   </div>
 </section>
 `

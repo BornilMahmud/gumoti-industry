@@ -6,7 +6,7 @@
 - **Visual Direction**: Luxury fashion brand meets advanced industrial manufacturing. Deep Navy `#071A2B`, Midnight `#0B1117`, Warm Ivory `#F5F1E8`, Textile Sand `#C7B79C`, Fraunces + Inter typography, cinematic scroll and interaction system.
 
 ## URLs
-- **Sandbox Preview**: https://3000-itgaur1qw6hqpqrimeclm-ad490db5.sandbox.novita.ai
+- **Sandbox Preview**: https://3000-idbp683657jxjgetsoac1-b9b802c4.sandbox.novita.ai
 - **GitHub**: https://github.com/BornilMahmud/gumoti-industry
 - **Production**: not yet deployed (Cloudflare Pages ready)
 - **Facebook**: https://www.facebook.com/gumtitextile
@@ -110,6 +110,38 @@ Important: `firestore.rules` does **not** store data by itself. It only controls
 2. **Visitors**: Use **ASK GUMTI AI** for verified product search, GSM/material guidance, certification summaries and RFQ handoff.
 3. **Admins/Ops**: Log in as `bornilmahmud56@gmail.com` or `bonrilmahmud56@gmail.com` at `/login` or `/admin` to view D1 records.
 4. **Content editors/developers**: Update company facts in `src/data/company.ts`, products in `src/data/products.ts`, jobs/news in `src/pages/careers-news.tsx`.
+
+## Enterprise Platform Upgrade (latest release)
+### Enterprise RBAC (Firebase identity + D1 authority)
+- 11 roles: `SUPER_ADMIN, ADMIN, SALES_MANAGER, SALES_EXECUTIVE, MERCHANDISING, PRODUCTION_MANAGER, QUALITY_MANAGER, HR_MANAGER, CONTENT_MANAGER, VIEWER, BUYER`.
+- 38 granular permissions seeded in D1 (`roles`, `permissions`, `role_permissions`, `users`).
+- Every protected API: Firebase ID token → signature verification → D1 user → role → permission → allow/deny. Frontend roles are never trusted.
+- Super Admins can assign roles / disable users from the admin Users tab (self-lockout prevented).
+
+### Fully functional Admin Control Center (`/admin` + `/static/admin.js`)
+Animated tabbed workspace with detail drawer, count-up KPIs, staggered row reveals, live bar chart, status pills and toggles:
+- **Dashboard** — live D1 KPIs, real RFQ funnel by status, recent activity, verification health.
+- **RFQs** — full workflow (`NEW → UNDER_REVIEW → ASSIGNED → NEED_MORE_INFORMATION → PRICING → QUOTATION_SENT → CUSTOMER_REVIEW → APPROVED/REJECTED → CONVERTED_TO_ORDER`), status change dropdowns, RFQ detail drawer with animated status timeline (`rfq_status_events`), one-click quotation creation and order conversion.
+- **Quotations** — create with multi-line items (auto totals), draft → send → buyer accepts/rejects, document download, RFQ status sync.
+- **Samples** — workflow `REQUESTED → REVIEWED → APPROVED → IN_PROGRESS → DISPATCHED → DELIVERED → COMPLETED` with `sample_status_events`.
+- **Orders** — pipeline `CONFIRMED → MATERIAL_PLANNING → PRODUCTION → QUALITY → PACKING → SHIPMENT → DELIVERED`, animated stage track and production timeline (`order_status_events`), CRM auto-upsert.
+- **Customers (CRM)** — profiles with full RFQ / quotation / sample / order history per company.
+- **Verification Center** — verified metrics registry (value, unit, year, source, status: `VERIFIED / PENDING_VERIFICATION / NEEDS_REVIEW / EXPIRED`), publish toggle; only VERIFIED+published values reach the public site.
+- **Export Markets** — country/region/products with verification + publish control. Until verified, the site shows “Serving international markets from Bangladesh.”
+- **Users & Roles**, **Audit Logs** (actor, action, old→new values, timestamp), **AI Analytics** (query text + matched flag only, no personal data).
+
+### Upgraded Buyer Portal (`/portal`)
+- Token-verified `/api/portal/me` — buyers only ever see records tied to their own signed-in email (buyer isolation; the old `?email=` query is closed).
+- Animated stats, tabs for RFQs / Quotations / Samples / Orders, and per-record animated status progress timelines.
+- Buyers can Accept/Reject sent quotations (`POST /api/portal/quotations/:id/decision`), which also updates the linked RFQ.
+
+### Public site data connections
+- `/sustainability` and `/global-reach` now render VERIFIED+published D1 rows (`verified_metrics`, `export_markets`); pending values remain clearly marked.
+- `GET /api/public/verified` exposes only verified public data.
+- GUMTI AI: added Explore Capabilities + Request Sample quick actions, capability answers, View Product buttons and conversation analytics logging.
+
+### New admin API surface (`/api/admin/*`, all RBAC-guarded)
+`GET /overview` · `GET/PATCH /rfqs/:id(/status)` · `PATCH /samples/:id/status` · `POST/GET/PATCH /quotations…` + `/document` · `POST/GET/PATCH /orders…` · `GET/POST /customers…` · `GET/POST/PATCH/DELETE /metrics…` · `GET/POST/PATCH/DELETE /markets…` · `GET/PATCH /users…` · `GET /audit` · `GET /ai-analytics`
 
 ## Features Not Yet Implemented
 - Writable admin workflows for product CRUD, categories, quotations, customers/CRM, orders, production stages, quality inspections, certifications, sustainability metrics, media library, CMS editing, AI controls, search tuning, notifications, users/roles, audit logs, global settings and verification workflow.
