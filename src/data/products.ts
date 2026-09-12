@@ -36,7 +36,7 @@ export const products: Product[] = [
     application: 'Casualwear / Basics programs', certifications: ['OEKO-TEX', 'BCI'],
     moq: 'Per order confirmation', leadTime: 'Per order confirmation', availability: 'Available for Order',
     description: 'A core knitwear program: combed cotton single jersey crew neck with rib collar, engineered for consistent shade and dimensional stability across bulk production.',
-    image: media.garments, specNote: SPEC_NOTE,
+    image: media.products.crewTshirt, specNote: SPEC_NOTE,
   },
   {
     slug: 'premium-heavyweight-tshirt', code: 'GT-TS-002', name: 'Premium Heavyweight T-Shirt',
@@ -45,7 +45,7 @@ export const products: Product[] = [
     application: 'Premium retail / Streetwear', certifications: ['OEKO-TEX', 'GOTS (organic option)'],
     moq: 'Per order confirmation', leadTime: 'Per order confirmation', availability: 'Available for Order',
     description: 'Heavyweight boxy-fit tee for premium retail programs, with tight stitch density for structure and a soft enzyme-washed surface.',
-    image: media.fabricPile, specNote: SPEC_NOTE,
+    image: media.products.crewTshirt, specNote: SPEC_NOTE,
   },
   {
     slug: 'organic-cotton-tshirt', code: 'GT-TS-003', name: 'Organic Cotton T-Shirt',
@@ -54,7 +54,7 @@ export const products: Product[] = [
     application: 'Sustainable collections', certifications: ['GOTS', 'OEKO-TEX'],
     moq: 'Per order confirmation', leadTime: 'Per order confirmation', availability: 'Development',
     description: 'Organic cotton tee developed for GOTS-route programs, supporting traceable organic fibre sourcing and low-impact processing.',
-    image: media.shirts, specNote: SPEC_NOTE,
+    image: media.products.activewear, specNote: SPEC_NOTE,
   },
   {
     slug: 'classic-pique-polo', code: 'GT-PL-001', name: 'Classic Piqué Polo Shirt',
@@ -63,7 +63,7 @@ export const products: Product[] = [
     application: 'Corporate / Retail / Uniform', certifications: ['OEKO-TEX', 'BCI'],
     moq: 'Per order confirmation', leadTime: 'Per order confirmation', availability: 'Available for Order',
     description: 'Classic two-button piqué polo with flat-knit collar and cuffs — a flagship export category for Gumti Textiles.',
-    image: media.shirtRack, specNote: SPEC_NOTE,
+    image: media.products.poloClassic, specNote: SPEC_NOTE,
   },
   {
     slug: 'cvc-performance-polo', code: 'GT-PL-002', name: 'CVC Performance Polo',
@@ -72,16 +72,16 @@ export const products: Product[] = [
     application: 'Workwear / Sports-inspired retail', certifications: ['OEKO-TEX'],
     moq: 'Per order confirmation', leadTime: 'Per order confirmation', availability: 'Available for Order',
     description: 'Cotton-rich CVC polo balancing natural hand feel with durability and shade retention across industrial wash cycles.',
-    image: media.garments, specNote: SPEC_NOTE,
+    image: media.products.poloContrast, specNote: SPEC_NOTE,
   },
   {
-    slug: 'fleece-knit-jacket', code: 'GT-KJ-001', name: 'Brushed Fleece Knit Jacket',
+    slug: 'fleece-knit-jacket', code: 'GT-KJ-001', name: 'Brushed Fleece Knit Jacket & Hoodie',
     category: 'Knit Jackets', construction: 'Fleece (Brushed)', composition: '80% Cotton 20% Polyester',
     gsm: '280–320', finish: 'Anti-pilling / Brushed inner', colors: ['Black', 'Charcoal', 'Navy', 'Custom'],
     application: 'Outerwear / Athleisure', certifications: ['OEKO-TEX'],
     moq: 'Per order confirmation', leadTime: 'Per order confirmation', availability: 'Available for Order',
-    description: 'Full-zip brushed fleece jacket with ribbed hem and cuffs, produced through the integrated knit-dye-finish route for shade consistency.',
-    image: media.sewing2, specNote: SPEC_NOTE,
+    description: 'Full-zip and pullover brushed fleece hoodies and jackets with ribbed hem and cuffs, produced through the integrated knit-dye-finish route.',
+    image: media.products.hoodie, specNote: SPEC_NOTE,
   },
   {
     slug: 'interlock-track-jacket', code: 'GT-KJ-002', name: 'Interlock Track Jacket',
@@ -90,7 +90,7 @@ export const products: Product[] = [
     application: 'Athleisure / Sports retail', certifications: ['OEKO-TEX'],
     moq: 'Per order confirmation', leadTime: 'Per order confirmation', availability: 'Development',
     description: 'Structured interlock track jacket with contrast piping options, developed for athleisure programs requiring stretch recovery.',
-    image: media.sewing3, specNote: SPEC_NOTE,
+    image: media.products.activewear, specNote: SPEC_NOTE,
   },
   {
     slug: 'jersey-lounge-shorts', code: 'GT-SH-001', name: 'Jersey Lounge Shorts',

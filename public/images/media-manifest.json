@@ -1,0 +1,263 @@
+[
+  {
+    "id": "logo_textiles_logo_png",
+    "category": "Branding",
+    "filename": "textiles-logo.png",
+    "url": "/images/logo/textiles-logo.png",
+    "title": "Gumti Textiles Logo",
+    "description": "Official corporate emblem and brand mark",
+    "sizeBytes": 13170
+  },
+  {
+    "id": "hero_background_1920x530_webp",
+    "category": "Hero",
+    "filename": "background_1920x530.webp",
+    "url": "/images/hero/background_1920x530.webp",
+    "title": "Panoramic Manufacturing Floor",
+    "description": "Wide panoramic view of integrated textile operations",
+    "sizeBytes": 225770
+  },
+  {
+    "id": "hero_garment_realistic_1170x600_webp",
+    "category": "Hero",
+    "filename": "garment_realistic_1170x600.webp",
+    "url": "/images/hero/garment_realistic_1170x600.webp",
+    "title": "Apparel Sewing Lines",
+    "description": "Industrial sewing and apparel manufacturing floor",
+    "sizeBytes": 198676
+  },
+  {
+    "id": "hero_corrected_1170x600_webp",
+    "category": "Hero",
+    "filename": "corrected_1170x600.webp",
+    "url": "/images/hero/corrected_1170x600.webp",
+    "title": "Composite Facility Exterior & Floor",
+    "description": "Clean industrial floor and production bays",
+    "sizeBytes": 176958
+  },
+  {
+    "id": "factory_knitting_370x230_webp",
+    "category": "Machinery",
+    "filename": "knitting_370x230.webp",
+    "url": "/images/factory/knitting_370x230.webp",
+    "title": "Circular Knitting Machine Unit",
+    "description": "Automated circular and flat knitting machines",
+    "sizeBytes": 41830
+  },
+  {
+    "id": "factory_stenter_clean_630x400_webp",
+    "category": "Machinery",
+    "filename": "stenter_clean_630x400.webp",
+    "url": "/images/factory/stenter_clean_630x400.webp",
+    "title": "Ehwha Korea Stenter Machine",
+    "description": "Finishing stenter line with automated temperature and width control",
+    "sizeBytes": 55316
+  },
+  {
+    "id": "factory_lafer_630x400_webp",
+    "category": "Machinery",
+    "filename": "lafer_630x400.webp",
+    "url": "/images/factory/lafer_630x400.webp",
+    "title": "Lafer Italy Finishing Machine",
+    "description": "Fabric sueding and compacting finishing equipment",
+    "sizeBytes": 71536
+  },
+  {
+    "id": "factory_red_fabric_370x230_webp",
+    "category": "Textiles",
+    "filename": "red_fabric_370x230.webp",
+    "url": "/images/factory/red_fabric_370x230.webp",
+    "title": "Dyeing Batch Inspection",
+    "description": "Vibrant dyed fabric post-dyeing inspection",
+    "sizeBytes": 34314
+  },
+  {
+    "id": "factory_textiles_same_370x230_webp",
+    "category": "Textiles",
+    "filename": "textiles_same_370x230.webp",
+    "url": "/images/factory/textiles_same_370x230.webp",
+    "title": "Fabric Roll Staging",
+    "description": "Inspected fabric rolls ready for garment cutting",
+    "sizeBytes": 39214
+  },
+  {
+    "id": "factory_firstaid_630x400_webp",
+    "category": "Facilities",
+    "filename": "firstaid_630x400.webp",
+    "url": "/images/factory/firstaid_630x400.webp",
+    "title": "Factory Medical & First Aid Center",
+    "description": "In-house medical facility and health station for workers",
+    "sizeBytes": 77608
+  },
+  {
+    "id": "clients_norma_webp",
+    "category": "Partners",
+    "filename": "norma.webp",
+    "url": "/images/clients/norma.webp",
+    "title": "Norma Brand Partner",
+    "description": "Valued international buyer partner logo",
+    "sizeBytes": 3546
+  },
+  {
+    "id": "clients_smart_blanks_webp",
+    "category": "Partners",
+    "filename": "smart_blanks.webp",
+    "url": "/images/clients/smart_blanks.webp",
+    "title": "Smart Blanks Partner",
+    "description": "Valued international buyer partner logo",
+    "sizeBytes": 3870
+  },
+  {
+    "id": "clients_suncity_webp",
+    "category": "Partners",
+    "filename": "suncity.webp",
+    "url": "/images/clients/suncity.webp",
+    "title": "Suncity Brand Partner",
+    "description": "Valued international buyer partner logo",
+    "sizeBytes": 5926
+  },
+  {
+    "id": "clients_txm_webp",
+    "category": "Partners",
+    "filename": "txm.webp",
+    "url": "/images/clients/txm.webp",
+    "title": "TXM Brand Partner",
+    "description": "Valued international buyer partner logo",
+    "sizeBytes": 3236
+  },
+  {
+    "id": "products_polo_classic_png",
+    "category": "Products",
+    "filename": "polo-classic.png",
+    "url": "/images/products/polo-classic.png",
+    "title": "Classic Pique Polo Shirt",
+    "description": "100% combed cotton pique 220 GSM",
+    "sizeBytes": 945009
+  },
+  {
+    "id": "products_polo_contrast_png",
+    "category": "Products",
+    "filename": "polo-contrast.png",
+    "url": "/images/products/polo-contrast.png",
+    "title": "Contrast Collar Polo",
+    "description": "Cotton-poly blend 200 GSM with tipped rib collar",
+    "sizeBytes": 986100
+  },
+  {
+    "id": "products_activewear_sport_png",
+    "category": "Products",
+    "filename": "activewear-sport.png",
+    "url": "/images/products/activewear-sport.png",
+    "title": "Performance Activewear",
+    "description": "Moisture-wicking interlock knit 180 GSM",
+    "sizeBytes": 1060031
+  },
+  {
+    "id": "products_hoodie_fleece_png",
+    "category": "Products",
+    "filename": "hoodie-fleece.png",
+    "url": "/images/products/hoodie-fleece.png",
+    "title": "Heavyweight Pullover Hoodie",
+    "description": "3-end brushed fleece 320 GSM",
+    "sizeBytes": 776499
+  },
+  {
+    "id": "products_crew_tshirt_png",
+    "category": "Products",
+    "filename": "crew-tshirt.png",
+    "url": "/images/products/crew-tshirt.png",
+    "title": "Premium Ring-Spun Crew T-Shirt",
+    "description": "100% organic ring-spun cotton 160 GSM",
+    "sizeBytes": 1988783
+  },
+  {
+    "id": "gallery_w_webp",
+    "category": "Operations",
+    "filename": "w.webp",
+    "url": "/images/gallery/w.webp",
+    "title": "Knitting Operations",
+    "description": "High-speed circular knitting stations",
+    "sizeBytes": 65218
+  },
+  {
+    "id": "gallery_w1_webp",
+    "category": "Operations",
+    "filename": "w1.webp",
+    "url": "/images/gallery/w1.webp",
+    "title": "Quality Inspection Floor",
+    "description": "Continuous 4-point fabric inspection",
+    "sizeBytes": 63220
+  },
+  {
+    "id": "gallery_w3_jpg",
+    "category": "Operations",
+    "filename": "w3.jpg",
+    "url": "/images/gallery/w3.jpg",
+    "title": "Dyeing House Automated Lines",
+    "description": "Sclavos Athena high-pressure dyeing vessels",
+    "sizeBytes": 63548
+  },
+  {
+    "id": "gallery_w4_webp",
+    "category": "Operations",
+    "filename": "w4.webp",
+    "url": "/images/gallery/w4.webp",
+    "title": "Finishing & Compacting",
+    "description": "Automated slitting and compacting section",
+    "sizeBytes": 62510
+  },
+  {
+    "id": "gallery_w6_plus_webp",
+    "category": "Operations",
+    "filename": "w6_plus.webp",
+    "url": "/images/gallery/w6_plus.webp",
+    "title": "Garment Assembly Lines",
+    "description": "Modern synchronized sewing lines",
+    "sizeBytes": 63018
+  },
+  {
+    "id": "gallery_w6_webp",
+    "category": "Operations",
+    "filename": "w6.webp",
+    "url": "/images/gallery/w6.webp",
+    "title": "Cutting Section Automation",
+    "description": "Precision multi-ply fabric cutting line",
+    "sizeBytes": 58620
+  },
+  {
+    "id": "gallery_w7_plus_webp",
+    "category": "Operations",
+    "filename": "w7_plus.webp",
+    "url": "/images/gallery/w7_plus.webp",
+    "title": "Ironing & Finishing Section",
+    "description": "Steam finishing and packaging bays",
+    "sizeBytes": 51358
+  },
+  {
+    "id": "gallery_w8_plus_webp",
+    "category": "Operations",
+    "filename": "w8_plus.webp",
+    "url": "/images/gallery/w8_plus.webp",
+    "title": "Packaging & Warehouse",
+    "description": "Export-ready packing and logistics staging",
+    "sizeBytes": 50500
+  },
+  {
+    "id": "gallery_fire_workshop_1_png",
+    "category": "Safety",
+    "filename": "fire_workshop_1.png",
+    "url": "/images/gallery/fire_workshop_1.png",
+    "title": "Fire Safety Drill & Training",
+    "description": "Annual employee fire response and evacuation drill",
+    "sizeBytes": 1775250
+  },
+  {
+    "id": "gallery_fire_workshop_2_png",
+    "category": "Safety",
+    "filename": "fire_workshop_2.png",
+    "url": "/images/gallery/fire_workshop_2.png",
+    "title": "Fire Fighting Equipment Training",
+    "description": "Hands-on fire extinguisher operations for factory personnel",
+    "sizeBytes": 1612159
+  }
+]

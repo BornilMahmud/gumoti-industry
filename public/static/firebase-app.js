@@ -1,6 +1,4 @@
-// Gumti Textiles — Firebase integration (Auth: Google Sign-In, Firestore, Analytics)
-// Firebase web config values are public identifiers by design; security is
-// enforced through Firebase Auth + Firestore Security Rules.
+// Gumti Textiles — Firebase integration (Auth, RBAC, Firestore CMS, Analytics)
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js'
 import {
   getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
@@ -8,7 +6,7 @@ import {
   onAuthStateChanged, signOut,
 } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js'
 import {
-  getFirestore, collection, addDoc, doc, setDoc, query, where, orderBy, getDocs, serverTimestamp,
+  getFirestore, collection, addDoc, doc, setDoc, getDoc, updateDoc, query, where, orderBy, getDocs, serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js'
 
 const firebaseConfig = {
@@ -24,42 +22,125 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 const auth = getAuth(app)
 const db = getFirestore(app)
+window.gtDb = db
+window.gtAuth = auth
 
-// Analytics is optional — it fails in restricted/iframe contexts, never block on it.
 try {
   const { getAnalytics } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics.js')
   getAnalytics(app)
-} catch (_) { /* analytics unavailable in this context */ }
+} catch (_) { /* analytics unavailable */ }
 
 const provider = new GoogleAuthProvider()
 const ADMIN_EMAILS = ['bornilmahmud56@gmail.com', 'bonrilmahmud56@gmail.com']
-const DEFAULT_ADMIN_EMAIL = ADMIN_EMAILS[0]
 const isAdminEmail = (email = '') => ADMIN_EMAILS.includes(String(email).toLowerCase())
 
-// ---------- Auth state ----------
-onAuthStateChanged(auth, (user) => {
+window.gtUser = null
+window.gtUserRole = 'customer'
+window.gtIsAdmin = false
+window.gtIsModerator = false
+
+// ---------- Auth state listener ----------
+onAuthStateChanged(auth, async (user) => {
   window.gtUser = user || null
   window.gtAdminToken = user ? (() => user.getIdToken(true)) : null
-  if (user) ensureUserProfile(user, { provider: user.providerData?.[0]?.providerId || 'firebase' })
-  document.dispatchEvent(new CustomEvent('gt:auth', { detail: user }))
 
+  let role = 'customer'
+  if (user) {
+    const isBornil = isAdminEmail(user.email)
+    if (isBornil) {
+      role = 'admin'
+    } else {
+      // Check existing role in Firestore
+      try {
+        const snap = await getDoc(doc(db, 'users', user.uid))
+        if (snap.exists() && snap.data().role) {
+          role = snap.data().role
+        }
+      } catch (err) {
+        console.warn('Could not read user role from Firestore:', err.message)
+      }
+    }
+    await ensureUserProfile(user, {
+      role,
+      provider: user.providerData?.[0]?.providerId || 'firebase',
+      lastLoginAt: serverTimestamp(),
+    })
+  }
+
+  window.gtUserRole = role
+  window.gtIsAdmin = role === 'admin'
+  window.gtIsModerator = role === 'moderator' || role === 'admin'
+
+  document.dispatchEvent(new CustomEvent('gt:auth', { detail: { user, role } }))
+
+  // Route Guard: Logged in users cannot visit /login or /register; Guests cannot visit /profile
+  const currentPath = window.location.pathname.replace(/\/$/, '') || '/'
+  if (user) {
+    localStorage.setItem('gt_auth_user', JSON.stringify({ uid: user.uid, email: user.email, role }))
+    if (currentPath === '/login' || currentPath === '/register') {
+      window.location.replace(role === 'admin' ? '/admin' : '/profile')
+      return
+    }
+  } else {
+    localStorage.removeItem('gt_auth_user')
+    if (currentPath === '/profile') {
+      window.location.replace('/login')
+      return
+    }
+  }
+
+  // Update Navigation UI based on Role & Auth
+  const navLoginBtn = document.getElementById('nav-login-btn')
+  const navUserPill = document.getElementById('nav-user-pill')
+  const navUserAvatar = document.getElementById('nav-user-avatar')
+  const navUserName = document.getElementById('nav-user-name')
+  const navUserRoleBadge = document.getElementById('nav-user-role-badge')
+  const navAdminBtn = document.getElementById('nav-admin-btn')
+  const hasControlAccess = window.gtIsModerator
+
+  document.documentElement.classList.add('auth-ready')
+
+  if (navLoginBtn) {
+    navLoginBtn.classList.toggle('hidden', !!user)
+  }
+
+  if (navUserPill) {
+    navUserPill.classList.toggle('hidden', !user)
+    navUserPill.classList.toggle('inline-flex', !!user)
+    if (user) {
+      const displayName = user.displayName || user.email?.split('@')[0] || 'Profile'
+      const initial = displayName[0].toUpperCase()
+      if (navUserName) navUserName.textContent = displayName
+      if (navUserAvatar) navUserAvatar.textContent = initial
+      if (navUserRoleBadge) {
+        navUserRoleBadge.textContent = role.toUpperCase()
+        navUserRoleBadge.className = `px-1.5 py-0.5 rounded text-[9px] font-mono font-bold ${
+          role === 'admin' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
+          role === 'moderator' ? 'bg-[#00D2FF]/20 text-[#00D2FF] border border-[#00D2FF]/30' :
+          'bg-[#00E599]/15 text-[#00E599] border border-[#00E599]/30'
+        }`
+      }
+    }
+  }
+
+  if (navAdminBtn) {
+    navAdminBtn.classList.toggle('hidden', !hasControlAccess)
+    navAdminBtn.classList.toggle('inline-flex', hasControlAccess)
+    navAdminBtn.title = role === 'admin' ? 'Super Admin Dashboard' : 'Moderator Dashboard'
+  }
+
+  // Mobile drawer links
+  document.querySelectorAll('[data-mobile-login]').forEach((el) => el.classList.toggle('hidden', !!user))
+  document.querySelectorAll('[data-mobile-profile]').forEach((el) => el.classList.toggle('hidden', !user))
+  document.querySelectorAll('[data-mobile-admin]').forEach((el) => el.classList.toggle('hidden', !hasControlAccess))
+
+  // Legacy compatibility fallbacks
   const account = document.getElementById('nav-account')
   const label = document.getElementById('nav-account-label')
-  const register = document.getElementById('nav-register')
   const admin = document.getElementById('nav-admin')
-  const isAdmin = !!user && isAdminEmail(user.email)
-  document.documentElement.classList.add('auth-ready')
-  document.querySelectorAll('[data-mobile-login]').forEach((el) => el.classList.toggle('hidden', !!user))
-  document.querySelectorAll('[data-mobile-register]').forEach((el) => el.classList.toggle('hidden', !!user))
-  document.querySelectorAll('[data-mobile-portal]').forEach((el) => el.classList.toggle('hidden', !user))
-  document.querySelectorAll('[data-mobile-admin]').forEach((el) => el.classList.toggle('hidden', !isAdmin))
-  if (account) {
-    account.href = user ? '/portal' : '/login'
-    account.setAttribute('aria-label', user ? 'Buyer portal' : 'Login')
-  }
-  if (label) label.textContent = user ? 'Portal' : 'Login'
-  if (register) register.classList.toggle('auth-hidden', !!user)
-  if (admin) admin.classList.toggle('auth-hidden', !isAdmin)
+  if (account) account.href = user ? '/profile' : '/login'
+  if (label) label.textContent = user ? (user.displayName ? user.displayName.split(' ')[0] : 'Profile') : 'Sign In'
+  if (admin) admin.classList.toggle('auth-hidden', !hasControlAccess)
 
   // Portal page elements
   const signedOut = document.getElementById('portal-signed-out')
@@ -71,25 +152,37 @@ onAuthStateChanged(auth, (user) => {
       const nameEl = document.getElementById('portal-user-name')
       const emailEl = document.getElementById('portal-user-email')
       const photoEl = document.getElementById('portal-user-photo')
+      const roleBadge = document.getElementById('portal-user-role')
       if (nameEl) nameEl.textContent = user.displayName || 'Buyer Account'
       if (emailEl) emailEl.textContent = user.email || ''
       if (photoEl && user.photoURL) { photoEl.src = user.photoURL; photoEl.classList.remove('hidden') }
+      if (roleBadge) {
+        roleBadge.textContent = role.toUpperCase()
+        roleBadge.className = `inline-flex text-[10px] font-semibold px-2 py-0.5 uppercase tracking-widest ${role === 'admin' ? 'bg-amber-100 text-amber-900' : role === 'moderator' ? 'bg-emerald-100 text-emerald-900' : 'bg-sand/30 text-navy'}`
+      }
       loadPortalData(user)
     }
   }
 
   // Admin page elements
   const adminEmail = document.getElementById('admin-user-email')
-  if (adminEmail) adminEmail.textContent = user ? (user.email || '') : 'Not signed in'
-  if (user && window.gtLoadAdmin) window.gtLoadAdmin()
+  if (adminEmail) {
+    adminEmail.innerHTML = user ? `${escapeHtml(user.email || '')} <span class="ml-2 inline-flex text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded ${role === 'admin' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : role === 'moderator' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-white/10 text-sand'}">${role}</span>` : 'Not signed in'
+  }
 })
 
 // ---------- Google Sign-In ----------
 async function googleSignIn() {
   try {
     const result = await signInWithPopup(auth, provider)
-    if (result.user) await ensureUserProfile(result.user, { provider: 'google.com' })
-    window.gtToast && window.gtToast('Signed in successfully.')
+    if (result.user) {
+      const isBornil = isAdminEmail(result.user.email)
+      await ensureUserProfile(result.user, {
+        provider: 'google.com',
+        role: isBornil ? 'admin' : 'customer',
+      })
+      window.gtToast && window.gtToast('Signed in successfully.')
+    }
   } catch (err) {
     if (err && (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment')) {
       try { await signInWithRedirect(auth, provider); return } catch (e2) { err = e2 }
@@ -101,7 +194,13 @@ async function googleSignIn() {
 
 document.addEventListener('click', (e) => {
   if (e.target.closest('[data-google-signin]')) { e.preventDefault(); googleSignIn() }
-  if (e.target.closest('[data-signout]')) { e.preventDefault(); signOut(auth).then(() => window.gtToast && window.gtToast('Signed out.')) }
+  if (e.target.closest('[data-signout]')) {
+    e.preventDefault()
+    signOut(auth).then(() => {
+      window.gtToast && window.gtToast('Signed out.')
+      setTimeout(() => window.location.assign('/login'), 500)
+    })
+  }
   const toggle = e.target.closest('[data-toggle-password]')
   if (toggle) {
     e.preventDefault()
@@ -115,20 +214,34 @@ document.addEventListener('click', (e) => {
 
 async function ensureUserProfile(user, extra = {}) {
   if (!user) return false
+  const isBornil = isAdminEmail(user.email)
   try {
-    await setDoc(doc(db, 'users', user.uid), {
+    const userRef = doc(db, 'users', user.uid)
+    let role = isBornil ? 'admin' : (extra.role || 'customer')
+
+    // If document exists, always preserve existing role assigned by Admin
+    try {
+      const snap = await getDoc(userRef)
+      if (snap.exists() && snap.data()?.role) {
+        role = isBornil ? 'admin' : snap.data().role
+      }
+    } catch (_) { /* if cannot read, fallback to calculated */ }
+
+    await setDoc(userRef, {
       uid: user.uid,
       userEmail: user.email || '',
       email: user.email || '',
       displayName: user.displayName || '',
       photoURL: user.photoURL || '',
-      isDefaultAdminEmail: isAdminEmail(user.email),
+      role,
+      isDefaultAdminEmail: isBornil,
       updatedAt: serverTimestamp(),
       ...extra,
+      role, // guarantee role is preserved
     }, { merge: true })
     return true
   } catch (err) {
-    console.warn('User profile save skipped:', err.message)
+    console.warn('User profile save skipped in Firestore:', err.message)
     return false
   }
 }
@@ -153,20 +266,32 @@ async function authSubmit(form, action) {
   const company = String(fd.get('company') || '').trim()
   try {
     let credential
+    const isBornil = isAdminEmail(email)
+    const initialRole = isBornil ? 'admin' : 'customer'
+
     if (action === 'register') {
       credential = await createUserWithEmailAndPassword(auth, email, password)
       if (name) await updateProfile(credential.user, { displayName: name })
-      await ensureUserProfile(credential.user, { displayName: name, company, provider: 'password', role: 'buyer', createdAt: serverTimestamp() })
-      setAuthStatus(form, 'Account created and saved to Firestore users/{uid}. Redirecting…', true)
+      await ensureUserProfile(credential.user, {
+        displayName: name,
+        company,
+        provider: 'password',
+        role: initialRole,
+        createdAt: serverTimestamp(),
+      })
+      setAuthStatus(form, `Account created with role [${initialRole}]. Redirecting…`, true)
     } else {
       credential = await signInWithEmailAndPassword(auth, email, password)
-      await ensureUserProfile(credential.user, { provider: 'password', lastLoginAt: serverTimestamp() })
+      await ensureUserProfile(credential.user, {
+        provider: 'password',
+        lastLoginAt: serverTimestamp(),
+      })
       setAuthStatus(form, 'Signed in successfully. Redirecting…', true)
     }
-    window.gtToast && window.gtToast('Firebase sign-in successful.')
+    window.gtToast && window.gtToast('Sign-in successful.')
     setTimeout(() => {
-      const isAdmin = isAdminEmail(credential.user.email)
-      window.location.assign(isAdmin ? '/admin' : '/portal')
+      const isSuper = isAdminEmail(credential.user.email)
+      window.location.assign(isSuper ? '/admin' : '/portal')
     }, 700)
   } catch (err) {
     console.error('Auth form error:', err)
@@ -188,7 +313,143 @@ function firebaseFriendlyError(err) {
   return err?.message || 'Firebase authentication failed.'
 }
 
-// ---------- Firestore save (RFQs, contacts, samples, applications) ----------
+// ---------- Role Promotion Helper (Admin Only) ----------
+window.gtPromoteUserRole = async function (email, targetUid, newRole) {
+  if (!window.gtIsAdmin) {
+    window.gtToast && window.gtToast('Only administrators can promote or change user roles.', false)
+    return false
+  }
+  try {
+    const token = await window.gtAdminToken()
+    const res = await fetch('/api/admin/users/role', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ email, uid: targetUid, role: newRole }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Failed to update role')
+
+    // Also mirror to Firestore if targetUid exists
+    if (targetUid) {
+      try {
+        await updateDoc(doc(db, 'users', targetUid), {
+          role: newRole,
+          promotedBy: window.gtUser?.email || '',
+          promotedAt: serverTimestamp(),
+        })
+      } catch (fErr) {
+        console.warn('Firestore role mirror skipped:', fErr.message)
+      }
+    }
+    window.gtToast && window.gtToast(`Successfully updated ${email} to ${newRole.toUpperCase()}.`)
+    return true
+  } catch (err) {
+    console.error('Role update error:', err)
+    window.gtToast && window.gtToast('Role update failed: ' + err.message, false)
+    return false
+  }
+}
+
+// ---------- Save Landing Page Config ----------
+window.gtSaveLandingConfig = async function (configData) {
+  if (!window.gtIsModerator) {
+    window.gtToast && window.gtToast('Moderator or Admin privileges required to edit landing page.', false)
+    return false
+  }
+  try {
+    const token = await window.gtAdminToken()
+    const res = await fetch('/api/admin/site-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(configData),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Failed to save landing page config')
+
+    // Also mirror to Firestore landing_config/current
+    try {
+      await setDoc(doc(db, 'landing_config', 'current'), {
+        ...configData,
+        updatedBy: window.gtUser?.email || '',
+        updatedAt: serverTimestamp(),
+      }, { merge: true })
+    } catch (fErr) {
+      console.warn('Firestore landing config mirror skipped:', fErr.message)
+    }
+    window.gtToast && window.gtToast('Landing page configuration published live.')
+    return true
+  } catch (err) {
+    console.error('Save config error:', err)
+    window.gtToast && window.gtToast('Save failed: ' + err.message, false)
+    return false
+  }
+}
+
+// ---------- Hydrate Landing Page in Real-Time ----------
+async function hydrateLandingPage() {
+  const isHome = window.location.pathname === '/' || window.location.pathname === ''
+  if (!isHome) return
+  try {
+    // Check local API config first
+    const res = await fetch('/api/site-config')
+    if (!res.ok) return
+    const cfg = await res.json()
+    applyLandingDom(cfg)
+
+    // Secondary: listen to Firestore live updates
+    try {
+      const snap = await getDoc(doc(db, 'landing_config', 'current'))
+      if (snap.exists()) applyLandingDom(snap.data())
+    } catch (_) {}
+  } catch (_) {}
+}
+
+function applyLandingDom(cfg) {
+  if (!cfg) return
+  const elL1 = document.getElementById('cfg-hero-l1')
+  const elL2 = document.getElementById('cfg-hero-l2')
+  const elKicker = document.getElementById('cfg-hero-kicker')
+  const elCopy = document.getElementById('cfg-hero-copy')
+  const elMedia = document.getElementById('cfg-hero-media')
+  const elCta1 = document.getElementById('cfg-cta1')
+  const elCta2 = document.getElementById('cfg-cta2')
+
+  if (elL1 && cfg.heroHeadlineLine1) elL1.textContent = cfg.heroHeadlineLine1
+  if (elL2 && cfg.heroHeadlineLine2) elL2.textContent = cfg.heroHeadlineLine2
+  if (elKicker && cfg.heroKicker) elKicker.innerHTML = `<span class="inline-block w-10 h-px bg-sand"></span>${escapeHtml(cfg.heroKicker)}`
+  if (elCopy && cfg.heroSubTagline) elCopy.textContent = cfg.heroSubTagline
+  if (elMedia && cfg.heroBgImage && elMedia.getAttribute('src') !== cfg.heroBgImage) elMedia.src = cfg.heroBgImage
+  if (elCta1 && cfg.heroCta1Text) {
+    elCta1.querySelector('span').textContent = cfg.heroCta1Text
+    if (cfg.heroCta1Link) elCta1.href = cfg.heroCta1Link
+  }
+  if (elCta2 && cfg.heroCta2Text) {
+    elCta2.querySelector('span').textContent = cfg.heroCta2Text
+    if (cfg.heroCta2Link) elCta2.href = cfg.heroCta2Link
+  }
+
+  // Stats
+  if (cfg.stats) {
+    const s1v = document.getElementById('cfg-stat1-value')
+    const s2v = document.getElementById('cfg-stat2-value')
+    const s3v = document.getElementById('cfg-stat3-value')
+    const s4v = document.getElementById('cfg-stat4-value')
+    if (s1v && cfg.stats.stat1Value) s1v.textContent = cfg.stats.stat1Value
+    if (s2v && cfg.stats.stat2Value) s2v.textContent = cfg.stats.stat2Value
+    if (s3v && cfg.stats.stat3Value) s3v.textContent = cfg.stats.stat3Value
+    if (s4v && cfg.stats.stat4Value) s4v.textContent = cfg.stats.stat4Value
+  }
+
+  // Contact
+  const cPhone = document.getElementById('cfg-contact-phone')
+  const cEmail = document.getElementById('cfg-contact-email')
+  if (cPhone && cfg.contactPhone) cPhone.textContent = cfg.contactPhone
+  if (cEmail && cfg.contactEmail) cEmail.textContent = cfg.contactEmail
+}
+
+document.addEventListener('DOMContentLoaded', hydrateLandingPage)
+
+// ---------- Firestore mirror save (RFQs, contacts, samples, applications) ----------
 window.gtFirestoreSave = async function (collectionName, data) {
   try {
     const clean = {}
@@ -198,7 +459,6 @@ window.gtFirestoreSave = async function (collectionName, data) {
     await addDoc(collection(db, collectionName), clean)
     return true
   } catch (err) {
-    // Firestore rules may restrict writes — server-side D1 storage is the source of truth.
     console.warn('Firestore mirror skipped:', err.message)
     return false
   }
@@ -208,13 +468,12 @@ window.gtFirestoreSave = async function (collectionName, data) {
 async function loadPortalData(user) {
   const rfqList = document.getElementById('portal-rfq-list')
   if (!rfqList) return
-  // Primary source: server D1 API
   try {
     const res = await fetch('/api/rfq?email=' + encodeURIComponent(user.email || ''))
     const data = await res.json()
     if (data.rfqs && data.rfqs.length) {
       rfqList.innerHTML = data.rfqs.map((r) => `
-        <article class="bg-white border border-sand/40 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <article class="bg-white border border-sand/40 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
           <div>
             <p class="font-semibold text-navy text-sm">${r.rfq_id}</p>
             <p class="text-xs text-mutedgt mt-1">${escapeHtml(r.product || '')} · Qty: ${escapeHtml(String(r.quantity || '—'))} ${escapeHtml(r.unit || '')}</p>
@@ -224,15 +483,15 @@ async function loadPortalData(user) {
         </article>`).join('')
       return
     }
-  } catch (_) { /* fall through to Firestore */ }
-  // Secondary: Firestore mirror
+  } catch (_) { /* secondary: Firestore */ }
+
   try {
     const qs = await getDocs(query(collection(db, 'rfqs'), where('uid', '==', user.uid), orderBy('createdAt', 'desc')))
     if (!qs.empty) {
       rfqList.innerHTML = ''
       qs.forEach((doc) => {
         const r = doc.data()
-        rfqList.innerHTML += `<article class="bg-white border border-sand/40 p-5">
+        rfqList.innerHTML += `<article class="bg-white border border-sand/40 p-5 shadow-sm">
           <p class="font-semibold text-navy text-sm">${escapeHtml(r.refId || doc.id)}</p>
           <p class="text-xs text-mutedgt mt-1">${escapeHtml(r.product || '')} · Qty: ${escapeHtml(String(r.quantity || '—'))}</p>
         </article>`
@@ -240,11 +499,11 @@ async function loadPortalData(user) {
       return
     }
   } catch (_) {}
-  rfqList.innerHTML = '<div class="border border-dashed border-sand/60 p-8 text-center text-sm text-mutedgt">No RFQs yet. <a href="/request-quote" class="text-navy underline underline-offset-4">Submit your first RFQ</a>.</div>'
+  rfqList.innerHTML = '<div class="border border-dashed border-sand/60 p-8 text-center text-sm text-mutedgt">No RFQs yet. <a href="/request-quote" class="text-navy underline underline-offset-4 font-semibold">Submit your first RFQ</a>.</div>'
 }
 
 function statusColor(s) {
   const m = { NEW: 'bg-sand/30 text-navy', 'UNDER REVIEW': 'bg-blue-100 text-blue-900', PRICING: 'bg-amber-100 text-amber-900', 'QUOTATION SENT': 'bg-emerald-100 text-emerald-900', APPROVED: 'bg-emerald-200 text-emerald-900', REJECTED: 'bg-red-100 text-red-900' }
   return m[s] || 'bg-sand/30 text-navy'
 }
-function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])) }
+function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])) }

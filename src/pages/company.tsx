@@ -1,303 +1,411 @@
 import { html, raw } from 'hono/html'
 import { companyProfile as co, media, manufacturingStages } from '../data/company'
 
-const PageHero = (label: string, title: string, sub?: string) => `
-<section class="relative bg-navy text-white pt-40 pb-20 lg:pb-28">
+const PageHero = (kicker: string, title: string, sub?: string) => `
+<section class="relative bg-[#060B10] pt-32 pb-14 border-b border-white/[0.08]">
   <div class="max-w-[1440px] mx-auto px-5 lg:px-10">
-    <p class="text-[11px] tracking-widest2 uppercase text-sand mb-5 flex items-center gap-3"><span class="w-10 h-px bg-sand inline-block"></span>${label}</p>
-    <h1 class="font-serif text-4xl sm:text-5xl lg:text-[68px] leading-[1.02]">${title}</h1>
-    ${sub ? `<p class="mt-6 max-w-xl text-white/60 leading-relaxed">${sub}</p>` : ''}
+    <span class="kicker-pill mb-4">${kicker}</span>
+    <h1 class="text-3xl sm:text-5xl lg:text-[60px] font-extrabold font-display leading-[1.05] text-white">
+      ${title}
+    </h1>
+    ${sub ? `<p class="mt-4 max-w-2xl text-[#788A9C] text-sm sm:text-base leading-relaxed">${sub}</p>` : ''}
   </div>
 </section>`
 
-// ============ ABOUT ============
+// ============ ABOUT PAGE ============
 export const AboutPage = () => html`
-${raw(PageHero('About Gumti', 'Built on Experience.<br/>Driven by Manufacturing.', `${co.name} is an established Bangladesh-based textile and apparel manufacturing company with integrated capabilities spanning knitting, dyeing, finishing and garment manufacturing.`))}
+${raw(PageHero('Over 30 Years of Excellence', 'Built on Experience.<br/><span class="text-gradient-emerald">Driven by Manufacturing.</span>', `${co.name} is an established knit-composite textile and apparel manufacturer in Bangladesh — integrating circular knitting, eco-dyeing, stenter finishing, and 22 garment assembly lines.`))}
 
-<section class="bg-ivory py-20 lg:py-28">
-  <div class="max-w-[1440px] mx-auto px-5 lg:px-10 grid lg:grid-cols-2 gap-14 items-center">
-    <div class="reveal-img overflow-hidden">
-      <img src="${media.sewing2}" alt="Garment production line" class="w-full aspect-[4/3] object-cover" loading="lazy" />
-    </div>
-    <div class="reveal">
-      <p class="text-[11px] tracking-widest2 uppercase text-mutedgt mb-4 flex items-center gap-3"><span class="w-8 h-px bg-sand inline-block"></span>Company Story</p>
-      <h2 class="font-serif text-3xl lg:text-5xl text-navy leading-[1.05]">From Bangladesh to Global Markets</h2>
-      <p class="mt-6 text-ink/75 leading-relaxed">Established on ${co.establishedFull}, ${co.name} operates as a knit-composite manufacturer — combining knitting, dyeing, finishing and export-oriented garment manufacturing within one integrated operation.</p>
-      <p class="mt-4 text-ink/75 leading-relaxed">The company is registered with BGMEA (Reg. ${co.bgmeaRegistration}) and the Export Promotion Bureau (Reg. ${co.epbRegistration}), with publicly documented export products including T-shirts, polo shirts, knit jackets and shorts.</p>
-      <dl class="mt-8 grid grid-cols-2 gap-6 text-sm">
-        <div class="border-t border-sand/50 pt-4"><dt class="text-[10px] tracking-widest2 uppercase text-mutedgt">Managing Director</dt><dd class="mt-1 font-medium text-navy">${co.managingDirector}</dd></div>
-        <div class="border-t border-sand/50 pt-4"><dt class="text-[10px] tracking-widest2 uppercase text-mutedgt">Factory Type</dt><dd class="mt-1 font-medium text-navy">${co.factoryType}</dd></div>
-        <div class="border-t border-sand/50 pt-4"><dt class="text-[10px] tracking-widest2 uppercase text-mutedgt">BGMEA Reg.</dt><dd class="mt-1 font-medium text-navy">${co.bgmeaRegistration}</dd></div>
-        <div class="border-t border-sand/50 pt-4"><dt class="text-[10px] tracking-widest2 uppercase text-mutedgt">EPB Reg.</dt><dd class="mt-1 font-medium text-navy">${co.epbRegistration}</dd></div>
-      </dl>
-    </div>
-  </div>
-</section>
-
-<section class="bg-white py-20 lg:py-28 border-y border-sand/40" id="timeline-section">
-  <div class="max-w-[900px] mx-auto px-5 lg:px-10">
-    <h2 class="font-serif text-3xl lg:text-5xl text-navy text-center reveal">Our Journey</h2>
-    <p class="text-center text-xs text-mutedgt mt-3 reveal">Timeline content is CMS-editable; milestone years beyond 1993 to be confirmed by Gumti Textiles Ltd.</p>
-    <ol class="mt-14 border-l border-sand/60 ml-2 space-y-12">
-      ${raw(co.timeline.map((t) => `
-        <li class="relative pl-10 timeline-dot reveal">
-          <p class="font-serif text-2xl text-sand">${t.year}</p>
-          <p class="font-semibold text-navy mt-1">${t.title}</p>
-          <p class="text-sm text-mutedgt mt-2 max-w-lg leading-relaxed">${t.text}</p>
-        </li>`).join(''))}
-    </ol>
-  </div>
-</section>
-
-<section class="bg-navy text-white py-20 lg:py-28">
-  <div class="max-w-[1100px] mx-auto px-5 lg:px-10 text-center">
-    <h2 class="font-serif text-3xl lg:text-5xl reveal">Work With an Established Manufacturer</h2>
-    <div class="mt-10 flex flex-wrap justify-center gap-4 reveal">
-      <a href="/request-quote" class="bg-sand text-navy font-semibold px-8 py-4 text-sm tracking-wide hover:bg-white transition-colors">Request a Quote</a>
-      <a href="/capabilities" class="border border-white/30 px-8 py-4 text-sm tracking-wide hover:border-sand hover:text-sand transition-colors">Explore Capabilities</a>
-    </div>
-  </div>
-</section>
-`
-
-// ============ CAPABILITIES ============
-export const CapabilitiesPage = () => html`
-${raw(PageHero('Manufacturing Capabilities', 'FROM FIBER TO<br/><span class="text-sand">FINISHED GARMENT</span>', 'Six integrated stages under one quality system. Operational figures are CMS-managed and displayed only when confirmed by Gumti Textiles Ltd.'))}
-
-${raw(manufacturingStages.map((s, i) => `
-<section id="${s.slug}" class="${i % 2 === 0 ? 'bg-ivory' : 'bg-white border-y border-sand/40'} py-20 lg:py-28 journey-stage">
+<section class="bg-[#08111A] py-16 lg:py-24">
   <div class="max-w-[1440px] mx-auto px-5 lg:px-10 grid lg:grid-cols-12 gap-12 items-center">
-    <div class="lg:col-span-6 ${i % 2 === 1 ? 'lg:order-2' : ''} reveal-img overflow-hidden">
-      <img src="${(media as any)[s.image]}" alt="${s.name} stage" class="w-full aspect-[4/3] object-cover" loading="lazy" />
-    </div>
-    <div class="lg:col-span-6 ${i % 2 === 1 ? 'lg:order-1' : ''} reveal">
-      <p class="font-serif text-sand text-5xl lg:text-7xl">${s.num}</p>
-      <h2 class="font-serif text-3xl lg:text-5xl text-navy mt-2">${s.name}</h2>
-      <p class="text-sand text-sm tracking-wide uppercase mt-2">${s.tagline}</p>
-      <p class="mt-5 text-ink/75 leading-relaxed max-w-xl">${s.description}</p>
-      <div class="mt-7">
-        <p class="text-[10px] tracking-widest2 uppercase text-mutedgt mb-3">Quality checkpoints</p>
-        <div class="flex flex-wrap gap-2">${s.checkpoints.map((c) => `<span class="text-[11px] tracking-wide uppercase border border-sand/60 text-navy/70 px-3 py-1.5">${c}</span>`).join('')}</div>
-      </div>
-      <div class="mt-7 table-wrap">
-        <table class="w-full text-sm border-t border-sand/50">
-          <caption class="sr-only">${s.name} specifications (CMS-managed)</caption>
-          <tbody>
-            ${s.specs.map((sp) => `<tr class="border-b border-sand/40"><th scope="row" class="text-left py-3 pr-4 text-[11px] tracking-widest uppercase text-mutedgt font-medium whitespace-nowrap align-top">${sp.label}</th><td class="py-3 text-ink/75">${sp.value}</td></tr>`).join('')}
-          </tbody>
-        </table>
-      </div>
-      <a href="/request-quote" class="mt-8 inline-flex items-center gap-3 text-sm font-semibold text-navy border-b border-sand pb-1 hover:text-sand transition-colors">Discuss Your Requirement <i class="fa-solid fa-arrow-right text-xs"></i></a>
-    </div>
-  </div>
-</section>`).join(''))}
-
-<section class="bg-navy text-white py-20 lg:py-24">
-  <div class="max-w-[1100px] mx-auto px-5 lg:px-10 text-center">
-    <h2 class="font-serif text-3xl lg:text-5xl reveal">Have a Production Requirement?</h2>
-    <a href="/request-quote" class="mt-8 inline-block bg-sand text-navy font-semibold px-8 py-4 text-sm tracking-wide hover:bg-white transition-colors reveal">Request a Quote</a>
-  </div>
-</section>
-`
-
-// ============ QUALITY ============
-export const QualityPage = () => html`
-${raw(PageHero('Quality & Compliance', 'QUALITY IS BUILT<br/>INTO THE PROCESS.', 'Quality is enforced at every stage of the integrated workflow — not inspected in at the end.'))}
-
-<section class="bg-ivory py-20 lg:py-28">
-  <div class="max-w-[1440px] mx-auto px-5 lg:px-10">
-    <div class="grid md:grid-cols-3 gap-px bg-sand/40 border border-sand/40">
-      ${raw([
-        ['Raw Material', 'Incoming yarn and trims are verified against buyer specifications before entering production.', 'fa-box-open'],
-        ['Fabric Production', 'Construction, GSM and greige quality are controlled at the knitting stage.', 'fa-layer-group'],
-        ['Dyeing', 'Lab dips, shade continuity and fastness performance are managed through the laboratory workflow.', 'fa-droplet'],
-        ['Finishing', 'Shrinkage, width and hand feel are verified against tolerance standards.', 'fa-wand-magic-sparkles'],
-        ['Garment Production', 'In-line inspection and measurement audits run throughout cutting and sewing.', 'fa-shirt'],
-        ['Final Inspection', 'AQL-based final inspection and pre-shipment verification before packing and export.', 'fa-clipboard-check'],
-      ].map(([t, d, icon], i) => `
-        <article class="bg-ivory p-8 lg:p-10 reveal">
-          <div class="flex items-center gap-4">
-            <span class="w-11 h-11 flex items-center justify-center bg-navy text-sand"><i class="fa-solid ${icon}"></i></span>
-            <span class="font-serif text-sand text-xl">0${i + 1}</span>
+    
+    <!-- Left Factory Image -->
+    <div class="lg:col-span-6">
+      <div class="glass-panel p-3 border border-white/[0.1] rounded-2xl relative overflow-hidden group">
+        <img src="${media.sewing2}" alt="Gumti Sewing Floor" class="w-full aspect-[4/3] object-cover rounded-xl group-hover:scale-105 transition-transform duration-700" loading="lazy" />
+        <div class="absolute bottom-6 left-6 right-6 p-4 rounded-xl bg-[#060B10]/85 backdrop-blur-md border border-white/[0.1] flex items-center justify-between">
+          <div>
+            <p class="text-[10px] font-bold uppercase text-[#00E599] tracking-wider">Garment Assembly</p>
+            <p class="text-xs font-bold text-white mt-0.5">22 Lines · 35,000 Pcs/Day</p>
           </div>
-          <h2 class="font-serif text-2xl text-navy mt-5">${t}</h2>
-          <p class="mt-3 text-sm text-mutedgt leading-relaxed">${d}</p>
-        </article>`).join(''))}
+          <span class="text-[10px] font-mono px-2.5 py-1 rounded bg-[#00E599]/15 text-[#00E599] border border-[#00E599]/30 font-bold">Active</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Story & Registrations -->
+    <div class="lg:col-span-6 space-y-6">
+      <span class="kicker-pill">Corporate Profile</span>
+      <h2 class="text-2xl sm:text-4xl font-bold font-display text-white">
+        From Bangladesh to Global Retailers
+      </h2>
+      <p class="text-sm text-[#CBD5E1] leading-relaxed">
+        Founded on ${co.establishedFull}, ${co.name} operates as a fully integrated knit-composite manufacturing complex. We take raw combed cotton yarn and execute knitting, state-of-the-art chemical and reactive dyeing, stenter compacting, and export garment production under one roof.
+      </p>
+      <p class="text-sm text-[#788A9C] leading-relaxed">
+        Officially registered with the Bangladesh Garment Manufacturers and Exporters Association (BGMEA Reg. ${co.bgmeaRegistration}) and the Export Promotion Bureau (EPB Reg. ${co.epbRegistration}), Gumti Textiles serves premier fashion brands across Europe and North America with ~$27M annual export turnover.
+      </p>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+        <div class="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+          <p class="text-[10px] uppercase font-semibold text-[#788A9C]">Managing Director</p>
+          <p class="text-xs font-bold text-white mt-1">${co.managingDirector}</p>
+        </div>
+        <div class="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+          <p class="text-[10px] uppercase font-semibold text-[#788A9C]">Operation Model</p>
+          <p class="text-xs font-bold text-[#00E599] mt-1">${co.factoryType}</p>
+        </div>
+        <div class="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+          <p class="text-[10px] uppercase font-semibold text-[#788A9C]">BGMEA Reg.</p>
+          <p class="text-xs font-mono font-bold text-white mt-1">${co.bgmeaRegistration}</p>
+        </div>
+        <div class="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+          <p class="text-[10px] uppercase font-semibold text-[#788A9C]">Workforce</p>
+          <p class="text-xs font-bold text-[#00D2FF] mt-1">1,600 (74% ♀)</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Timeline Journey -->
+<section class="bg-[#060B10] py-16 lg:py-24 border-y border-white/[0.08]">
+  <div class="max-w-[1000px] mx-auto px-5 lg:px-10">
+    <div class="text-center mb-14">
+      <span class="kicker-pill mb-3">Milestones</span>
+      <h2 class="text-3xl sm:text-4xl font-extrabold font-display text-white">Three Decades of Growth</h2>
+      <p class="text-xs sm:text-sm text-[#788A9C] mt-2">Continuous reinvestment into European machinery, clean energy, and social empowerment.</p>
+    </div>
+
+    <div class="relative border-l border-[#00E599]/30 ml-4 sm:ml-8 space-y-10">
+      ${raw(co.timeline.map((t) => `
+        <div class="relative pl-8 sm:pl-10 group">
+          <div class="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-[#060B10] border-2 border-[#00E599] group-hover:bg-[#00E599] transition-colors"></div>
+          <span class="text-xs font-mono font-bold text-[#00E599] bg-[#00E599]/10 px-2.5 py-0.5 rounded border border-[#00E599]/20">${t.year}</span>
+          <h3 class="text-lg font-bold font-display text-white mt-2">${t.title}</h3>
+          <p class="text-xs sm:text-sm text-[#788A9C] mt-1.5 leading-relaxed max-w-xl">${t.text}</p>
+        </div>`).join(''))}
     </div>
   </div>
 </section>
 
-<section id="certifications" class="bg-navy text-white py-20 lg:py-28">
+<!-- Leadership Grid -->
+<section class="bg-[#08111A] py-16 lg:py-24">
   <div class="max-w-[1440px] mx-auto px-5 lg:px-10">
-    <p class="text-[11px] tracking-widest2 uppercase text-sand mb-4 flex items-center gap-3 reveal"><span class="w-8 h-px bg-sand inline-block"></span>Certifications & Standards</p>
-    <h2 class="font-serif text-3xl lg:text-5xl reveal">Publicly Listed by BGMEA</h2>
-    <p class="mt-4 text-white/60 max-w-xl text-sm reveal">Certificate numbers, validity dates and scope documents are displayed only when provided by Gumti Textiles Ltd. management. No certificate metadata is fabricated.</p>
-    <div class="mt-12 grid sm:grid-cols-2 gap-5">
-      ${raw(co.certifications.map((c) => `
-        <details class="cert-card bg-navylight border border-white/10 p-7 group reveal">
-          <summary class="cursor-pointer list-none flex items-start justify-between gap-4">
-            <div>
-              <p class="font-serif text-3xl">${c.code}</p>
-              <p class="text-xs tracking-wide uppercase text-sand mt-1">${c.scope}</p>
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <span class="kicker-pill mb-3">Executive Team</span>
+      <h2 class="text-3xl sm:text-4xl font-extrabold font-display text-white">Experienced Leadership</h2>
+      <p class="text-xs sm:text-sm text-[#788A9C] mt-2">Seasoned textile engineers and garment professionals leading operations at Gumti.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      ${raw(co.leadership.map((lead) => `
+        <div class="glass-card p-6 border border-white/[0.08] flex flex-col justify-between">
+          <div>
+            <div class="w-10 h-10 rounded-lg bg-[#00E599]/15 border border-[#00E599]/30 flex items-center justify-center text-[#00E599] text-base mb-4 font-bold">
+              ${lead.name.split(' ').map((n) => n[0]).filter((c) => /[A-Za-z]/.test(c)).slice(0, 2).join('')}
             </div>
-            <i class="fa-solid fa-chevron-down text-sand mt-2 transition-transform group-open:rotate-180" aria-hidden="true"></i>
-          </summary>
-          <div class="mt-5 text-sm text-white/70 leading-relaxed">
-            <p class="font-medium text-white">${c.name}</p>
-            <p class="mt-2">${c.description}</p>
-            <dl class="mt-5 grid grid-cols-2 gap-4 text-xs">
-              <div><dt class="text-white/40 uppercase tracking-widest text-[10px]">Certificate No.</dt><dd class="mt-1">${c.certificateNumber || 'To be confirmed by Gumti Textiles Ltd.'}</dd></div>
-              <div><dt class="text-white/40 uppercase tracking-widest text-[10px]">Valid Until</dt><dd class="mt-1">${c.validUntil || 'To be confirmed by Gumti Textiles Ltd.'}</dd></div>
-            </dl>
-            <p class="mt-4 text-[11px] text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i> Listed in BGMEA public records</p>
+            <p class="text-[11px] font-bold uppercase tracking-wider text-[#00E599]">${lead.role}</p>
+            <h3 class="text-base font-bold text-white font-display mt-1">${lead.name}</h3>
           </div>
-        </details>`).join(''))}
+          ${lead.email || lead.phone ? `
+            <div class="mt-4 pt-3 border-t border-white/[0.06] text-xs text-[#788A9C] space-y-1">
+              ${lead.email ? `<p class="truncate"><i class="fa-regular fa-envelope mr-1.5 text-[#00E599]"></i>${lead.email}</p>` : ''}
+              ${lead.phone ? `<p><i class="fa-solid fa-phone mr-1.5 text-[#00D2FF]"></i>${lead.phone}</p>` : ''}
+            </div>` : ''}
+        </div>`).join(''))}
+    </div>
+  </div>
+</section>
+
+<!-- CTA Bar -->
+<section class="bg-[#060B10] py-16 border-t border-white/[0.08]">
+  <div class="max-w-[900px] mx-auto px-5 lg:px-10 text-center">
+    <h2 class="text-2xl sm:text-4xl font-bold font-display text-white">Partner with an Established Industry Leader</h2>
+    <p class="text-xs sm:text-sm text-[#788A9C] mt-3">Discuss your technical requirements with our merchandising and production team.</p>
+    <div class="mt-8 flex flex-wrap justify-center gap-4">
+      <a href="/request-quote" class="pill-btn-emerald">Request a Program Quote</a>
+      <a href="/capabilities" class="pill-btn-outline">Explore Factory Capabilities</a>
     </div>
   </div>
 </section>
 `
 
-// ============ SUSTAINABILITY ============
-export const SustainabilityPage = () => html`
-${raw(PageHero('Sustainability', 'Responsible<br/>Manufacturing', 'Environmental and social performance data is CMS-managed with verification status. Only verified metrics are published — no figures are invented.'))}
+// ============ CAPABILITIES PAGE ============
+export const CapabilitiesPage = () => html`
+${raw(PageHero('Factory Infrastructure', 'Six Integrated Stages.<br/><span class="text-gradient-emerald">One Certified Quality System.</span>', 'Our Gazipur knit composite plant synchronizes circular knitting, low-liquor dyeing, stenter finishing, and computerized sewing lines.'))}
 
-<section class="bg-ivory py-20 lg:py-28">
-  <div class="max-w-[1440px] mx-auto px-5 lg:px-10 grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-    ${raw([
-      ['Water', 'fa-droplet', 'Water use and treatment practices in dyeing and finishing. Quantified water metrics pending verification.'],
-      ['Energy', 'fa-bolt', 'Energy management across the integrated facility. Energy statistics pending verification by Gumti management.'],
-      ['Waste', 'fa-recycle', 'Fabric and process waste handling practices. Waste-stream data pending verification.'],
-      ['Materials', 'fa-seedling', 'BCI cotton sourcing and GOTS-route organic programs, per publicly listed memberships.'],
-      ['People', 'fa-people-group', 'Workplace standards supported by SEDEX membership for ethical trade data exchange.'],
-      ['Compliance', 'fa-scale-balanced', 'Social and product-safety compliance aligned with SEDEX and OEKO-TEX frameworks.'],
-      ['Supply Chain', 'fa-link', 'Responsible sourcing supported through BCI and GOTS-route material programs.'],
-      ['Environment', 'fa-leaf', 'Environmental management practices across operations. Statistics published only when verified.'],
-    ].map(([t, icon, d]) => `
-      <article class="bg-white border border-sand/40 p-7 reveal">
-        <span class="w-11 h-11 flex items-center justify-center bg-navy text-sand"><i class="fa-solid ${icon}"></i></span>
-        <h2 class="font-serif text-2xl text-navy mt-5">${t}</h2>
-        <p class="mt-3 text-sm text-mutedgt leading-relaxed">${d}</p>
-      </article>`).join(''))}
-  </div>
-</section>
+<!-- 6 Stages -->
+<section class="bg-[#08111A] py-14 lg:py-20 space-y-16">
+  <div class="max-w-[1440px] mx-auto px-5 lg:px-10 space-y-16">
+    ${raw(manufacturingStages.map((s, i) => `
+      <div id="${s.slug}" class="glass-panel p-6 sm:p-10 border border-white/[0.08] rounded-2xl">
+        <div class="grid lg:grid-cols-12 gap-10 items-center">
+          
+          <!-- Image -->
+          <div class="lg:col-span-6 ${i % 2 === 1 ? 'lg:order-2' : ''}">
+            <div class="aspect-[4/3] rounded-xl overflow-hidden bg-[#0A131C] border border-white/[0.1] relative group">
+              <img src="${(media as any)[s.image] || media.knitting}" alt="${s.name} stage" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
+              <span class="absolute top-4 left-4 px-3 py-1 rounded-full bg-[#060B10]/80 backdrop-blur-md border border-white/[0.1] text-xs font-mono font-bold text-[#00E599]">
+                STAGE ${s.num}
+              </span>
+            </div>
+          </div>
 
-<section class="bg-white border-y border-sand/40 py-20 lg:py-28">
-  <div class="max-w-[1100px] mx-auto px-5 lg:px-10">
-    <h2 class="font-serif text-3xl lg:text-5xl text-navy text-center reveal">Sustainability Data Model</h2>
-    <p class="text-center text-sm text-mutedgt mt-4 max-w-xl mx-auto reveal">Metrics follow a verified-data policy: each metric carries a value, unit, year, source and verification status. Unverified metrics are never published.</p>
-    <div class="table-wrap mt-12 reveal">
-      <table class="w-full text-sm border border-sand/50">
-        <caption class="sr-only">Sustainability metrics registry</caption>
-        <thead class="bg-navy text-white text-left">
-          <tr>${['Metric', 'Value', 'Unit', 'Year', 'Source', 'Verification'].map((h) => `<th scope="col" class="px-5 py-3.5 text-[11px] tracking-widest uppercase font-medium">${h}</th>`).join('')}</tr>
-        </thead>
-        <tbody class="divide-y divide-sand/40 bg-ivory">
-          ${['Water consumption per kg fabric', 'Renewable energy share', 'Recycled material share', 'Wastewater treatment coverage'].map((m) => `
-            <tr>
-              <td class="px-5 py-4 text-navy font-medium">${m}</td>
-              <td class="px-5 py-4 text-mutedgt italic" colspan="4">Information to be confirmed by Gumti Textiles Ltd.</td>
-              <td class="px-5 py-4"><span class="text-[10px] tracking-widest uppercase bg-amber-100 text-amber-900 px-2.5 py-1">Pending verification</span></td>
-            </tr>`).join('')}
-          <tr>
-            <td class="px-5 py-4 text-navy font-medium">Certified memberships</td>
-            <td class="px-5 py-4 text-ink/75">BCI · SEDEX · OEKO-TEX · GOTS</td>
-            <td class="px-5 py-4 text-mutedgt">—</td>
-            <td class="px-5 py-4 text-mutedgt">Current</td>
-            <td class="px-5 py-4 text-mutedgt">BGMEA public listing</td>
-            <td class="px-5 py-4"><span class="text-[10px] tracking-widest uppercase bg-emerald-100 text-emerald-900 px-2.5 py-1">Verified</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+          <!-- Specs & Content -->
+          <div class="lg:col-span-6 ${i % 2 === 1 ? 'lg:order-1' : ''} space-y-4">
+            <span class="text-xs font-bold uppercase tracking-wider text-[#00E599]">${s.tagline}</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold font-display text-white">${s.name} Department</h2>
+            <p class="text-xs sm:text-sm text-[#CBD5E1] leading-relaxed">${s.description}</p>
+            
+            <div class="pt-2">
+              <p class="text-[10px] uppercase font-bold tracking-wider text-[#788A9C] mb-2">Quality & Process Controls</p>
+              <div class="flex flex-wrap gap-1.5">
+                ${s.checkpoints.map((c) => `<span class="px-2.5 py-1 rounded bg-[#00E599]/10 border border-[#00E599]/20 text-[11px] font-medium text-[#00E599]">${c}</span>`).join('')}
+              </div>
+            </div>
+
+            <div class="pt-3 overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.01]">
+              <table class="w-full text-xs">
+                <tbody class="divide-y divide-white/[0.04]">
+                  ${s.specs.map((sp) => `
+                    <tr>
+                      <th scope="row" class="text-left py-2.5 px-4 text-[#788A9C] font-semibold text-[10px] uppercase tracking-wider w-40 whitespace-nowrap">${sp.label}</th>
+                      <td class="py-2.5 px-4 text-white font-medium">${sp.value}</td>
+                    </tr>`).join('')}
+                </tbody>
+              </table>
+            </div>
+
+            <div class="pt-2">
+              <a href="/request-quote" class="inline-flex items-center gap-2 text-xs font-bold text-[#00E599] hover:underline">
+                Book Capacity for this Program <i class="fa-solid fa-arrow-right text-[10px]"></i>
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>`).join(''))}
   </div>
 </section>
 `
 
-// ============ GLOBAL REACH ============
-export const GlobalReachPage = () => html`
-${raw(PageHero('Global Reach', 'MADE IN BANGLADESH.<br/><span class="text-sand">READY FOR THE WORLD.</span>', 'Export-oriented manufacturing registered with the Export Promotion Bureau (Reg. ' + co.epbRegistration + '). Market-level details are published only when verified.'))}
+// ============ QUALITY & ETP PAGE ============
+export const QualityPage = () => html`
+${raw(PageHero('Quality Assurance & Compliance', 'Engineered Quality.<br/><span class="text-gradient-emerald">Zero Toxic Impact.</span>', 'Our quality system operates at every manufacturing threshold — from incoming combed yarn testing to AQL final audits and biological effluent treatment.'))}
 
-<section class="bg-ivory py-20 lg:py-28">
+<!-- Quality Steps Grid -->
+<section class="bg-[#08111A] py-14 lg:py-20">
   <div class="max-w-[1440px] mx-auto px-5 lg:px-10">
-    <div class="grid lg:grid-cols-12 gap-12 items-center">
-      <div class="lg:col-span-7 reveal">
-        <svg viewBox="0 0 1000 480" class="w-full h-auto" role="img" aria-label="Stylized world map highlighting Bangladesh as the manufacturing origin">
-          <rect width="1000" height="480" fill="#071A2B"/>
-          <g fill="#0E2A42">
-            <ellipse cx="200" cy="160" rx="130" ry="85"/><ellipse cx="260" cy="330" rx="80" ry="100"/>
-            <ellipse cx="500" cy="140" rx="90" ry="60"/><ellipse cx="520" cy="300" rx="70" ry="90"/>
-            <ellipse cx="700" cy="200" rx="140" ry="100"/><ellipse cx="840" cy="360" rx="60" ry="40"/>
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <span class="kicker-pill mb-3">Inspection Thresholds</span>
+      <h2 class="text-3xl sm:text-4xl font-extrabold font-display text-white">6-Point Quality System</h2>
+      <p class="text-xs sm:text-sm text-[#788A9C] mt-2">Continuous digital monitoring and physical lab verification at every single transformation.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      ${raw([
+        ['01', 'Raw Material & Yarn', 'Incoming yarn strength, twist count, and lot continuity are tested before circular knitting allocation.', 'fa-box-open'],
+        ['02', 'Knitting & Greige Fabric', 'Full-feeder Lycra control, weight consistency, and four-point greige inspection tables.', 'fa-layer-group'],
+        ['03', 'Spectrophotometer Color Lab', 'X-Rite 850 spectrophotometer computerized recipe matching with 60 lab dips per day capacity.', 'fa-droplet'],
+        ['04', 'Finishing & Compacting', 'Bruckner & Ehwha stenters ensure dimensional stability, torque control, and minimal shrinkage.', 'fa-wand-magic-sparkles'],
+        ['05', 'In-Line Sewing Quality', 'Dedicated roving QCs monitor needle holes, stitch density (SPI), and tension across 22 lines.', 'fa-shirt'],
+        ['06', 'AQL Pre-Shipment Audit', 'Final AQL 1.5/2.5 pre-shipment inspection with metal detection before export packing.', 'fa-clipboard-check'],
+      ].map(([num, t, d, icon]) => `
+        <div class="glass-card p-6 border border-white/[0.08] space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="w-10 h-10 rounded-xl bg-[#00E599]/15 border border-[#00E599]/30 flex items-center justify-center text-[#00E599] text-base"><i class="fa-solid ${icon}"></i></span>
+            <span class="text-xs font-mono font-bold text-[#788A9C]">${num}</span>
+          </div>
+          <h3 class="text-base font-bold font-display text-white mt-2">${t}</h3>
+          <p class="text-xs text-[#788A9C] leading-relaxed">${d}</p>
+        </div>`).join(''))}
+    </div>
+  </div>
+</section>
+
+<!-- Certifications -->
+<section id="certifications" class="bg-[#060B10] py-16 lg:py-24 border-y border-white/[0.08]">
+  <div class="max-w-[1440px] mx-auto px-5 lg:px-10">
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <span class="kicker-pill mb-3">Global Accreditations</span>
+      <h2 class="text-3xl sm:text-4xl font-extrabold font-display text-white">Compliance & Membership</h2>
+      <p class="text-xs sm:text-sm text-[#788A9C] mt-2">Verified memberships ensuring ethical trade, responsible cotton sourcing, and non-toxic materials.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      ${raw(co.certifications.map((c) => `
+        <div class="glass-card p-6 border border-white/[0.08] flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-xl font-extrabold font-display text-white">${c.code}</span>
+              <span class="px-2 py-0.5 rounded-full bg-[#00E599]/15 text-[#00E599] text-[10px] font-bold border border-[#00E599]/30">Verified</span>
+            </div>
+            <p class="text-xs font-bold text-[#CBD5E1]">${c.name}</p>
+            <p class="text-xs text-[#788A9C] mt-2 leading-relaxed">${c.description}</p>
+          </div>
+          <div class="mt-5 pt-3 border-t border-white/[0.06] text-[11px] text-[#00E599]">
+            <i class="fa-solid fa-circle-check mr-1.5"></i> ${c.scope}
+          </div>
+        </div>`).join(''))}
+    </div>
+  </div>
+</section>
+`
+
+// ============ SUSTAINABILITY PAGE ============
+export const SustainabilityPage = () => html`
+${raw(PageHero('Responsible Manufacturing', 'Clean Water. Clean Power.<br/><span class="text-gradient-emerald">Zero Toxic Effluent.</span>', 'Gumti Textiles operates a dedicated biological Effluent Treatment Plant (ETP), captive LPG energy station, and dual jute boilers to minimize ecological footprint.'))}
+
+<section class="bg-[#08111A] py-14 lg:py-20">
+  <div class="max-w-[1440px] mx-auto px-5 lg:px-10">
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+      ${raw([
+        ['Biological ETP', 'fa-water', 'On-site effluent treatment plant biologically treats 100% of dyehouse discharge before safe release into the environment.'],
+        ['Captive LPG Station', 'fa-fire-flame-curved', 'Independent clean-burning LPG fueling station ensures continuous, low-emission power across all production bays.'],
+        ['Twin-Jute Boilers', 'fa-leaf', 'Sustainable biomass steam generation utilizing natural jute fibers, lowering dependence on fossil fuels.'],
+        ['Low Liquor Ratio Dyeing', 'fa-droplet', 'Sclavos Athena soft-flow vessels reduce water consumption by up to 40% compared to conventional beck dyeing.'],
+        ['Worker Welfare & Clinic', 'fa-heart-pulse', 'Full-time doctor and nurse on staff with free medicines and regular health screening for all 1,600 employees.'],
+        ['Childcare & Nursery', 'fa-baby', 'Safe on-site daycare center supporting our 74% female workforce with trained attendants.'],
+        ['Fire & Life Safety', 'fa-shield-halved', 'Addressable alarm systems, certified fire hydrants, automatic dampers, and bi-monthly evacuation training.'],
+        ['Organic & BCI Cotton', 'fa-seedling', 'Traceable sourcing routes for GOTS organic cotton and Better Cotton Initiative (BCI) bulk programs.'],
+      ].map(([t, icon, d]) => `
+        <div class="glass-card p-6 border border-white/[0.08] space-y-3">
+          <span class="w-10 h-10 rounded-xl bg-[#00E599]/15 border border-[#00E599]/30 flex items-center justify-center text-[#00E599] text-base"><i class="fa-solid ${icon}"></i></span>
+          <h3 class="text-base font-bold font-display text-white mt-2">${t}</h3>
+          <p class="text-xs text-[#788A9C] leading-relaxed">${d}</p>
+        </div>`).join(''))}
+    </div>
+  </div>
+</section>
+`
+
+// ============ GLOBAL REACH PAGE ============
+export const GlobalReachPage = () => html`
+${raw(PageHero('International Markets', 'Made in Bangladesh.<br/><span class="text-gradient-emerald">Delivered Globally.</span>', 'Operating under EPB Registration ' + co.epbRegistration + ' and BGMEA Membership ' + co.bgmeaRegistration + ', Gumti exports over $27M in premium apparel annually.'))}
+
+<section class="bg-[#08111A] py-14 lg:py-20">
+  <div class="max-w-[1440px] mx-auto px-5 lg:px-10 grid lg:grid-cols-12 gap-12 items-center">
+    
+    <!-- Stylized Cyber World Map -->
+    <div class="lg:col-span-7">
+      <div class="glass-panel p-6 border border-white/[0.08] rounded-2xl relative overflow-hidden">
+        <svg viewBox="0 0 1000 480" class="w-full h-auto" role="img" aria-label="Global export network from Bangladesh">
+          <rect width="1000" height="480" fill="#070E16" rx="12"/>
+          <g fill="#101D2B">
+            <ellipse cx="200" cy="160" rx="130" ry="85"/>
+            <ellipse cx="260" cy="330" rx="80" ry="100"/>
+            <ellipse cx="500" cy="140" rx="90" ry="60"/>
+            <ellipse cx="520" cy="300" rx="70" ry="90"/>
+            <ellipse cx="700" cy="200" rx="140" ry="100"/>
+            <ellipse cx="840" cy="360" rx="60" ry="40"/>
           </g>
-          <circle cx="712" cy="215" r="8" fill="#C7B79C"><animate attributeName="r" values="8;13;8" dur="2.5s" repeatCount="indefinite"/></circle>
-          <circle cx="712" cy="215" r="20" fill="none" stroke="#C7B79C" stroke-width="1" opacity="0.5"><animate attributeName="r" values="14;30" dur="2.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0" dur="2.5s" repeatCount="indefinite"/></circle>
-          <text x="712" y="255" fill="#C7B79C" font-size="15" text-anchor="middle" font-family="Georgia,serif">Bangladesh</text>
-          <g stroke="#C7B79C" stroke-width="1" fill="none" opacity="0.45" stroke-dasharray="4 5">
-            <path d="M712 215 Q 500 60 230 140"/><path d="M712 215 Q 620 100 505 135"/>
-            <path d="M712 215 Q 640 300 520 300"/><path d="M712 215 Q 800 300 840 350"/>
+          <!-- Bangladesh Origin Pin -->
+          <circle cx="712" cy="215" r="8" fill="#00E599"><animate attributeName="r" values="8;13;8" dur="2s" repeatCount="indefinite"/></circle>
+          <circle cx="712" cy="215" r="22" fill="none" stroke="#00E599" stroke-width="1.5" opacity="0.6"><animate attributeName="r" values="12;36" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.7;0" dur="2s" repeatCount="indefinite"/></circle>
+          <text x="712" y="250" fill="#00E599" font-size="14" font-weight="bold" text-anchor="middle" font-family="system-ui">BANGLADESH HUB</text>
+          
+          <!-- Route Arcs -->
+          <g stroke="#00E599" stroke-width="1.5" fill="none" opacity="0.6" stroke-dasharray="6 6">
+            <path d="M712 215 Q 500 60 230 140"/>
+            <path d="M712 215 Q 620 100 505 135"/>
+            <path d="M712 215 Q 640 300 520 300"/>
+            <path d="M712 215 Q 800 300 840 350"/>
             <path d="M712 215 Q 480 320 280 330"/>
           </g>
         </svg>
       </div>
-      <div class="lg:col-span-5 reveal">
-        <h2 class="font-serif text-3xl lg:text-4xl text-navy">Export-Oriented Since Establishment</h2>
-        <p class="mt-5 text-ink/75 leading-relaxed">Gumti Textiles manufactures knitwear for international, export-oriented markets. EPB records classify the company as a Knit & Woven exporter across multiple knitted and apparel product categories.</p>
-        <div class="mt-8 space-y-4">
-          ${raw([
-            ['EPB Registration', co.epbRegistration + ' — Export Promotion Bureau, Bangladesh'],
-            ['BGMEA Membership', 'Reg. ' + co.bgmeaRegistration + ' — Bangladesh Garment Manufacturers & Exporters Association'],
-            ['Export Markets', 'Country-level market data to be confirmed by Gumti Textiles Ltd. (CMS-managed)'],
-          ].map(([k, v]) => `
-            <div class="border-l-2 border-sand pl-5 py-1">
-              <p class="text-[10px] tracking-widest2 uppercase text-mutedgt">${k}</p>
-              <p class="text-sm text-navy mt-1">${v}</p>
-            </div>`).join(''))}
+    </div>
+
+    <!-- Export Facts -->
+    <div class="lg:col-span-5 space-y-6">
+      <span class="kicker-pill">Direct Export Routes</span>
+      <h2 class="text-2xl sm:text-3xl font-extrabold font-display text-white">Full Container Logistics & Sea Freight</h2>
+      <p class="text-xs sm:text-sm text-[#CBD5E1] leading-relaxed">
+        Strategically located in Gazipur with direct transit access to Chittagong Seaport and Hazrat Shahjalal International Airport (DAC) for air expedited programs.
+      </p>
+
+      <div class="space-y-3 pt-2">
+        <div class="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-between">
+          <span class="text-xs text-[#788A9C]">Export Promotion Bureau</span>
+          <span class="text-xs font-mono font-bold text-white">Reg. ${co.epbRegistration}</span>
         </div>
-        <a href="/request-quote" class="mt-9 inline-flex items-center gap-3 text-sm font-semibold text-navy border-b border-sand pb-1 hover:text-sand transition-colors">Source From Bangladesh <i class="fa-solid fa-arrow-right text-xs"></i></a>
+        <div class="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-between">
+          <span class="text-xs text-[#788A9C]">Annual Turnover</span>
+          <span class="text-xs font-bold text-[#00E599]">~$27 Million USD</span>
+        </div>
+        <div class="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-between">
+          <span class="text-xs text-[#788A9C]">Key Partner Brands</span>
+          <span class="text-xs font-bold text-white">Norma · Smart Blanks · Suncity · TXM</span>
+        </div>
+      </div>
+
+      <div class="pt-2">
+        <a href="/request-quote" class="pill-btn-emerald">
+          <span>Inquire for Your Region</span>
+          <i class="fa-solid fa-arrow-right text-xs"></i>
+        </a>
       </div>
     </div>
+
   </div>
 </section>
 `
 
-// ============ FACILITIES ============
+// ============ FACILITIES PAGE ============
 export const FacilitiesPage = () => html`
-${raw(PageHero('Facilities', 'OUR FACTORY', 'The integrated knit-composite facility at Kaliakoir, Gazipur — and the corporate head office in Dhaka.'))}
+${raw(PageHero('Factory Locations', 'Manufacturing Complex.<br/><span class="text-gradient-emerald">Strategic Logistics.</span>', 'Our knit composite facility in Chandra, Gazipur and corporate head office in Dhaka.'))}
 
-<section class="bg-ivory py-20 lg:py-28">
+<section class="bg-[#08111A] py-14 lg:py-20">
   <div class="max-w-[1440px] mx-auto px-5 lg:px-10 grid lg:grid-cols-2 gap-8">
-    <article class="bg-white border border-sand/40 reveal">
-      <img src="${media.knitting2}" alt="Knitting machinery hall" class="w-full aspect-[16/9] object-cover" loading="lazy" />
-      <div class="p-8 lg:p-10">
-        <p class="text-[10px] tracking-widest2 uppercase text-sand">Manufacturing Facility</p>
-        <h2 class="font-serif text-3xl text-navy mt-2">Gazipur Factory</h2>
-        <address class="not-italic mt-4 text-sm text-mutedgt leading-relaxed">${co.factoryAddress.line1}<br/>${co.factoryAddress.line2}<br/>${co.factoryAddress.line3}</address>
-        <p class="mt-4 text-sm text-ink/70 leading-relaxed">Houses the integrated workflow: knitting, dyeing, finishing, garment manufacturing, quality control and packing for export. Facility area and capacity data to be confirmed by Gumti Textiles Ltd.</p>
-        <a href="${co.factoryAddress.mapUrl}" target="_blank" rel="noopener" class="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-navy border-b border-sand pb-1 hover:text-sand transition-colors"><i class="fa-solid fa-map-location-dot"></i> Open in Google Maps</a>
+    
+    <!-- Gazipur Facility -->
+    <div class="glass-card p-6 sm:p-8 border border-white/[0.08] space-y-5">
+      <div class="aspect-[16/9] rounded-xl overflow-hidden bg-[#0A131C] border border-white/[0.06]">
+        <img src="${media.knitting2}" alt="Gazipur Plant" class="w-full h-full object-cover" loading="lazy" />
       </div>
-    </article>
-    <article class="bg-white border border-sand/40 reveal">
-      <div class="w-full aspect-[16/9] bg-navy flex items-center justify-center">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-[#00E599]">Main Production Facility</span>
+        <h2 class="text-2xl font-bold font-display text-white mt-1">Chandra Factory, Gazipur</h2>
+        <address class="not-italic text-xs sm:text-sm text-[#788A9C] mt-2 leading-relaxed">
+          ${co.factoryAddress.line1}<br/>${co.factoryAddress.line2}<br/>${co.factoryAddress.line3}
+        </address>
+        <p class="text-xs text-[#CBD5E1] mt-3 leading-relaxed">
+          Houses our 50T/day dyeing floor, 10T/day circular knitting hall, 80T/day stenter finishing, and 22 modern garment assembly lines.
+        </p>
+      </div>
+      <a href="${co.factoryAddress.mapUrl}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-xs font-bold text-[#00E599] hover:underline">
+        <i class="fa-solid fa-map-location-dot"></i> View on Google Maps
+      </a>
+    </div>
+
+    <!-- Dhaka Office -->
+    <div class="glass-card p-6 sm:p-8 border border-white/[0.08] space-y-5">
+      <div class="aspect-[16/9] rounded-xl overflow-hidden bg-[#0A131C] border border-white/[0.06] flex items-center justify-center p-8">
         <div class="text-center">
-          <i class="fa-regular fa-building text-sand text-5xl"></i>
-          <p class="text-white/50 text-xs mt-4 tracking-widest2 uppercase">Official imagery slot — CMS managed</p>
+          <div class="w-14 h-14 rounded-2xl bg-[#00E599]/15 border border-[#00E599]/30 flex items-center justify-center text-[#00E599] text-2xl mx-auto mb-3">
+            <i class="fa-regular fa-building"></i>
+          </div>
+          <p class="text-xs font-bold text-white">Baridhara DOHS Commercial Suite</p>
+          <p class="text-[11px] text-[#788A9C] mt-1">Corporate, Sourcing & International Accounts</p>
         </div>
       </div>
-      <div class="p-8 lg:p-10">
-        <p class="text-[10px] tracking-widest2 uppercase text-sand">Corporate</p>
-        <h2 class="font-serif text-3xl text-navy mt-2">Head Office, Dhaka</h2>
-        <address class="not-italic mt-4 text-sm text-mutedgt leading-relaxed">${co.headOffice.line1}<br/>${co.headOffice.line2}<br/>${co.headOffice.line3}</address>
-        <p class="mt-4 text-sm text-ink/70 leading-relaxed">Corporate, merchandising and buyer communication functions operate from the Baridhara DOHS head office.</p>
-        <a href="${co.headOffice.mapUrl}" target="_blank" rel="noopener" class="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-navy border-b border-sand pb-1 hover:text-sand transition-colors"><i class="fa-solid fa-map-location-dot"></i> Open in Google Maps</a>
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-[#00D2FF]">Corporate Headquarters</span>
+        <h2 class="text-2xl font-bold font-display text-white mt-1">Dhaka Head Office</h2>
+        <address class="not-italic text-xs sm:text-sm text-[#788A9C] mt-2 leading-relaxed">
+          ${co.headOffice.line1}<br/>${co.headOffice.line2}<br/>${co.headOffice.line3}
+        </address>
+        <p class="text-xs text-[#CBD5E1] mt-3 leading-relaxed">
+          Handles buyer merchandising, lab dip approvals, shipping documentation, and commercial correspondence.
+        </p>
       </div>
-    </article>
-  </div>
+      <a href="${co.headOffice.mapUrl}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-xs font-bold text-[#00D2FF] hover:underline">
+        <i class="fa-solid fa-map-location-dot"></i> View on Google Maps
+      </a>
+    </div>
 
-  <div class="max-w-[1440px] mx-auto px-5 lg:px-10 mt-8 grid sm:grid-cols-3 gap-6">
-    ${raw([[media.dyeing, 'Dyeing facility'], [media.sewing3, 'Sewing floor'], [media.quality, 'Quality inspection']].map(([src, alt]) => `
-      <figure class="reveal-img overflow-hidden">
-        <img src="${src}" alt="${alt} (representative imagery)" class="w-full aspect-[4/3] object-cover" loading="lazy" />
-        <figcaption class="text-[10px] tracking-widest uppercase text-mutedgt mt-2">${alt} — representative image, replaceable via CMS</figcaption>
-      </figure>`).join(''))}
   </div>
 </section>
 `

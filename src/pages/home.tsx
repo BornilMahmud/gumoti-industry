@@ -2,198 +2,493 @@ import { html, raw } from 'hono/html'
 import { companyProfile as co, media, manufacturingStages } from '../data/company'
 import { products } from '../data/products'
 
-export const HomePage = () => html`
-<!-- ================= CINEMATIC HERO ================= -->
-<section id="hero-section" class="cinematic-hero relative min-h-screen flex items-end bg-midnight overflow-hidden textile-texture">
-  <div class="absolute inset-0" data-parallax="0.18">
-    <img src="${media.hero}" alt="Garment production floor with rows of sewing stations" class="hero-media w-full h-full object-cover opacity-40" fetchpriority="high" />
-    <div class="hero-overlay absolute inset-0 bg-gradient-to-t from-[#070B10] via-navy/86 to-navy/58"></div>
+export interface LandingConfigData {
+  heroHeadlineLine1?: string
+  heroHeadlineLine2?: string
+  heroKicker?: string
+  heroSubTagline?: string
+  heroBgImage?: string
+  heroCta1Text?: string
+  heroCta1Link?: string
+  heroCta2Text?: string
+  heroCta2Link?: string
+  stats?: {
+    stat1Label?: string
+    stat1Value?: string
+    stat1Sub?: string
+    stat2Label?: string
+    stat2Value?: string
+    stat2Sub?: string
+    stat3Label?: string
+    stat3Value?: string
+    stat3Sub?: string
+    stat4Label?: string
+    stat4Value?: string
+    stat4Sub?: string
+  }
+  aboutHeading?: string
+  aboutText?: string
+  contactEmail?: string
+  contactPhone?: string
+  contactAddress?: string
+  facebookUrl?: string
+}
+
+export const HomePage = (cfg?: LandingConfigData) => {
+  const heroL1 = cfg?.heroHeadlineLine1 || 'INTEGRATED KNITWEAR.'
+  const heroL2 = cfg?.heroHeadlineLine2 || 'GLOBAL SCALE.'
+  const heroKicker = cfg?.heroKicker || `● 30+ YEARS EXCELLENCE · EST. ${co.established} · 22 SEWING LINES`
+  const heroCopy = cfg?.heroSubTagline || 'Premier knit-composite textile and apparel manufacturer in Bangladesh — integrating knitting, dyeing, finishing, and garment assembly under one certified quality system.'
+  const heroBg = cfg?.heroBgImage || '/images/hero/background_1920x530.webp'
+  const cta1Text = cfg?.heroCta1Text || 'Explore Capabilities'
+  const cta1Link = cfg?.heroCta1Link || '/capabilities'
+  const cta2Text = cfg?.heroCta2Text || 'Request a Quote'
+  const cta2Link = cfg?.heroCta2Link || '/request-quote'
+
+  const stat1L = cfg?.stats?.stat1Label || 'Dyeing Output'
+  const stat1V = cfg?.stats?.stat1Value || '50T/Day'
+  const stat1S = cfg?.stats?.stat1Sub || 'Sclavos Athena Greece & Thies Germany'
+
+  const stat2L = cfg?.stats?.stat2Label || 'Knitting Output'
+  const stat2V = cfg?.stats?.stat2Value || '10T/Day'
+  const stat2S = cfg?.stats?.stat2Sub || 'Mayer & Cie & Terrot circular & flat'
+
+  const stat3L = cfg?.stats?.stat3Label || 'Finishing & Sewing'
+  const stat3V = cfg?.stats?.stat3Value || '80T / 35k'
+  const stat3S = cfg?.stats?.stat3Sub || '80T Finishing & 35,000 Pcs/Day Sewing'
+
+  const stat4L = cfg?.stats?.stat4Label || 'Workforce & Scale'
+  const stat4V = cfg?.stats?.stat4Value || '1,600'
+  const stat4S = cfg?.stats?.stat4Sub || '74% Female Empowerment · $27M Export'
+
+  return html`
+<!-- ================= HERO SECTION (Inspired by Reference 1 & 3) ================= -->
+<section id="hero-section" class="relative min-h-[92vh] flex items-center justify-center overflow-hidden bg-[#060B10] py-16 lg:py-24">
+  <!-- Subtle cyber glow backdrop -->
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-gradient-to-br from-[#00E599]/10 via-[#00D2FF]/5 to-transparent rounded-full blur-[140px]"></div>
+    <div class="absolute bottom-10 right-10 w-96 h-96 bg-[#00E599]/5 rounded-full blur-[100px]"></div>
   </div>
-  <div class="relative z-10 max-w-[1440px] mx-auto px-5 lg:px-10 pb-24 lg:pb-32 pt-40 w-full">
-    <p class="hero-kicker text-[11px] tracking-widest2 uppercase text-sand mb-7 flex items-center gap-3"><span class="inline-block w-10 h-px bg-sand"></span>Knit Composite Manufacturer · Bangladesh · Est. ${co.established}</p>
-    <h1 class="hero-headline font-serif text-white leading-[0.88] text-[16vw] sm:text-7xl lg:text-[104px] xl:text-[132px] tracking-[-0.055em]">
-      <span class="hero-line"><span>ENGINEERING</span></span><br/>
-      <span class="hero-line text-sand"><span>QUALITY.</span></span>
-    </h1>
-    <p class="hero-copy mt-8 max-w-2xl text-white/88 text-base lg:text-xl leading-relaxed">${co.subTagline}</p>
-    <div class="hero-actions mt-10 flex flex-wrap gap-4">
-      <a href="/capabilities" class="luxury-btn magnetic inline-flex items-center gap-3 bg-sand text-navy font-semibold px-8 py-4 text-sm tracking-wide hover:bg-white" data-cursor="EXPLORE"><span>Explore Capabilities</span> <i class="fa-solid fa-arrow-right text-xs"></i></a>
-      <a href="/request-quote" class="luxury-btn magnetic inline-flex items-center gap-3 border border-white/35 text-white px-8 py-4 text-sm tracking-wide hover:border-sand hover:text-sand" data-cursor="QUOTE"><span>Request a Quote</span></a>
+
+  <div class="relative z-10 max-w-[1440px] mx-auto px-5 lg:px-10 w-full">
+    <div class="grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+      
+      <!-- Left Hero Text Column -->
+      <div class="lg:col-span-7 space-y-6 text-left">
+        <div class="inline-block">
+          <span id="cfg-hero-kicker" class="kicker-pill">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#00E599] animate-pulse"></span>
+            KNIT COMPOSITE MANUFACTURING
+          </span>
+        </div>
+
+        <h1 class="text-4xl sm:text-6xl lg:text-[76px] font-extrabold font-display leading-[1.04] tracking-tight text-white">
+          <span id="cfg-hero-l1" class="block">${heroL1}</span>
+          <span id="cfg-hero-l2" class="block text-gradient-emerald">${heroL2}</span>
+        </h1>
+
+        <p id="cfg-hero-copy" class="text-sm sm:text-base lg:text-lg text-[#CBD5E1] leading-relaxed max-w-xl font-normal">
+          ${heroCopy}
+        </p>
+
+        <!-- CTAs -->
+        <div class="pt-4 flex flex-wrap items-center gap-4">
+          <a id="cfg-cta1" href="${cta1Link}" class="pill-btn-emerald">
+            <span>${cta1Text}</span>
+            <i class="fa-solid fa-arrow-right text-xs"></i>
+          </a>
+          <a href="https://wa.me/8801329713736?text=Hello%20Gumti%20Textiles,%20I%20would%20like%20to%20inquire%20about%20knitwear%20manufacturing..." target="_blank" rel="noopener" class="pill-btn-outline border-[#25D366]/40 text-[#25D366] hover:bg-[#25D366]/15 hover:border-[#25D366] inline-flex items-center gap-2">
+            <i class="fa-brands fa-whatsapp text-base"></i>
+            <span>WhatsApp</span>
+          </a>
+          <div class="flex items-center gap-2 pl-2 text-xs text-[#788A9C]">
+            <i class="fa-solid fa-bolt text-[#00E599]"></i>
+            <span>Quotes within 24h</span>
+          </div>
+        </div>
+
+        <!-- Quick trust facts -->
+        <div class="pt-6 grid grid-cols-3 gap-6 border-t border-white/[0.08] max-w-lg text-xs">
+          <div>
+            <p class="text-white font-bold text-base font-display">50T / Day</p>
+            <p class="text-[#788A9C] text-[11px] mt-0.5">Dyeing Capacity</p>
+          </div>
+          <div>
+            <p class="text-white font-bold text-base font-display">22 Lines</p>
+            <p class="text-[#788A9C] text-[11px] mt-0.5">Garment Sewing</p>
+          </div>
+          <div>
+            <p class="text-white font-bold text-base font-display">30+ Years</p>
+            <p class="text-[#788A9C] text-[11px] mt-0.5">Since 1993</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Visual Card (Real Local Machinery & Composite Floor) -->
+      <div class="lg:col-span-5 relative">
+        <div class="glass-panel p-3.5 relative overflow-hidden shadow-2xl border border-white/[0.12] group">
+          <div class="relative overflow-hidden rounded-xl aspect-[4/3] bg-[#0A131C]">
+            <img id="cfg-hero-media" src="${heroBg}" alt="Gumti Manufacturing Plant" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90" />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#060B10] via-transparent to-transparent"></div>
+            
+            <!-- Floating Machinery Badge -->
+            <div class="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-[#060B10]/80 backdrop-blur-md border border-white/[0.1] text-[11px] font-semibold text-white flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-[#00E599]"></span>
+              Chandra Plant, Gazipur
+            </div>
+
+            <div class="absolute bottom-4 left-4 right-4">
+              <p class="text-[10px] uppercase font-bold tracking-wider text-[#00E599]">Composite Floor</p>
+              <p class="text-sm font-bold text-white mt-0.5">High-Pressure Dyeing & Automated Knitting</p>
+            </div>
+          </div>
+
+          <!-- Quick Metrics Bar below card -->
+          <div class="grid grid-cols-2 gap-3 mt-3 pt-1">
+            <div class="p-3 rounded-lg bg-white/[0.02] border border-white/[0.05]">
+              <p class="text-[10px] text-[#788A9C] uppercase font-semibold">Biological ETP</p>
+              <p class="text-xs font-bold text-white mt-0.5">100% Zero Toxic Effluent</p>
+            </div>
+            <div class="p-3 rounded-lg bg-white/[0.02] border border-white/[0.05]">
+              <p class="text-[10px] text-[#788A9C] uppercase font-semibold">Machinery Brands</p>
+              <p class="text-xs font-bold text-white mt-0.5">Sclavos · Mayer & Cie · Ehwha</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
-  </div>
-  <div class="hero-scroll absolute bottom-8 right-8 hidden lg:flex flex-col items-center gap-2 text-white/40" aria-hidden="true">
-    <span class="text-[10px] tracking-widest2 uppercase rotate-90 origin-center translate-y-[-14px]">Scroll</span>
-    <span class="scroll-line block w-px h-14 bg-white/50 origin-top mt-6"></span>
   </div>
 </section>
 
-<!-- ================= VERIFIED TRUST STRIP ================= -->
-<section id="trust-strip" class="bg-ivory border-b border-sand/40 ivory-texture textile-texture">
-  <div class="max-w-[1440px] mx-auto px-5 lg:px-10 grid grid-cols-2 lg:grid-cols-4 divide-x divide-sand/40">
-    ${raw([
-      ['Established', co.established, 'Founded 30 October 1993 (BGMEA)'],
-      ['Factory Type', 'Knit Composite', 'Knitting · Dyeing · Finishing · Garments'],
-      ['BGMEA Reg.', co.bgmeaRegistration, 'EPB Registration ' + co.epbRegistration],
-      ['Export Focus', 'International', 'Export-oriented apparel manufacturing'],
-    ].map(([k, v, s]) => `
-      <div class="py-10 lg:py-14 px-5 lg:px-10 reveal">
-        <p class="text-[10px] tracking-widest2 uppercase text-mutedgt">${k}</p>
-        <p class="font-serif text-3xl lg:text-6xl text-navy mt-3 big-num">${v}</p>
-        <p class="text-xs text-mutedgt mt-2">${s}</p>
-      </div>`).join(''))}
+<!-- ================= LIVE FACTORY METRICS TICKER (Inspired by Reference 1 & 2) ================= -->
+<section id="metrics-ticker" class="bg-[#081119] border-y border-white/[0.08] py-8">
+  <div class="max-w-[1440px] mx-auto px-5 lg:px-10">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      
+      <!-- Metric 1 -->
+      <div class="glass-card p-5">
+        <div class="flex items-center justify-between">
+          <span id="cfg-stat1-label" class="text-[11px] font-semibold uppercase tracking-wider text-[#788A9C]">${stat1L}</span>
+          <span class="text-[10px] font-bold text-[#00E599] bg-[#00E599]/10 px-2 py-0.5 rounded-full border border-[#00E599]/20">Active</span>
+        </div>
+        <p id="cfg-stat1-value" class="text-3xl font-extrabold font-display text-white mt-2">${stat1V}</p>
+        <p id="cfg-stat1-sub" class="text-xs text-[#788A9C] mt-1.5">${stat1S}</p>
+        <div class="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-[#00E599]">
+          <span><i class="fa-solid fa-arrow-trend-up mr-1"></i> Eco vessels</span>
+          <span class="text-[#788A9C]">Low liquor ratio</span>
+        </div>
+      </div>
+
+      <!-- Metric 2 -->
+      <div class="glass-card p-5">
+        <div class="flex items-center justify-between">
+          <span id="cfg-stat2-label" class="text-[11px] font-semibold uppercase tracking-wider text-[#788A9C]">${stat2L}</span>
+          <span class="text-[10px] font-bold text-[#00D2FF] bg-[#00D2FF]/10 px-2 py-0.5 rounded-full border border-[#00D2FF]/20">High-Speed</span>
+        </div>
+        <p id="cfg-stat2-value" class="text-3xl font-extrabold font-display text-white mt-2">${stat2V}</p>
+        <p id="cfg-stat2-sub" class="text-xs text-[#788A9C] mt-1.5">${stat2S}</p>
+        <div class="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-[#00D2FF]">
+          <span><i class="fa-solid fa-arrows-rotate mr-1"></i> Circular & flat</span>
+          <span class="text-[#788A9C]">Single jersey & pique</span>
+        </div>
+      </div>
+
+      <!-- Metric 3 -->
+      <div class="glass-card p-5">
+        <div class="flex items-center justify-between">
+          <span id="cfg-stat3-label" class="text-[11px] font-semibold uppercase tracking-wider text-[#788A9C]">${stat3L}</span>
+          <span class="text-[10px] font-bold text-[#00E599] bg-[#00E599]/10 px-2 py-0.5 rounded-full border border-[#00E599]/20">Output</span>
+        </div>
+        <p id="cfg-stat3-value" class="text-3xl font-extrabold font-display text-white mt-2">${stat3V}</p>
+        <p id="cfg-stat3-sub" class="text-xs text-[#788A9C] mt-1.5">${stat3S}</p>
+        <div class="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-[#00E599]">
+          <span><i class="fa-solid fa-industry mr-1"></i> 750+ Machines</span>
+          <span class="text-[#788A9C]">Synchronized lines</span>
+        </div>
+      </div>
+
+      <!-- Metric 4 -->
+      <div class="glass-card p-5">
+        <div class="flex items-center justify-between">
+          <span id="cfg-stat4-label" class="text-[11px] font-semibold uppercase tracking-wider text-[#788A9C]">Export Volume</span>
+          <span class="text-[10px] font-bold text-[#E5C378] bg-[#E5C378]/10 px-2 py-0.5 rounded-full border border-[#E5C378]/20">Global Reach</span>
+        </div>
+        <p id="cfg-stat4-value" class="text-3xl font-extrabold font-display text-white mt-2">$27M</p>
+        <p id="cfg-stat4-sub" class="text-xs text-[#788A9C] mt-1.5">Annual export shipments across Europe & North America</p>
+        <div class="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-[#E5C378]">
+          <span><i class="fa-solid fa-award mr-1"></i> Certified Quality</span>
+          <span class="text-[#788A9C]">1,600 Workforce</span>
+        </div>
+      </div>
+
+    </div>
   </div>
 </section>
 
-<!-- ================= EDITORIAL INTRO ================= -->
-<section id="about-intro" class="bg-ivory py-24 lg:py-36">
-  <div class="max-w-[1440px] mx-auto px-5 lg:px-10 grid lg:grid-cols-12 gap-12 items-start">
-    <div class="lg:col-span-5 reveal">
-      <p class="text-[11px] tracking-widest2 uppercase text-mutedgt mb-4 flex items-center gap-3"><span class="w-8 h-px bg-sand inline-block"></span>About Gumti</p>
-      <h2 class="font-serif text-5xl lg:text-[70px] leading-[0.95] text-navy tracking-[-0.045em]"><span class="word-mask"><span>CRAFTING</span></span><br/><span class="word-mask"><span>POSSIBILITY.</span></span></h2>
-      <a href="/about" class="magnetic mt-10 inline-flex items-center gap-3 text-sm font-semibold text-navy border-b border-sand pb-1 hover:text-sand">Our Story <i class="fa-solid fa-arrow-right text-xs"></i></a>
+<!-- ================= INTERACTIVE APPAREL CAPACITY ESTIMATOR (Inspired by Reference 1 Calculator) ================= -->
+<section id="capacity-estimator" class="bg-[#060B10] py-20 border-b border-white/[0.08]">
+  <div class="max-w-[1200px] mx-auto px-5 lg:px-10">
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <span class="kicker-pill mb-3">Live Sourcing Tool</span>
+      <h2 class="text-3xl sm:text-4xl font-extrabold font-display text-white">Apparel Production Estimator</h2>
+      <p class="text-xs sm:text-sm text-[#788A9C] mt-2">Calculate real-time machine capacity, yarn requirements, and estimated turnaround based on our factory infrastructure.</p>
     </div>
-    <div class="lg:col-span-7 reveal">
-      <p class="text-xl lg:text-2xl leading-relaxed text-ink/78 max-w-3xl">
-        ${co.name} began operations in ${co.established} and operates as an established, export-oriented knit-composite textile and apparel manufacturer in Bangladesh — integrating knitting, dyeing, finishing and garment manufacturing under one quality system.
-      </p>
-      <div class="mt-12 grid sm:grid-cols-2 gap-x-10 gap-y-6">
-        ${raw(co.capabilities.slice(0, 4).map((c, i) => `
-          <div class="flex items-start gap-4 border-t border-sand/50 pt-5 reveal" style="transition-delay:${i * 80}ms">
-            <span class="font-serif text-sand text-2xl">0${i + 1}</span>
-            <p class="text-sm font-medium text-navy tracking-wide">${c}</p>
+
+    <div class="glass-panel p-6 sm:p-10 border border-white/[0.1]">
+      <div class="grid md:grid-cols-12 gap-8 items-center">
+        
+        <!-- Left: Input Controls -->
+        <div class="md:col-span-7 space-y-5">
+          <div>
+            <label class="field-label-dark">Select Garment Category</label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <button type="button" class="est-cat-btn active p-3 rounded-xl bg-[#00E599]/15 border border-[#00E599] text-xs font-bold text-white text-center" data-cat="polo" data-gsm="220" data-rate="2500">
+                Polo Shirt<br/><span class="text-[10px] text-[#00E599] font-normal">220 GSM Pique</span>
+              </button>
+              <button type="button" class="est-cat-btn p-3 rounded-xl bg-white/[0.02] border border-white/[0.08] text-xs font-medium text-[#CBD5E1] text-center hover:border-white/20" data-cat="tshirt" data-gsm="160" data-rate="4000">
+                Crew T-Shirt<br/><span class="text-[10px] text-[#788A9C] font-normal">160 GSM Jersey</span>
+              </button>
+              <button type="button" class="est-cat-btn p-3 rounded-xl bg-white/[0.02] border border-white/[0.08] text-xs font-medium text-[#CBD5E1] text-center hover:border-white/20" data-cat="hoodie" data-gsm="320" data-rate="1800">
+                Fleece Hoodie<br/><span class="text-[10px] text-[#788A9C] font-normal">320 GSM Fleece</span>
+              </button>
+              <button type="button" class="est-cat-btn p-3 rounded-xl bg-white/[0.02] border border-white/[0.08] text-xs font-medium text-[#CBD5E1] text-center hover:border-white/20" data-cat="active" data-gsm="180" data-rate="3200">
+                Activewear<br/><span class="text-[10px] text-[#788A9C] font-normal">180 GSM Interlock</span>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <label class="field-label-dark mb-0">Target Order Volume</label>
+              <span id="est-qty-display" class="text-sm font-bold text-[#00E599] font-mono">10,000 Pcs</span>
+            </div>
+            <input id="est-qty-slider" type="range" min="3000" max="50000" step="1000" value="10000" class="w-full accent-[#00E599] bg-[#0D1622] h-2 rounded-lg cursor-pointer" />
+            <div class="flex justify-between text-[10px] text-[#788A9C] mt-1 font-mono">
+              <span>3,000 (Min MOQ)</span>
+              <span>25,000</span>
+              <span>50,000+ Pcs</span>
+            </div>
+          </div>
+
+          <div>
+            <label class="field-label-dark">Fabric Blend</label>
+            <select id="est-blend-select" class="field-dark cursor-pointer text-xs">
+              <option value="100% Combed Cotton">100% Combed Ring-Spun Cotton</option>
+              <option value="100% Organic Cotton (GOTS)">100% Organic Cotton (GOTS Compliant)</option>
+              <option value="CVC (60% Cotton / 40% Polyester)">CVC (60% Cotton / 40% Polyester)</option>
+              <option value="Cotton / Elastane (95/5)">Cotton / Spandex (95% Cotton / 5% Elastane)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Right: Real-time Estimated Output Card -->
+        <div class="md:col-span-5 bg-[#0C1622] rounded-2xl p-6 border border-[#00E599]/30 shadow-xl space-y-4">
+          <div class="flex items-center justify-between border-b border-white/[0.08] pb-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-white">Estimated Factory Allocation</span>
+            <span class="px-2 py-0.5 rounded bg-[#00E599]/15 text-[#00E599] text-[10px] font-bold">Live Plan</span>
+          </div>
+
+          <div class="space-y-3 text-xs">
+            <div class="flex justify-between py-1.5 border-b border-white/[0.04]">
+              <span class="text-[#788A9C]">Fabric Weight Required:</span>
+              <span id="est-weight" class="text-white font-mono font-semibold">2,200 KG</span>
+            </div>
+            <div class="flex justify-between py-1.5 border-b border-white/[0.04]">
+              <span class="text-[#788A9C]">Knitting Floor Time:</span>
+              <span id="est-knit-days" class="text-white font-mono font-semibold">~0.5 Days</span>
+            </div>
+            <div class="flex justify-between py-1.5 border-b border-white/[0.04]">
+              <span class="text-[#788A9C]">Dyeing & Compacting:</span>
+              <span id="est-dye-days" class="text-white font-mono font-semibold">~0.5 Days</span>
+            </div>
+            <div class="flex justify-between py-1.5 border-b border-white/[0.04]">
+              <span class="text-[#788A9C]">Sewing Lines Allocated:</span>
+              <span id="est-lines" class="text-[#00E599] font-mono font-semibold">3 Lines (3-4 Days)</span>
+            </div>
+            <div class="flex justify-between py-1.5">
+              <span class="text-[#788A9C]">Target Production Turnaround:</span>
+              <span id="est-total-time" class="text-[#00E599] font-bold">14 - 18 Days</span>
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <button id="est-prefill-btn" type="button" class="pill-btn-emerald w-full py-3 text-xs">
+              <i class="fa-solid fa-paper-plane text-xs mr-1"></i> Submit RFQ with these Specs
+            </button>
+            <p class="text-[10px] text-[#788A9C] text-center mt-2">Commercial pricing confirmed within 24h by merchandising.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 4 CORE PILLAR CARDS (Inspired by Reference 3 "Why Blockchain?") ================= -->
+<section id="why-gumti" class="bg-[#070D14] py-20 border-b border-white/[0.08]">
+  <div class="max-w-[1440px] mx-auto px-5 lg:px-10">
+    <div class="text-center max-w-2xl mx-auto mb-14">
+      <span class="kicker-pill mb-3">Industrial Superiority</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold font-display text-white">Why <span class="text-gradient-emerald">Gumti Textiles</span>?</h2>
+      <p class="text-xs sm:text-sm text-[#788A9C] mt-2">World-class machinery, biological environmental compliance, and complete vertical composite integration from Bangladesh.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      
+      <!-- Card 1 -->
+      <div class="glass-card p-6 space-y-4">
+        <div class="w-12 h-12 rounded-xl bg-[#00E599]/15 border border-[#00E599]/30 flex items-center justify-center text-[#00E599] text-xl">
+          <i class="fa-solid fa-cubes-stacked"></i>
+        </div>
+        <h3 class="text-base font-bold text-white font-display">Vertical Integration</h3>
+        <p class="text-xs text-[#788A9C] leading-relaxed">
+          From circular knitting, open-width eco-dyeing, and stenter compacting to precision cutting and sewing across 22 lines under a unified quality assurance system.
+        </p>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="glass-card p-6 space-y-4">
+        <div class="w-12 h-12 rounded-xl bg-[#00D2FF]/15 border border-[#00D2FF]/30 flex items-center justify-center text-[#00D2FF] text-xl">
+          <i class="fa-solid fa-leaf"></i>
+        </div>
+        <h3 class="text-base font-bold text-white font-display">Biological ETP & Green Energy</h3>
+        <p class="text-xs text-[#788A9C] leading-relaxed">
+          100% biological Effluent Treatment Plant (ETP) ensuring clean water discharge, backed by our captive LPG station and 2 sustainable jute boilers.
+        </p>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="glass-card p-6 space-y-4">
+        <div class="w-12 h-12 rounded-xl bg-[#E5C378]/15 border border-[#E5C378]/30 flex items-center justify-center text-[#E5C378] text-xl">
+          <i class="fa-solid fa-microchip"></i>
+        </div>
+        <h3 class="text-base font-bold text-white font-display">European Precision Machinery</h3>
+        <p class="text-xs text-[#788A9C] leading-relaxed">
+          High-performance dyeing from Sclavos (Greece) and Thies (Germany), automated Mayer & Cie and Terrot knitting, and Korean Ehwha stenter lines.
+        </p>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="glass-card p-6 space-y-4">
+        <div class="w-12 h-12 rounded-xl bg-[#00E599]/15 border border-[#00E599]/30 flex items-center justify-center text-[#00E599] text-xl">
+          <i class="fa-solid fa-users"></i>
+        </div>
+        <h3 class="text-base font-bold text-white font-display">1,600 Ethical Workforce</h3>
+        <p class="text-xs text-[#788A9C] leading-relaxed">
+          74% skilled female personnel, full healthcare clinic, registered doctor and nurse, child nursery, certified fire alarms, and regular safety drills.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ================= VALUED INTERNATIONAL BUYER BRANDS ================= -->
+<section id="buyer-partners" class="bg-[#060B10] py-12 border-b border-white/[0.08]">
+  <div class="max-w-[1440px] mx-auto px-5 lg:px-10">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+      <div>
+        <p class="text-[11px] font-bold tracking-widest uppercase text-[#00E599]">Trusted Brand Partners</p>
+        <p class="text-xs text-[#788A9C] mt-0.5">Manufacturing export apparel for international retail partners</p>
+      </div>
+      <div class="flex flex-wrap items-center justify-center gap-6 lg:gap-10">
+        ${raw(media.clients.map((c) => `
+          <div class="h-12 px-5 py-2.5 rounded-xl bg-[#0B141E] border border-white/[0.08] flex items-center justify-center hover:border-[#00E599]/40 transition-colors">
+            <img src="${c.logo}" alt="${c.name}" class="h-6 w-auto object-contain filter brightness-90 hover:brightness-100 transition-all" loading="lazy" />
           </div>`).join(''))}
       </div>
     </div>
   </div>
 </section>
 
-<!-- ================= SIGNATURE MANUFACTURING JOURNEY ================= -->
-<section id="journey-signature" class="journey-pin textile-texture">
-  <div class="journey-sticky">
-    <div class="journey-bg" aria-hidden="true">
-      ${raw(manufacturingStages.map((s, i) => `<img src="${(media as any)[s.image]}" alt="" class="${i === 0 ? 'active' : ''}" loading="lazy" />`).join(''))}
+<!-- ================= CURATED APPAREL PROGRAM (Dark Cards) ================= -->
+<section id="product-showcase" class="bg-[#070D14] py-20 border-b border-white/[0.08]">
+  <div class="max-w-[1440px] mx-auto px-5 lg:px-10">
+    <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-12">
+      <div>
+        <span class="kicker-pill mb-2">Export Catalog</span>
+        <h2 class="text-3xl sm:text-4xl font-extrabold font-display text-white">Principal Apparel Categories</h2>
+      </div>
+      <a href="/products" class="pill-btn-outline text-xs">
+        View Full Product Catalog <i class="fa-solid fa-arrow-right text-[10px]"></i>
+      </a>
     </div>
-    <div class="journey-copy max-w-[1440px] mx-auto px-5 lg:px-10">
-      <p class="text-[11px] tracking-widest2 uppercase text-sand mb-6 flex items-center gap-3"><span class="w-10 h-px bg-sand inline-block"></span>Manufacturing Journey</p>
-      <p id="journey-no" class="journey-no">01</p>
-      <h2 class="journey-title" id="journey-title">KNITTING</h2>
-      <p id="journey-tag" class="journey-tag mt-5">Precision begins at the fabric stage.</p>
-      <p id="journey-desc" class="journey-desc mt-5">${manufacturingStages[0].description}</p>
-      <div id="journey-progress" class="journey-progress mt-9"><span style="width:${100 / manufacturingStages.length}%"></span></div>
-      <div class="journey-dots mt-7" aria-hidden="true">${raw(manufacturingStages.map((s, i) => `<button class="${i === 0 ? 'active' : ''}" tabindex="-1"></button>`).join(''))}</div>
-      <a href="/capabilities" class="magnetic mt-10 inline-flex items-center gap-3 border border-white/25 text-white px-7 py-3.5 text-sm tracking-wide hover:border-sand hover:text-sand">Explore Every Stage <i class="fa-solid fa-arrow-right text-xs"></i></a>
-      <div class="sr-only">
-        ${raw(manufacturingStages.map((s) => `<span class="journey-stage-data" data-num="${s.num}" data-name="${s.name.toUpperCase()}" data-tag="${s.tagline}" data-desc="${s.description}"></span>`).join(''))}
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      ${raw([
+        { cat: 'Classic Pique Polo', img: '/images/products/polo-classic.png', gsm: '220 GSM', blend: '100% Combed Cotton' },
+        { cat: 'Crew Neck T-Shirt', img: '/images/products/crew-tshirt.png', gsm: '160 GSM', blend: 'Organic Ring-Spun Cotton' },
+        { cat: 'Pullover Fleece Hoodie', img: '/images/products/hoodie-fleece.png', gsm: '320 GSM', blend: '3-End Brushed Fleece' },
+        { cat: 'Performance Activewear', img: '/images/products/activewear-sport.png', gsm: '180 GSM', blend: 'Moisture-Wicking Interlock' },
+      ].map((p, i) => `
+        <div class="glass-card overflow-hidden group">
+          <div class="aspect-[4/5] relative bg-[#09111A] flex items-center justify-center p-4">
+            <img src="${p.img}" alt="${p.cat}" class="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+            <span class="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[#060B10]/80 border border-white/[0.1] text-[10px] font-bold text-[#00E599] font-mono">
+              ${p.gsm}
+            </span>
+          </div>
+          <div class="p-5 space-y-3">
+            <div>
+              <h3 class="font-bold text-white text-base">${p.cat}</h3>
+              <p class="text-xs text-[#788A9C] mt-0.5">${p.blend}</p>
+            </div>
+            <div class="pt-2 flex items-center justify-between border-t border-white/[0.06]">
+              <a href="/request-sample?product=${encodeURIComponent(p.cat)}" class="text-xs font-semibold text-[#00E599] hover:underline inline-flex items-center gap-1.5">
+                Request Swatch <i class="fa-solid fa-arrow-right text-[10px]"></i>
+              </a>
+              <span class="text-[10px] text-[#788A9C] font-mono">MOQ 3k</span>
+            </div>
+          </div>
+        </div>`).join(''))}
+    </div>
+  </div>
+</section>
+
+<!-- ================= FABRIC TO APPAREL INTERACTIVE SLIDER ================= -->
+<section id="fabric-experience" class="bg-[#060B10] py-20 border-b border-white/[0.08]">
+  <div class="max-w-[1200px] mx-auto px-5 lg:px-10 text-center">
+    <span class="kicker-pill mb-3">Composite Workflow</span>
+    <h2 class="text-3xl sm:text-4xl font-extrabold font-display text-white">Fabric-to-Garment Integration</h2>
+    <p class="text-xs sm:text-sm text-[#788A9C] max-w-md mx-auto mt-2">Slide across to observe the transformation from raw knitted fabric roll to completed export apparel.</p>
+
+    <div id="fabric-compare" class="relative mt-10 aspect-[16/9] max-h-[520px] w-full overflow-hidden rounded-2xl border border-white/[0.12] select-none shadow-2xl bg-[#09111A]">
+      <img src="/images/hero/garment_realistic_1170x600.webp" alt="Finished garments line" class="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+      <img src="/images/factory/textiles_same_370x230.webp" alt="Knitted fabric inspection" class="cmp-top absolute inset-0 w-full h-full object-cover" style="clip-path: inset(0 50% 0 0)" loading="lazy" />
+      <div class="cmp-bar absolute top-0 bottom-0 w-0.5 bg-[#00E599]" style="left:50%">
+        <span class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-9 h-9 bg-[#00E599] text-[#050B10] flex items-center justify-center rounded-full shadow-[0_0_16px_rgba(0,229,153,0.5)]">
+          <i class="fa-solid fa-arrows-left-right text-xs"></i>
+        </span>
+      </div>
+      <input type="range" min="0" max="100" value="50" class="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize" aria-label="Compare raw fabric and finished garment" />
+    </div>
+  </div>
+</section>
+
+<!-- ================= EXECUTIVE CTA BANNER (Inspired by Reference 1 Footer Card) ================= -->
+<section id="cta-banner" class="bg-[#060B10] py-20">
+  <div class="max-w-[1200px] mx-auto px-5 lg:px-10">
+    <div class="relative overflow-hidden rounded-3xl p-8 sm:p-14 bg-gradient-to-r from-[#00E599]/20 via-[#0B1F2C] to-[#0A1624] border border-[#00E599]/40 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-8">
+      <div class="space-y-3 text-center lg:text-left">
+        <span class="px-3 py-1 rounded-full bg-[#00E599]/15 border border-[#00E599]/30 text-[11px] font-bold text-[#00E599] uppercase tracking-wider">
+          Ready for Production
+        </span>
+        <h2 class="text-3xl sm:text-4xl font-extrabold font-display text-white">Start Your Apparel Production with Gumti</h2>
+        <p class="text-xs sm:text-sm text-[#CBD5E1] max-w-xl">
+          Get competitive FOB pricing, fabric swatches, and factory line allocations directly from our merchandising leadership.
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center justify-center gap-4 flex-shrink-0">
+        <a href="/request-quote" class="pill-btn-emerald px-8 py-3.5 text-sm">
+          Request a Quote <i class="fa-solid fa-arrow-right text-xs"></i>
+        </a>
+        <a href="/contact" class="pill-btn-outline px-7 py-3.5 text-sm">
+          Contact Merchandising
+        </a>
       </div>
     </div>
   </div>
 </section>
-
-<!-- ================= HORIZONTAL CAPABILITIES ================= -->
-<section id="capability-horizontal" class="bg-navy text-white py-24 lg:py-32 textile-texture">
-  <div class="max-w-[1440px] mx-auto px-5 lg:px-10">
-    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-12">
-      <div class="reveal"><p class="text-[11px] tracking-widest2 uppercase text-sand mb-4">Our Capabilities</p><h2 class="font-serif text-4xl lg:text-[64px] leading-[.96] tracking-[-.045em]">TECHNICAL SCALE,<br/>EDITORIAL PRECISION.</h2></div>
-      <p class="text-white/58 max-w-md reveal">A responsive horizontal rail on mobile and desktop — designed as a premium technical capability walkthrough.</p>
-    </div>
-    <div class="capability-rail reveal-img" aria-label="Capability cards">
-      ${raw(manufacturingStages.map((s) => `
-        <article class="capability-card">
-          <p class="font-serif text-5xl text-sand/55">${s.num}</p>
-          <h3 class="font-serif text-3xl mt-10 text-white">${s.name}</h3>
-          <p class="text-sand text-sm uppercase tracking-widest mt-2">${s.tagline}</p>
-          <p class="text-white/62 text-sm leading-relaxed mt-5">${s.description}</p>
-          <a href="/capabilities#${s.slug}" class="mt-7 inline-flex items-center gap-2 text-sm text-sand hover:text-white">Stage details <i class="fa-solid fa-arrow-right text-xs"></i></a>
-        </article>`).join(''))}
-    </div>
-  </div>
-</section>
-
-<!-- ================= EDITORIAL PRODUCT SHOWCASE ================= -->
-<section id="product-showcase" class="bg-ivory py-24 lg:py-36 ivory-texture textile-texture">
-  <div class="max-w-[1440px] mx-auto px-5 lg:px-10">
-    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-14">
-      <div class="reveal"><p class="text-[11px] tracking-widest2 uppercase text-mutedgt mb-4 flex items-center gap-3"><span class="w-8 h-px bg-sand inline-block"></span>Product Catalog</p><h2 class="font-serif text-5xl lg:text-[72px] text-navy leading-[.94] tracking-[-.05em]">PRINCIPAL<br/>EXPORT CATEGORIES</h2></div>
-      <a href="/products" class="magnetic reveal inline-flex items-center gap-3 text-sm font-semibold text-navy border-b border-sand pb-1 hover:text-sand self-start lg:self-auto" data-cursor="EXPLORE">View Full Catalog <i class="fa-solid fa-arrow-right text-xs"></i></a>
-    </div>
-    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      ${raw(['T-Shirts', 'Polo Shirts', 'Knit Jackets', 'Shorts'].map((cat, i) => {
-        const p = products.find((x) => x.category === cat)!
-        return `<a href="/products?category=${encodeURIComponent(cat.toLowerCase().replace(/[^a-z]/g, ''))}" class="product-card group bg-white border border-sand/40 reveal block" data-cursor="EXPLORE" style="transition-delay:${i * 80}ms">
-          <div class="overflow-hidden aspect-[3/4] relative"><img src="${p.image}" alt="${cat}" class="pc-img w-full h-full object-cover" loading="lazy" /><span class="absolute right-4 top-4 font-serif text-4xl text-white/60">0${i + 1}</span></div>
-          <div class="p-6"><p class="text-[10px] tracking-widest2 uppercase text-mutedgt">Publicly documented export product</p><p class="font-serif text-3xl text-navy mt-2 group-hover:text-sand">${cat}</p><p class="mt-5 text-xs text-mutedgt inline-flex items-center gap-2">Explore category <i class="explore-arrow fa-solid fa-arrow-right"></i></p></div>
-        </a>`
-      }).join(''))}
-    </div>
-  </div>
-</section>
-
-<!-- ================= FABRIC TO GARMENT ================= -->
-<section id="fabric-experience" class="bg-white py-24 lg:py-32 border-y border-sand/40">
-  <div class="max-w-[1100px] mx-auto px-5 lg:px-10 text-center">
-    <p class="text-[11px] tracking-widest2 uppercase text-mutedgt mb-4 reveal">The Fabric-to-Garment Experience</p>
-    <h2 class="font-serif text-4xl lg:text-6xl text-navy reveal">One Integrated Transformation</h2>
-    <p class="mt-4 text-mutedgt text-sm max-w-lg mx-auto reveal">Drag the slider — from knitted fabric on the left to finished garments on the right. Imagery is representative; official Gumti media can replace these slots.</p>
-    <div id="fabric-compare" class="relative mt-12 aspect-[16/9] max-h-[520px] w-full overflow-hidden select-none reveal-img" data-cursor="VIEW">
-      <img src="${media.garments}" alt="Finished knit garments" class="absolute inset-0 w-full h-full object-cover" loading="lazy" />
-      <img src="${media.fabricPile}" alt="Knitted fabric" class="cmp-top absolute inset-0 w-full h-full object-cover" style="clip-path: inset(0 50% 0 0)" loading="lazy" />
-      <div class="cmp-bar absolute top-0 bottom-0 w-0.5 bg-sand" style="left:50%"><span class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-10 h-10 bg-sand text-navy flex items-center justify-center rounded-full shadow-lg"><i class="fa-solid fa-arrows-left-right text-sm"></i></span></div>
-      <input type="range" min="0" max="100" value="50" class="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize" aria-label="Compare fabric and finished garment" />
-    </div>
-  </div>
-</section>
-
-<!-- ================= QUALITY & CERTIFICATIONS ================= -->
-<section id="quality-certs" class="bg-ivory py-24 lg:py-36">
-  <div class="max-w-[1440px] mx-auto px-5 lg:px-10 grid lg:grid-cols-12 gap-12">
-    <div class="lg:col-span-5 reveal">
-      <p class="text-[11px] tracking-widest2 uppercase text-mutedgt mb-4 flex items-center gap-3"><span class="w-8 h-px bg-sand inline-block"></span>Quality & Compliance</p>
-      <h2 class="font-serif text-5xl lg:text-[68px] text-navy leading-[.95] tracking-[-.05em]"><span class="word-mask"><span>QUALITY IS</span></span><br/><span class="word-mask"><span>NOT A CLAIM.</span></span><br/><span class="text-sand word-mask"><span>IT'S A PROCESS.</span></span></h2>
-      <p class="mt-6 text-ink/70 leading-relaxed max-w-md">Standards and memberships publicly listed by BGMEA. Certificate numbers and validity are populated only when provided by Gumti management — never fabricated.</p>
-      <a href="/quality" class="magnetic mt-8 inline-flex items-center gap-3 text-sm font-semibold text-navy border-b border-sand pb-1 hover:text-sand">Quality System <i class="fa-solid fa-arrow-right text-xs"></i></a>
-    </div>
-    <div class="lg:col-span-7 grid sm:grid-cols-2 gap-5">
-      ${raw(co.certifications.map((c) => `
-        <a href="/quality#certifications" class="cert-card bg-white border border-sand/40 p-7 reveal block" data-cursor="VIEW">
-          <p class="font-serif text-4xl text-navy">${c.code}</p><p class="text-xs tracking-wide uppercase text-sand mt-1">${c.scope}</p><p class="mt-4 text-sm text-mutedgt leading-relaxed">${c.description.slice(0, 110)}…</p><div class="cert-extra"><p class="mt-4 text-xs text-mutedgt">${c.note}</p></div><p class="mt-4 text-[10px] tracking-widest2 uppercase text-emerald-700"><i class="fa-solid fa-circle-check mr-1"></i> Listed by BGMEA</p>
-        </a>`).join(''))}
-    </div>
-  </div>
-</section>
-
-<!-- ================= GLOBAL REACH ================= -->
-<section id="global-reach-home" class="bg-navy text-white py-24 lg:py-36 relative overflow-hidden textile-texture">
-  <div class="max-w-[1440px] mx-auto px-5 lg:px-10 relative z-10 text-center">
-    <p class="text-[11px] tracking-widest2 uppercase text-sand mb-4 reveal">Global Reach</p>
-    <h2 class="font-serif text-5xl lg:text-[86px] leading-[.9] tracking-[-.055em] reveal">MADE IN BANGLADESH.<br/><span class="text-sand">READY FOR THE WORLD.</span></h2>
-    <p class="mt-6 max-w-xl mx-auto text-white/60 reveal">An EPB-registered exporter serving international markets. Export-market details are displayed only when verified by Gumti Textiles Ltd.</p>
-    <a href="/global-reach" class="magnetic mt-10 inline-flex items-center gap-3 border border-white/30 text-white px-8 py-4 text-sm tracking-wide hover:border-sand hover:text-sand reveal">Explore Global Reach <i class="fa-solid fa-arrow-right text-xs"></i></a>
-  </div>
-</section>
-
-<!-- ================= FACTORY EXPERIENCE ================= -->
-<section id="factory-home" class="bg-ivory py-24 lg:py-36">
-  <div class="max-w-[1440px] mx-auto px-5 lg:px-10 grid lg:grid-cols-12 gap-6 items-end">
-    <div class="lg:col-span-7 reveal-img overflow-hidden"><img src="${media.knitting}" alt="Industrial circular knitting machines" class="w-full aspect-[4/3] object-cover" loading="lazy" /></div>
-    <div class="lg:col-span-5 reveal bg-white border border-sand/40 p-8 lg:p-12 lg:-ml-20 mb-8 relative z-10">
-      <p class="text-[11px] tracking-widest2 uppercase text-mutedgt mb-4 flex items-center gap-3"><span class="w-8 h-px bg-sand inline-block"></span>Our Factory</p>
-      <h2 class="font-serif text-4xl lg:text-[54px] text-navy leading-[.98] tracking-[-.04em]">From Bangladesh<br/>to Global Markets</h2>
-      <p class="mt-6 text-ink/70 leading-relaxed">The Gumti factory operates at Chandra, Shafipur, Kaliakoir, Gazipur — housing the integrated knit-composite workflow from fabric formation through packing and export.</p>
-      <address class="mt-6 not-italic text-sm text-mutedgt leading-relaxed border-l-2 border-sand pl-5">${co.factoryAddress.line1}<br/>${co.factoryAddress.line2}<br/>${co.factoryAddress.line3}</address>
-      <a href="/facilities" class="magnetic mt-8 inline-flex items-center gap-3 text-sm font-semibold text-navy border-b border-sand pb-1 hover:text-sand">Visit Facilities <i class="fa-solid fa-arrow-right text-xs"></i></a>
-    </div>
-  </div>
-</section>
-
-<!-- ================= DRAMATIC CTA ================= -->
-<section id="cta-final" class="bg-midnight text-white py-24 lg:py-36 textile-texture">
-  <div class="max-w-[1200px] mx-auto px-5 lg:px-10 text-center">
-    <h2 class="font-serif text-6xl lg:text-[112px] text-white leading-[.86] tracking-[-.06em] reveal">LET'S BUILD<br/><span class="text-sand">WHAT'S NEXT.</span></h2>
-    <p class="mt-7 text-white/65 max-w-xl mx-auto reveal">Have a product requirement, sourcing inquiry or partnership opportunity? Share your specification and receive a Gumti tracking ID.</p>
-    <div class="mt-11 flex flex-wrap justify-center gap-4 reveal">
-      <a href="/request-quote" class="luxury-btn magnetic inline-flex items-center gap-3 bg-sand text-navy font-semibold px-8 py-4 text-sm tracking-wide hover:bg-white"><span>Request a Quote</span><i class="fa-solid fa-arrow-right text-xs"></i></a>
-      <a href="/contact" class="magnetic inline-flex items-center gap-3 border border-white/30 text-white px-8 py-4 text-sm tracking-wide hover:border-sand hover:text-sand">Contact Gumti</a>
-    </div>
-  </div>
-</section>
 `
+}

@@ -20,3 +20,8 @@ logs/
 # Backups
 *.tar.gz
 *.bak
+
+# Internal Resources (Protected)
+resource/
+resource/**
+

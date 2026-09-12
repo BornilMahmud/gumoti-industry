@@ -2,114 +2,155 @@ import { html } from 'hono/html'
 import { companyProfile as co } from '../data/company'
 
 export const PortalPage = () => html`
-<section class="relative bg-navy text-white pt-40 pb-16">
+<section class="relative bg-[#060B10] pt-32 pb-14 border-b border-white/[0.08]">
   <div class="max-w-[1440px] mx-auto px-5 lg:px-10">
-    <p class="text-[11px] tracking-widest2 uppercase text-sand mb-5 flex items-center gap-3"><span class="w-10 h-px bg-sand inline-block"></span>Buyer Portal</p>
-    <h1 class="font-serif text-4xl lg:text-[56px]">Your Sourcing Workspace</h1>
+    <span class="kicker-pill mb-4">Buyer Workspace</span>
+    <h1 class="text-3xl sm:text-5xl lg:text-[56px] font-extrabold font-display leading-[1.06] text-white">
+      Your Sourcing <span class="text-gradient-emerald">Dashboard</span>
+    </h1>
+    <p class="mt-3 max-w-xl text-[#788A9C] text-sm leading-relaxed">
+      Monitor live RFQs, sample dispatch tracking, and communication with our Gazipur production desk.
+    </p>
   </div>
 </section>
 
-<section class="bg-ivory py-16 lg:py-24 min-h-[50vh]">
+<section class="bg-[#08111A] py-14 lg:py-20 min-h-[60vh]">
   <div class="max-w-[1100px] mx-auto px-5 lg:px-10">
 
     <!-- Signed OUT state -->
-    <div id="portal-signed-out" class="bg-white border border-sand/40 p-10 lg:p-16 text-center max-w-xl mx-auto">
-      <span class="inline-flex w-14 h-14 items-center justify-center bg-navy text-sand text-xl"><i class="fa-regular fa-user"></i></span>
-      <h2 class="font-serif text-3xl text-navy mt-6">Sign in to Continue</h2>
-      <p class="text-sm text-mutedgt mt-3 leading-relaxed">Access RFQs, samples and buyer records linked to your email.</p>
+    <div id="portal-signed-out" class="glass-panel p-10 sm:p-14 text-center max-w-xl mx-auto rounded-3xl border border-white/[0.1] shadow-2xl">
+      <div class="w-16 h-16 rounded-2xl bg-[#00E599]/15 border border-[#00E599]/30 flex items-center justify-center text-[#00E599] text-2xl mx-auto mb-5">
+        <i class="fa-regular fa-user"></i>
+      </div>
+      <h2 class="text-2xl sm:text-3xl font-bold font-display text-white">Sign In to Continue</h2>
+      <p class="text-xs sm:text-sm text-[#788A9C] mt-2 leading-relaxed">
+        Access quotation histories, sample tracking IDs, and commercial documents linked to your account.
+      </p>
       <div class="mt-8 flex flex-col sm:flex-row justify-center gap-3">
-      <a href="/login" class="inline-flex items-center justify-center bg-navy text-white font-semibold px-8 py-4 text-sm hover:bg-ink transition-colors">Email Login</a>
-      <button data-google-signin class="inline-flex items-center justify-center gap-3 border border-navy/30 bg-white text-navy font-semibold px-8 py-4 text-sm hover:border-navy transition-colors cursor-pointer">
-        <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C41 35.4 44 30.2 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
-        Google
-      </button>
+        <a href="/login" class="pill-btn-emerald py-3 px-8 text-xs">
+          <span>Sign In with Email</span>
+          <i class="fa-solid fa-arrow-right text-xs"></i>
+        </a>
+        <button data-google-signin class="py-3 px-6 rounded-full bg-white/[0.04] border border-white/[0.1] hover:border-white/[0.25] text-xs font-bold text-white flex items-center justify-center gap-2.5 transition-colors cursor-pointer">
+          <i class="fa-brands fa-google text-[#00E599]"></i>
+          <span>Google Sign In</span>
+        </button>
       </div>
     </div>
 
     <!-- Signed IN state -->
-    <div id="portal-signed-in" class="hidden">
-      <div class="bg-white border border-sand/40 p-7 lg:p-9 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+    <div id="portal-signed-in" class="hidden space-y-8">
+      <div class="glass-card p-6 sm:p-8 border border-white/[0.08] rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
         <div class="flex items-center gap-4">
-          <img id="portal-user-photo" src="" alt="" class="hidden w-14 h-14 rounded-full border-2 border-sand" referrerpolicy="no-referrer" />
+          <img id="portal-user-photo" src="" alt="" class="hidden w-14 h-14 rounded-2xl border-2 border-[#00E599] object-cover" referrerpolicy="no-referrer" />
           <div>
-            <p id="portal-user-name" class="font-serif text-2xl text-navy">—</p>
-            <p id="portal-user-email" class="text-sm text-mutedgt">—</p>
+            <p id="portal-user-name" class="text-xl sm:text-2xl font-bold font-display text-white">—</p>
+            <p id="portal-user-email" class="text-xs text-[#788A9C] font-mono mt-0.5">—</p>
           </div>
         </div>
-        <div class="flex gap-3">
-          <a href="/request-quote" class="bg-navy text-white text-sm font-semibold px-6 py-3 hover:bg-ink transition-colors">New RFQ</a>
-          <button data-signout class="border border-sand/70 text-navy text-sm px-6 py-3 hover:border-navy transition-colors cursor-pointer">Sign Out</button>
+        <div class="flex items-center gap-3">
+          <a href="/request-quote" class="pill-btn-emerald py-2.5 px-6 text-xs">
+            <i class="fa-solid fa-plus text-xs mr-1"></i> New RFQ
+          </a>
+          <button data-signout class="py-2.5 px-5 rounded-full border border-white/[0.12] text-xs font-semibold text-[#CBD5E1] hover:text-white hover:border-white/30 transition-colors cursor-pointer">
+            Sign Out
+          </button>
         </div>
       </div>
 
-      <div class="mt-8">
-        <div>
-          <div class="flex items-center justify-between gap-4 mb-5">
-            <h2 class="font-serif text-2xl text-navy">Your RFQs</h2>
-            <a href="/contact" class="text-sm text-navy underline underline-offset-4">Contact Sales</a>
+      <div class="glass-panel p-6 sm:p-8 border border-white/[0.08] rounded-2xl">
+        <div class="flex items-center justify-between gap-4 mb-6 border-b border-white/[0.06] pb-4">
+          <div>
+            <h2 class="text-xl font-bold font-display text-white">Your RFQs & Sourcing Records</h2>
+            <p class="text-xs text-[#788A9C] mt-1">Live status tracking directly from our factory merchandising ERP.</p>
           </div>
-          <div id="portal-rfq-list" class="space-y-4">
-            <div class="border border-dashed border-sand/60 p-8 text-center text-sm text-mutedgt"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Loading RFQs…</div>
+          <a href="/contact" class="text-xs font-bold text-[#00E599] hover:underline flex items-center gap-1.5">
+            Contact Sourcing Desk <i class="fa-solid fa-arrow-right text-[10px]"></i>
+          </a>
+        </div>
+        
+        <div id="portal-rfq-list" class="space-y-3">
+          <div class="glass-card p-8 text-center text-xs text-[#788A9C] border border-dashed border-white/[0.1]">
+            <i class="fa-solid fa-circle-notch fa-spin mr-2 text-[#00E599]"></i> Synchronizing records from Gumti database…
           </div>
         </div>
       </div>
     </div>
+
   </div>
 </section>
 `
 
 export const PrivacyPage = () => html`
-<section class="relative bg-navy text-white pt-40 pb-14">
-  <div class="max-w-[900px] mx-auto px-5 lg:px-10"><h1 class="font-serif text-4xl lg:text-[52px]">Privacy Policy</h1></div>
+<section class="relative bg-[#060B10] pt-32 pb-14 border-b border-white/[0.08]">
+  <div class="max-w-[900px] mx-auto px-5 lg:px-10">
+    <span class="kicker-pill mb-4">Legal & Privacy</span>
+    <h1 class="text-3xl sm:text-5xl font-extrabold font-display text-white">Privacy Policy</h1>
+  </div>
 </section>
-<section class="bg-ivory py-16">
-  <div class="max-w-[760px] mx-auto px-5 lg:px-10 space-y-8 text-sm leading-relaxed text-ink/75">
-    <p><strong class="text-navy">Scope.</strong> This policy describes how ${co.name} handles information submitted through this website, including RFQs, contact inquiries, sample requests and job applications.</p>
-    <div><h2 class="font-serif text-2xl text-navy mb-2">Data We Collect</h2><p>Business contact details (name, company, email, phone, country) and the content of your inquiries. If you sign in with Google, we receive your name, email address and profile photo from Google via Firebase Authentication.</p></div>
-    <div><h2 class="font-serif text-2xl text-navy mb-2">How We Use It</h2><p>To respond to inquiries, prepare quotations, process sample requests and evaluate job applications. We do not sell personal data.</p></div>
-    <div><h2 class="font-serif text-2xl text-navy mb-2">Storage</h2><p>Submissions are stored in our application database and, where applicable, mirrored to Google Firebase (Firestore) linked to your signed-in account. Firebase Analytics may collect standard usage metrics.</p></div>
-    <div id="cookies"><h2 class="font-serif text-2xl text-navy mb-2">Cookies</h2><p>Essential cookies and local storage support sign-in state and product comparison. Analytics identifiers are managed by Firebase Analytics.</p></div>
-    <div><h2 class="font-serif text-2xl text-navy mb-2">Contact</h2><p>For privacy requests, contact us via the <a href="/contact" class="text-navy underline underline-offset-2">contact page</a>.</p></div>
-    <p class="text-xs text-mutedgt">This template policy should be reviewed by Gumti Textiles Ltd. legal counsel before production use.</p>
+
+<section class="bg-[#08111A] py-14 lg:py-20 min-h-[50vh]">
+  <div class="max-w-[760px] mx-auto px-5 lg:px-10 glass-panel p-8 sm:p-12 rounded-2xl border border-white/[0.08] space-y-6 text-xs sm:text-sm text-[#CBD5E1] leading-relaxed">
+    <p><strong class="text-white">Scope.</strong> This policy describes how ${co.name} handles commercial information submitted through this website, including RFQs, inquiries, sample requests and job applications.</p>
+    <div>
+      <h2 class="text-lg font-bold font-display text-white mb-2">Data Protection</h2>
+      <p class="text-[#788A9C]">Commercial contact details (company name, email, telephone, destination country) and tech packs are retained exclusively for quotations, sampling, and manufacturing fulfillment. We never sell or distribute corporate partner data.</p>
+    </div>
+    <div>
+      <h2 class="text-lg font-bold font-display text-white mb-2">Secure Cloud Infrastructure</h2>
+      <p class="text-[#788A9C]">Account records and authenticated submissions are stored under industry-standard SSL 256-bit encryption with Google Cloud Firebase Authentication and Firestore security rules.</p>
+    </div>
+    <div>
+      <h2 class="text-lg font-bold font-display text-white mb-2">Direct Contact</h2>
+      <p class="text-[#788A9C]">For privacy requests or corporate documentation, please contact our legal desk via <a href="mailto:info@gumtitex.com" class="text-[#00E599] underline">info@gumtitex.com</a>.</p>
+    </div>
   </div>
 </section>`
 
 export const TermsPage = () => html`
-<section class="relative bg-navy text-white pt-40 pb-14">
-  <div class="max-w-[900px] mx-auto px-5 lg:px-10"><h1 class="font-serif text-4xl lg:text-[52px]">Terms of Use</h1></div>
+<section class="relative bg-[#060B10] pt-32 pb-14 border-b border-white/[0.08]">
+  <div class="max-w-[900px] mx-auto px-5 lg:px-10">
+    <span class="kicker-pill mb-4">Commercial Terms</span>
+    <h1 class="text-3xl sm:text-5xl font-extrabold font-display text-white">Terms of Business</h1>
+  </div>
 </section>
-<section class="bg-ivory py-16">
-  <div class="max-w-[760px] mx-auto px-5 lg:px-10 space-y-8 text-sm leading-relaxed text-ink/75">
-    <div><h2 class="font-serif text-2xl text-navy mb-2">Website Content</h2><p>Company facts on this site derive from public registrations (BGMEA, EPB). Product specifications shown are CMS-managed templates; commercial terms are established only through formal quotations and contracts.</p></div>
-    <div><h2 class="font-serif text-2xl text-navy mb-2">RFQs & Quotations</h2><p>Submitting an RFQ does not constitute an order. Quotations issued by ${co.name} are subject to their stated validity and conditions.</p></div>
-    <div><h2 class="font-serif text-2xl text-navy mb-2">Intellectual Property</h2><p>Site content may not be reproduced without permission. Certain photography is used under Creative Commons/public-domain licenses as placeholders pending official company imagery.</p></div>
-    <p class="text-xs text-mutedgt">This template should be reviewed by Gumti Textiles Ltd. legal counsel before production use.</p>
+
+<section class="bg-[#08111A] py-14 lg:py-20 min-h-[50vh]">
+  <div class="max-w-[760px] mx-auto px-5 lg:px-10 glass-panel p-8 sm:p-12 rounded-2xl border border-white/[0.08] space-y-6 text-xs sm:text-sm text-[#CBD5E1] leading-relaxed">
+    <div>
+      <h2 class="text-lg font-bold font-display text-white mb-2">Commercial RFQs</h2>
+      <p class="text-[#788A9C]">Submitting an RFQ initiates merchandising review and cost estimation. Final commercial terms, incoterms (FOB Chittagong, CIF, etc.), payment terms (L/C at sight, TT), and production delivery windows are confirmed upon formal Proforma Invoice signoff.</p>
+    </div>
+    <div>
+      <h2 class="text-lg font-bold font-display text-white mb-2">Intellectual Property</h2>
+      <p class="text-[#788A9C]">Buyer tech packs, size curves, and proprietary artwork submitted to Gumti Textiles Ltd. remain the exclusive intellectual property of the buyer and are treated under strict non-disclosure manufacturing protocols.</p>
+    </div>
   </div>
 </section>`
 
 export const NotFoundPage = () => html`
-<section class="bg-navy text-white min-h-screen flex items-center">
-  <div class="max-w-[900px] mx-auto px-5 lg:px-10 text-center py-40">
-    <p class="font-serif text-sand text-8xl lg:text-9xl">404</p>
-    <h1 class="font-serif text-3xl lg:text-5xl mt-4">Page Not Found</h1>
-    <p class="mt-5 text-white/60 text-sm max-w-md mx-auto">The page you're looking for doesn't exist or has moved. Try one of these instead:</p>
-    <div class="mt-8 flex flex-wrap justify-center gap-4">
-      <a href="/" class="bg-sand text-navy font-semibold px-7 py-3.5 text-sm hover:bg-white transition-colors">Homepage</a>
-      <a href="/products" class="border border-white/30 px-7 py-3.5 text-sm hover:border-sand hover:text-sand transition-colors">Products</a>
-      <a href="/contact" class="border border-white/30 px-7 py-3.5 text-sm hover:border-sand hover:text-sand transition-colors">Contact</a>
+<section class="bg-[#060B10] min-h-screen flex items-center justify-center py-20 px-5">
+  <div class="max-w-[600px] w-full glass-panel p-10 sm:p-14 text-center rounded-3xl border border-white/[0.1] shadow-2xl">
+    <span class="text-7xl sm:text-8xl font-black font-display text-gradient-emerald">404</span>
+    <h1 class="text-2xl sm:text-3xl font-extrabold font-display text-white mt-4">Page Not Located</h1>
+    <p class="mt-3 text-xs sm:text-sm text-[#788A9C] leading-relaxed">The requested URL cannot be found on Gumti Textiles. You can navigate back using the links below:</p>
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <a href="/" class="pill-btn-emerald py-2.5 px-6 text-xs">Homepage</a>
+      <a href="/products" class="pill-btn-outline py-2.5 px-6 text-xs">Product Catalog</a>
+      <a href="/contact" class="pill-btn-outline py-2.5 px-6 text-xs">Contact Us</a>
     </div>
   </div>
 </section>`
 
 export const ErrorPage = () => html`
-<section class="bg-navy text-white min-h-screen flex items-center">
-  <div class="max-w-[900px] mx-auto px-5 lg:px-10 text-center py-40">
-    <p class="font-serif text-sand text-8xl">500</p>
-    <h1 class="font-serif text-3xl lg:text-5xl mt-4">Something Went Wrong</h1>
-    <p class="mt-5 text-white/60 text-sm max-w-md mx-auto">An unexpected error occurred. Please try again, or contact us if the problem persists.</p>
-    <div class="mt-8 flex flex-wrap justify-center gap-4">
-      <a href="/" class="bg-sand text-navy font-semibold px-7 py-3.5 text-sm hover:bg-white transition-colors">Homepage</a>
-      <a href="/contact" class="border border-white/30 px-7 py-3.5 text-sm hover:border-sand hover:text-sand transition-colors">Contact Support</a>
+<section class="bg-[#060B10] min-h-screen flex items-center justify-center py-20 px-5">
+  <div class="max-w-[600px] w-full glass-panel p-10 sm:p-14 text-center rounded-3xl border border-white/[0.1] shadow-2xl">
+    <span class="text-7xl sm:text-8xl font-black font-display text-amber-400">500</span>
+    <h1 class="text-2xl sm:text-3xl font-extrabold font-display text-white mt-4">System Exception</h1>
+    <p class="mt-3 text-xs sm:text-sm text-[#788A9C] leading-relaxed">An unexpected error occurred while processing your request. Please reload or contact our technical support.</p>
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <a href="/" class="pill-btn-emerald py-2.5 px-6 text-xs">Return Home</a>
+      <a href="/contact" class="pill-btn-outline py-2.5 px-6 text-xs">Contact Support</a>
     </div>
   </div>
 </section>`
