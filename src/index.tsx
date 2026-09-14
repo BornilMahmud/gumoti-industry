@@ -64,7 +64,7 @@ export let activeLandingConfig: LandingConfigData = {
   heroHeadlineLine2: 'QUALITY.',
   heroKicker: `Knit Composite Manufacturer · Bangladesh · Est. ${co.established}`,
   heroSubTagline: co.subTagline,
-  heroBgImage: '/images/hero/background_1920x530.webp',
+  heroBgImage: '/images/factory/stenter_clean_630x400.webp',
   heroCta1Text: 'Explore Capabilities',
   heroCta1Link: '/capabilities',
   heroCta2Text: 'Request a Quote',
@@ -85,11 +85,28 @@ export let activeLandingConfig: LandingConfigData = {
   },
   aboutHeading: 'CRAFTING POSSIBILITY.',
   aboutText: `${co.name} began operations in ${co.established} and operates as an established, export-oriented knit-composite textile and apparel manufacturer in Bangladesh — integrating knitting, dyeing, finishing and garment manufacturing under one quality system.`,
+  aboutImage: '/images/hero/background_1920x530.webp',
+  facilitiesImage: '/images/hero/corrected_1170x600.webp',
   contactEmail: co.contact.email,
   contactPhone: co.contact.phone,
+  whatsappNumber: '+8801329713736',
   contactAddress: co.factoryAddress.full,
+  headOfficeAddress: co.headOffice.full,
   facebookUrl: co.contact.facebookUrl,
+  companyName: co.name,
+  estYear: co.established,
+  bgmeaReg: co.bgmeaRegistration,
+  epbReg: co.epbRegistration,
+  workforceCount: '1,600',
+  femaleWorkforcePercent: '74%',
+  dyeingCapacity: '50T/Day',
+  knittingCapacity: '10T/Day',
+  finishingCapacity: '80T/Day',
+  sewingCapacity: '35,000 Pcs/Day (22 Lines)',
+  annualExport: '$27 Million',
 }
+
+const productImageOverrides = new Map<string, string>()
 
 const app = new Hono<{ Bindings: Bindings }>()
 
@@ -288,6 +305,8 @@ app.get('/portal', (c) => c.html(Layout({ title: 'Buyer Portal', path: '/portal'
 app.get('/profile', (c) => c.html(Layout({ title: 'User Profile', path: '/profile', children: ProfilePage() })))
 app.get('/login', (c) => c.html(Layout({ title: 'Login', path: '/login', darkNav: true, children: LoginPage() })))
 app.get('/register', (c) => c.html(Layout({ title: 'Register', path: '/register', darkNav: true, children: RegisterPage() })))
+app.get('/auth/login', (c) => c.redirect('/login'))
+app.get('/auth/register', (c) => c.redirect('/register'))
 app.get('/admin', (c) => c.html(Layout({ title: 'Admin Panel', path: '/admin', darkNav: true, children: AdminPage() })))
 app.get('/privacy', (c) => c.html(Layout({ title: 'Privacy Policy', children: PrivacyPage() })))
 app.get('/terms', (c) => c.html(Layout({ title: 'Terms of Use', children: TermsPage() })))
@@ -548,6 +567,137 @@ app.get('/api/admin/overview', async (c) => {
     sample_requests: sampleRows,
     job_applications: appRows,
   })
+})
+
+// ---------------- API: Admin RFQ Status Progression ----------------
+app.post('/api/admin/rfqs/:id/status', async (c) => {
+  const user = await verifyFirebaseUser(c)
+  if (!user || (user.role !== 'admin' && user.role !== 'moderator')) {
+    return c.json({ error: 'Unauthorized' }, 403)
+  }
+  const rfqId = c.req.param('id')
+  let body: any = {}
+  try { body = await c.req.json() } catch {}
+  const nextStatus = clean(body.status, 40).toUpperCase()
+  const note = clean(body.note, 500)
+  const db = c.env?.DB
+  if (db) {
+    try {
+      const current = await db.prepare('SELECT status FROM rfqs WHERE rfq_id = ?').bind(rfqId).first<{ status: string }>()
+      await db.prepare('UPDATE rfqs SET status = ? WHERE rfq_id = ?').bind(nextStatus, rfqId).run()
+      await db.prepare('INSERT INTO rfq_status_events (rfq_id, from_status, to_status, note, actor_email) VALUES (?, ?, ?, ?, ?)')
+        .bind(rfqId, current?.status || 'UNKNOWN', nextStatus, note, user.email).run()
+      await db.prepare('INSERT INTO admin_audit_logs (actor_email, action, entity_type, entity_id, details) VALUES (?, ?, ?, ?, ?)')
+        .bind(user.email, 'UPDATE_STATUS', 'RFQ', rfqId, `Status updated to ${nextStatus}`).run()
+    } catch (e) {
+      console.warn('D1 status update fallback:', e)
+    }
+  }
+  return c.json({ ok: true, rfqId, status: nextStatus })
+})
+
+// ---------------- API: Admin Quotation Builder ----------------
+app.post('/api/admin/quotations', async (c) => {
+  const user = await verifyFirebaseUser(c)
+  if (!user || (user.role !== 'admin' && user.role !== 'moderator')) {
+    return c.json({ error: 'Unauthorized' }, 403)
+  }
+  let body: any = {}
+  try { body = await c.req.json() } catch {}
+  const rfqId = clean(body.rfq_id, 50)
+  const email = clean(body.email, 150)
+  const unitPrice = Number(body.unit_price) || 0
+  const moqQuoted = clean(body.moq_quoted, 50)
+  const leadTimeDays = Number(body.lead_time_days) || 60
+  const paymentTerms = clean(body.payment_terms, 100)
+  const quoteId = refId('QUO')
+  const db = c.env?.DB
+  if (db) {
+    try {
+      await db.prepare(`INSERT INTO quotations (quote_id, rfq_id, email, unit_price, moq_quoted, lead_time_days, payment_terms, created_by, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'SENT')`)
+        .bind(quoteId, rfqId, email, unitPrice, moqQuoted, leadTimeDays, paymentTerms, user.email).run()
+      await db.prepare('UPDATE rfqs SET status = ? WHERE rfq_id = ?').bind('QUOTED', rfqId).run()
+    } catch (e) {
+      console.warn('D1 quotation insert fallback:', e)
+    }
+  }
+  return c.json({ ok: true, quoteId, message: `Quotation ${quoteId} generated successfully.` })
+})
+
+// ---------------- API: Admin Dynamic Products ----------------
+app.get('/api/admin/products', async (c) => {
+  const db = c.env?.DB
+  let adminProds: any[] = []
+  if (db) {
+    try {
+      const rows = await db.prepare('SELECT * FROM products_admin ORDER BY created_at DESC').all()
+      adminProds = rows.results || []
+    } catch {}
+  }
+  const all = [...products, ...adminProds].map((p: any) => ({
+    ...p,
+    image: productImageOverrides.get(p.slug) || p.image || '/images/products/crew_tshirt.webp',
+  }))
+  return c.json({ products: all })
+})
+
+app.post('/api/admin/products', async (c) => {
+  const user = await verifyFirebaseUser(c)
+  if (!user || user.role !== 'admin') {
+    return c.json({ error: 'Super Admin access required to create products.' }, 403)
+  }
+  let body: any = {}
+  try { body = await c.req.json() } catch {}
+  const name = clean(body.name, 120)
+  const code = clean(body.code, 40)
+  const category = clean(body.category, 60)
+  const composition = clean(body.composition, 120)
+  const construction = clean(body.construction, 120)
+  const gsm = clean(body.gsm, 40)
+  const finish = clean(body.finish, 100)
+  const moq = clean(body.moq, 60)
+  const leadTime = clean(body.lead_time, 60)
+  const image = clean(body.image, 500) || '/images/products/crew_tshirt.webp'
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `prod-${Date.now()}`
+  
+  productImageOverrides.set(slug, image)
+  const db = c.env?.DB
+  if (db) {
+    try {
+      await db.prepare(`INSERT INTO products_admin (slug, name, code, category, composition, construction, gsm, finish, moq, lead_time, application, certifications)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(slug) DO UPDATE SET name=excluded.name, code=excluded.code, category=excluded.category, composition=excluded.composition, construction=excluded.construction, gsm=excluded.gsm, finish=excluded.finish, moq=excluded.moq, lead_time=excluded.lead_time`)
+        .bind(slug, name, code, category, composition, construction, gsm, finish, moq, leadTime, 'Export Knitwear', 'OEKO-TEX Standard 100, BCI').run()
+      await db.prepare('INSERT OR REPLACE INTO site_settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)')
+        .bind(`prod_img_${slug}`, image).run()
+    } catch (e) {
+      console.warn('D1 product insert fallback:', e)
+    }
+  }
+  return c.json({ ok: true, product: { slug, name, code, category, composition, construction, gsm, finish, moq, leadTime, image } })
+})
+
+app.post('/api/admin/products/:slug/image', async (c) => {
+  const user = await verifyFirebaseUser(c)
+  if (!user || (user.role !== 'admin' && user.role !== 'moderator')) {
+    return c.json({ error: 'Admin or Moderator role required to update product media.' }, 403)
+  }
+  const slug = c.req.param('slug')
+  let body: any = {}
+  try { body = await c.req.json() } catch {}
+  const image = clean(body.image, 500)
+  if (!image) return c.json({ error: 'Image URL is required' }, 400)
+  
+  productImageOverrides.set(slug, image)
+  const db = c.env?.DB
+  if (db) {
+    try {
+      await db.prepare('INSERT OR REPLACE INTO site_settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)')
+        .bind(`prod_img_${slug}`, image).run()
+    } catch {}
+  }
+  return c.json({ ok: true, slug, image, message: `Product ${slug} image updated successfully.` })
 })
 
 // ---------------- API: RFQ ----------------

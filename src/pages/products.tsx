@@ -3,58 +3,60 @@ import { products, categories, filterProducts, type Product } from '../data/prod
 
 export function productCardHtml(p: Product): string {
   return `
-  <article class="glass-card flex flex-col group overflow-hidden border border-white/[0.08] hover:border-[#00E599]/40 transition-all duration-300">
-    <a href="/products/${p.slug}" class="block overflow-hidden aspect-[4/3] relative bg-[#09111A]">
+  <article class="editorial-card flex flex-col group overflow-hidden">
+    <a href="/products/${p.slug}" class="block overflow-hidden aspect-[4/3] relative bg-[var(--bg-surface)]">
       <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-      <span class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#060B10]/80 backdrop-blur-md border border-white/[0.1] text-[10px] font-mono font-semibold text-[#00E599]">
+      <span class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#060B10]/80 backdrop-blur-md border border-white/10 text-[10px] font-mono font-semibold text-[#00E599]">
         ${p.code}
       </span>
-      <span class="absolute bottom-3 left-3 px-2.5 py-1 rounded-full bg-[#00E599]/15 border border-[#00E599]/30 text-[10px] font-bold text-[#00E599] uppercase tracking-wider">
+      <span class="absolute bottom-3 left-3 px-2.5 py-1 rounded-full bg-[var(--bg-canvas)]/90 backdrop-blur-md border border-[var(--border-subtle)] text-[10px] font-bold text-[var(--text-primary)] uppercase tracking-wider">
         ${p.category}
       </span>
     </a>
 
     <div class="p-5 flex flex-col flex-1">
-      <a href="/products/${p.slug}" class="text-base sm:text-lg font-bold font-display text-white group-hover:text-[#00E599] transition-colors line-clamp-1">
+      <a href="/products/${p.slug}" class="text-base font-bold font-display text-[var(--text-primary)] group-hover:text-[#00E599] transition-colors line-clamp-1">
         ${p.name}
       </a>
       
-      <p class="text-xs text-[#788A9C] mt-2 line-clamp-2 leading-relaxed">
+      <p class="text-xs text-[var(--text-muted)] mt-1.5 line-clamp-2 leading-relaxed">
         ${p.description}
       </p>
 
-      <dl class="mt-4 grid grid-cols-2 gap-2 text-xs py-3 border-y border-white/[0.06] bg-white/[0.01] rounded-lg px-2">
+      <div class="mt-4 grid grid-cols-2 gap-2 text-xs py-3 border-y border-[var(--border-subtle)] bg-[var(--bg-input)]/50 rounded-xl px-3">
         <div>
-          <dt class="text-[10px] uppercase font-semibold text-[#788A9C]">Fabric</dt>
-          <dd class="text-[#CBD5E1] font-medium truncate mt-0.5">${p.construction}</dd>
+          <span class="text-[9px] uppercase font-bold text-[var(--text-muted)] block">Construction</span>
+          <span class="text-[var(--text-primary)] font-medium truncate block mt-0.5">${p.construction}</span>
         </div>
         <div>
-          <dt class="text-[10px] uppercase font-semibold text-[#788A9C]">Weight</dt>
-          <dd class="text-[#00E599] font-mono font-medium mt-0.5">${p.gsm} GSM</dd>
+          <span class="text-[9px] uppercase font-bold text-[var(--text-muted)] block">Weight</span>
+          <span class="text-[#00E599] font-mono font-bold block mt-0.5">${p.gsm} GSM</span>
         </div>
         <div>
-          <dt class="text-[10px] uppercase font-semibold text-[#788A9C]">Composition</dt>
-          <dd class="text-[#CBD5E1] font-medium truncate mt-0.5">${p.composition}</dd>
+          <span class="text-[9px] uppercase font-bold text-[var(--text-muted)] block">Yarn</span>
+          <span class="text-[var(--text-secondary)] truncate block mt-0.5">${p.composition}</span>
         </div>
         <div>
-          <dt class="text-[10px] uppercase font-semibold text-[#788A9C]">Finish</dt>
-          <dd class="text-[#CBD5E1] font-medium truncate mt-0.5">${p.finish}</dd>
+          <span class="text-[9px] uppercase font-bold text-[var(--text-muted)] block">Finish</span>
+          <span class="text-[var(--text-secondary)] truncate block mt-0.5">${p.finish}</span>
         </div>
-      </dl>
-
-      <div class="mt-3 flex flex-wrap gap-1.5">
-        ${p.certifications.map((c) => `<span class="text-[9px] font-semibold uppercase px-2 py-0.5 rounded bg-white/[0.04] text-[#CBD5E1] border border-white/[0.08]">${c}</span>`).join('')}
       </div>
 
-      <div class="mt-auto pt-5 flex items-center justify-between gap-3">
-        <a href="/products/${p.slug}" class="inline-flex items-center gap-1.5 text-xs font-bold text-[#00E599] hover:underline">
-          Specifications <i class="fa-solid fa-arrow-right text-[10px]"></i>
-        </a>
+      <div class="mt-3 flex flex-wrap gap-1">
+        ${p.certifications.map((c) => `<span class="text-[9px] font-mono font-semibold uppercase px-2 py-0.5 rounded bg-[var(--bg-input)] text-[var(--text-muted)] border border-[var(--border-subtle)]">${c}</span>`).join('')}
+      </div>
+
+      <div class="mt-auto pt-4 flex items-center justify-between gap-3 border-t border-[var(--border-subtle)] mt-4">
+        <label class="inline-flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] cursor-pointer">
+          <input type="checkbox" value="${p.slug}" class="product-compare-checkbox rounded text-[#00E599]" />
+          <span>Compare</span>
+        </label>
+        
         <div class="flex items-center gap-2">
-          <button data-compare="${p.slug}" class="px-2.5 py-1 rounded-lg border border-white/[0.12] text-[10px] font-semibold text-[#CBD5E1] hover:border-[#00E599] hover:text-white transition-colors cursor-pointer">
-            <span>Compare</span>
-          </button>
-          <a href="/request-quote?product=${encodeURIComponent(p.name)}" class="px-3 py-1 rounded-lg bg-[#00E599] text-[#060B10] text-[11px] font-bold hover:bg-[#00D2FF] transition-colors">
+          <a href="/products/${p.slug}" class="text-xs font-semibold text-[var(--text-primary)] hover:text-[#00E599]">
+            Datasheet
+          </a>
+          <a href="/request-quote?product=${encodeURIComponent(p.name)}" class="pill-btn-emerald py-1 px-3 text-[11px]">
             Quote
           </a>
         </div>
@@ -67,259 +69,287 @@ export const ProductsPage = (q: Record<string, string>) => {
   const list = filterProducts(q)
   return html`
 <!-- Header -->
-<section class="relative bg-[#060B10] pt-32 pb-14 border-b border-white/[0.08]">
+<section class="relative bg-[var(--bg-canvas)] pt-32 pb-14 border-b border-[var(--border-subtle)] transition-colors">
   <div class="max-w-[1440px] mx-auto px-5 lg:px-10">
-    <span class="kicker-pill mb-4">Export Apparel Catalog</span>
-    <h1 class="text-3xl sm:text-5xl lg:text-[56px] font-extrabold font-display leading-[1.06] text-white">
-      Knitwear Programs <span class="text-gradient-emerald">for Global Brands</span>
+    <span class="kicker-pill mb-3">Technical Textile Catalog</span>
+    <h1 class="text-3xl sm:text-5xl lg:text-[54px] font-extrabold font-display leading-[1.06] text-[var(--text-primary)]">
+      Export Knitwear <span class="text-[#00E599]">Programs</span>
     </h1>
-    <p class="mt-3 max-w-2xl text-[#788A9C] text-sm sm:text-base leading-relaxed">
-      Engineered across 22 integrated sewing lines with 50T/day low-liquor dyeing and 10T/day circular knitting. Certified to international compliance standards.
+    <p class="mt-3 max-w-2xl text-[var(--text-muted)] text-xs sm:text-sm leading-relaxed">
+      Sourcing specifications engineered across 22 integrated sewing lines with 50T/day low-liquor dyeing and 10T/day circular knitting.
     </p>
   </div>
 </section>
 
 <!-- Filter & Grid -->
-<section class="bg-[#08111A] py-12 lg:py-16 min-h-[60vh]">
+<section class="bg-[var(--bg-canvas)] py-12 lg:py-16 min-h-[65vh] transition-colors">
   <div class="max-w-[1440px] mx-auto px-5 lg:px-10">
     
     <!-- Filter Bar -->
-    <form id="product-filters" class="glass-panel p-5 grid sm:grid-cols-2 lg:grid-cols-5 gap-3 border border-white/[0.08]" role="search" aria-label="Product filters">
+    <form id="product-filters" class="editorial-card p-5 grid sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-8" role="search" aria-label="Product filters">
       <div class="lg:col-span-2">
-        <label class="field-label-dark" for="f-search">Search Catalog</label>
+        <label class="block text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5" for="f-search">Search Sourcing DB</label>
         <div class="relative">
-          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-[#788A9C]"></i>
-          <input id="f-search" name="search" type="search" class="field-dark pl-9" placeholder="Search polo, fleece, jersey, code..." value="${q.search || ''}" />
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)]"></i>
+          <input id="f-search" name="search" type="search" class="w-full rounded-xl p-2.5 pl-9 text-xs" placeholder="Search polo, hoodie, jersey, GSM, code..." value="${q.search || ''}" />
         </div>
       </div>
       <div>
-        <label class="field-label-dark" for="f-category">Category</label>
-        <select id="f-category" name="category" class="field-dark">
+        <label class="block text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5" for="f-category">Category</label>
+        <select id="f-category" name="category" class="w-full rounded-xl p-2.5 text-xs">
           <option value="">All Categories</option>
           ${raw(categories.map((c) => `<option value="${c.toLowerCase().replace(/[^a-z]/g, '')}" ${q.category === c.toLowerCase().replace(/[^a-z]/g, '') ? 'selected' : ''}>${c}</option>`).join(''))}
         </select>
       </div>
       <div>
-        <label class="field-label-dark" for="f-composition">Composition</label>
-        <select id="f-composition" name="composition" class="field-dark">
-          <option value="">Any Composition</option>
-          ${raw(['Cotton', 'Organic', 'Polyester', 'Elastane'].map((c) => `<option value="${c.toLowerCase()}" ${q.composition === c.toLowerCase() ? 'selected' : ''}>${c}</option>`).join(''))}
+        <label class="block text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5" for="f-comp">Composition</label>
+        <select id="f-comp" name="composition" class="w-full rounded-xl p-2.5 text-xs">
+          <option value="">All Blends</option>
+          <option value="100% Cotton" ${q.composition === '100% Cotton' ? 'selected' : ''}>100% Cotton</option>
+          <option value="Poly" ${q.composition === 'Poly' ? 'selected' : ''}>Cotton/Poly Blends</option>
+          <option value="Elastane" ${q.composition === 'Elastane' ? 'selected' : ''}>Elastane / Spandex</option>
         </select>
       </div>
-      <div>
-        <label class="field-label-dark" for="f-cert">Certification</label>
-        <select id="f-cert" name="certification" class="field-dark">
-          <option value="">Any Standard</option>
-          ${raw(['OEKO-TEX', 'GOTS', 'BCI'].map((c) => `<option value="${c.toLowerCase()}" ${q.certification === c.toLowerCase() ? 'selected' : ''}>${c}</option>`).join(''))}
-        </select>
+      <div class="flex items-end">
+        <button type="submit" class="pill-btn-emerald w-full py-2.5 text-xs">
+          <span>Apply Filters</span>
+        </button>
       </div>
     </form>
 
-    <div class="mt-8 flex items-center justify-between">
-      <p id="product-count" class="text-xs font-mono font-semibold uppercase tracking-wider text-[#00E599]">${list.length} Program${list.length === 1 ? '' : 's'} Available</p>
-      <p class="text-[11px] uppercase tracking-wider text-[#788A9C] hidden sm:block">Select up to 3 programs to compare side-by-side</p>
+    <!-- Product Grid -->
+    <div id="product-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      ${raw(list.length ? list.map(productCardHtml).join('') : `
+        <div class="col-span-full editorial-card p-16 text-center space-y-3">
+          <i class="fa-solid fa-shirt text-3xl text-[var(--text-muted)]"></i>
+          <h3 class="text-xl font-bold font-display text-[var(--text-primary)]">No products match those criteria</h3>
+          <p class="text-xs text-[var(--text-muted)] max-w-sm mx-auto">Try clearing search filters or consult our sales team for custom knitwear development.</p>
+          <a href="/contact" class="pill-btn-outline text-xs mt-3">Contact Merchandiser</a>
+        </div>
+      `)}
     </div>
 
-    <div id="product-grid" class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      ${raw(list.length ? list.map(productCardHtml).join('') : `
-        <div class="col-span-full glass-panel p-16 text-center border border-dashed border-white/[0.15]">
-          <i class="fa-solid fa-box-open text-4xl text-[#788A9C]"></i>
-          <p class="mt-4 text-xl font-bold font-display text-white">No products match those criteria</p>
-          <p class="text-xs text-[#788A9C] mt-2">Try clearing a filter, or submit a custom development request to our merchandising team.</p>
-          <a href="/request-quote" class="mt-6 inline-block pill-btn-emerald text-xs">Custom Program Request</a>
-        </div>`)}
-    </div>
+    <!-- Floating Comparison Bar -->
+    <aside id="compare-drawer" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 hidden items-center gap-4 px-6 py-3 rounded-full bg-[var(--bg-surface)] border border-[#00E599]/40 shadow-2xl text-xs backdrop-blur-xl">
+      <span class="text-[var(--text-primary)] font-bold"><span id="compare-count" class="text-[#00E599]">0</span> Products Selected</span>
+      <a id="compare-link" href="/products/compare" class="pill-btn-emerald py-1.5 px-4 text-xs">Compare Specs</a>
+      <button id="compare-clear" type="button" class="text-[var(--text-muted)] hover:text-[var(--text-primary)] underline">Clear</button>
+    </aside>
+
   </div>
 </section>
-
-<!-- Floating Compare Bar -->
-<div id="compare-bar" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#0C1622]/95 backdrop-blur-xl text-white shadow-2xl px-6 py-3.5 rounded-full flex items-center gap-5 border border-[#00E599]/40">
-  <p class="text-xs text-[#CBD5E1]"><span id="compare-count" class="font-bold text-[#00E599] font-mono">0</span> programs selected</p>
-  <a id="compare-link" href="/products/compare" class="pill-btn-emerald py-1.5 px-4 text-xs">Compare Now</a>
-  <button id="compare-clear" class="text-xs text-[#788A9C] hover:text-white cursor-pointer" aria-label="Clear comparison">Clear</button>
-</div>
 `
 }
 
+// ============ PRODUCT DETAIL (TECHNICAL TEXTILE DATASHEET) ============
 export const ProductDetailPage = (p: Product) => html`
-<!-- Header & Breadcrumb -->
-<section class="relative bg-[#060B10] pt-32 pb-10 border-b border-white/[0.08]">
+<section class="relative bg-[var(--bg-canvas)] pt-32 pb-14 border-b border-[var(--border-subtle)] transition-colors">
   <div class="max-w-[1440px] mx-auto px-5 lg:px-10">
-    <nav class="text-xs tracking-wider uppercase text-[#788A9C] flex items-center gap-2" aria-label="Breadcrumb">
-      <a href="/products" class="hover:text-[#00E599] transition-colors">Catalog</a>
+    <div class="flex items-center gap-2 text-xs text-[var(--text-muted)] mb-3">
+      <a href="/products" class="hover:text-[var(--text-primary)]">Catalog</a>
       <span>/</span>
-      <a href="/products?category=${p.category.toLowerCase().replace(/[^a-z]/g, '')}" class="hover:text-[#00E599] transition-colors">${p.category}</a>
+      <span>${p.category}</span>
       <span>/</span>
-      <span class="text-[#00E599] font-medium">${p.name}</span>
-    </nav>
+      <span class="text-[var(--text-primary)] font-medium">${p.name}</span>
+    </div>
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <span class="kicker-pill mb-2">${p.code} · ${p.category}</span>
+        <h1 class="text-3xl sm:text-5xl font-extrabold font-display text-[var(--text-primary)] tracking-tight">
+          ${p.name}
+        </h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="/api/products/${p.slug}/spec" class="pill-btn-outline text-xs">
+          <i class="fa-solid fa-download mr-1.5 text-[10px]"></i>
+          <span>Download Spec Sheet</span>
+        </a>
+        <a href="/request-quote?product=${encodeURIComponent(p.name)}" class="pill-btn-emerald text-xs">
+          <span>Request Quote</span>
+          <i class="fa-solid fa-arrow-right text-[10px] ml-1"></i>
+        </a>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- Product Detail Body -->
-<section class="bg-[#08111A] py-14 lg:py-20">
-  <div class="max-w-[1440px] mx-auto px-5 lg:px-10 grid lg:grid-cols-12 gap-12">
-    
-    <!-- Left Photo Column -->
-    <div class="lg:col-span-6 space-y-4">
-      <div class="glass-panel p-3 border border-white/[0.1] overflow-hidden rounded-2xl">
-        <img src="${p.image}" alt="${p.name}" class="w-full aspect-[4/3] object-cover rounded-xl" />
-      </div>
-      <div class="grid grid-cols-3 gap-3">
-        <div class="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] text-center">
-          <p class="text-[10px] text-[#788A9C] uppercase font-semibold">Program Code</p>
-          <p class="text-xs font-mono font-bold text-white mt-1">${p.code}</p>
+<section class="bg-[var(--bg-canvas)] py-12 lg:py-20 transition-colors">
+  <div class="max-w-[1440px] mx-auto px-5 lg:px-10">
+    <div class="grid lg:grid-cols-12 gap-12">
+      
+      <!-- Visual Column -->
+      <div class="lg:col-span-6 space-y-6">
+        <div class="editorial-card overflow-hidden">
+          <img src="${p.image}" alt="${p.name}" class="w-full h-[450px] object-cover" />
         </div>
-        <div class="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] text-center">
-          <p class="text-[10px] text-[#788A9C] uppercase font-semibold">Lead Capacity</p>
-          <p class="text-xs font-bold text-[#00E599] mt-1">35k Pcs/Day</p>
+        <div class="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-2">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Program Description</span>
+          <p class="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">${p.description}</p>
+          <p class="text-xs text-[var(--text-muted)] pt-2 border-t border-[var(--border-subtle)]">${p.specNote}</p>
         </div>
-        <div class="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] text-center">
-          <p class="text-[10px] text-[#788A9C] uppercase font-semibold">Quality Test</p>
-          <p class="text-xs font-bold text-[#00D2FF] mt-1">100% Inspected</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right Specs Column -->
-    <div class="lg:col-span-6 space-y-6">
-      <div>
-        <div class="flex items-center gap-3">
-          <span class="px-3 py-1 rounded-full bg-[#00E599]/15 border border-[#00E599]/30 text-xs font-bold text-[#00E599] uppercase tracking-wider">${p.category}</span>
-          <span class="text-xs font-mono text-[#788A9C]">${p.code}</span>
-        </div>
-        <h1 class="text-3xl sm:text-4xl font-extrabold font-display text-white mt-3">${p.name}</h1>
-        <p class="mt-4 text-sm text-[#CBD5E1] leading-relaxed">${p.description}</p>
       </div>
 
-      <!-- Specs Table -->
-      <div class="glass-panel overflow-hidden border border-white/[0.08] rounded-xl">
-        <div class="px-5 py-3 border-b border-white/[0.06] bg-white/[0.02] flex items-center justify-between">
-          <span class="text-xs font-bold uppercase tracking-wider text-white">Technical Specifications</span>
-          <span class="text-[10px] text-[#00E599] font-mono">Verified Program</span>
-        </div>
-        <table class="w-full text-xs">
-          <tbody class="divide-y divide-white/[0.04]">
-            ${raw([
-              ['Fabric Construction', p.construction],
-              ['Fiber Composition', p.composition],
-              ['Fabric Weight (GSM)', `${p.gsm} GSM`],
-              ['Surface Finish', p.finish],
-              ['Standard Colorways', p.colors.join(', ')],
-              ['Intended Application', p.application],
-              ['Certifications', p.certifications.join(' · ')],
-              ['Order Minimum (MOQ)', p.moq],
-              ['Production Lead Time', p.leadTime],
-            ].map(([k, v]) => `
+      <!-- Technical Parameters Column -->
+      <div class="lg:col-span-6 space-y-6">
+        <div class="editorial-card overflow-hidden">
+          <div class="p-6 border-b border-[var(--border-subtle)] flex items-center justify-between">
+            <h3 class="text-base font-bold font-display text-[var(--text-primary)]">Technical Specification Parameters</h3>
+            <span class="text-xs font-mono text-[#00E599] font-bold">ISO-Compliant</span>
+          </div>
+
+          <table class="spec-table">
+            <tbody>
               <tr>
-                <th scope="row" class="text-left py-3 px-5 text-[#788A9C] font-medium uppercase tracking-wider text-[10px] w-40 whitespace-nowrap bg-white/[0.01]">${k}</th>
-                <td class="py-3 px-5 text-white font-medium">${v}</td>
-              </tr>`).join(''))}
-          </tbody>
-        </table>
+                <td class="w-1/3 font-bold text-[var(--text-muted)]">Fabrication Code</td>
+                <td class="font-mono font-bold text-[#00E599]">${p.code}</td>
+              </tr>
+              <tr>
+                <td class="font-bold text-[var(--text-muted)]">Construction</td>
+                <td class="font-medium text-[var(--text-primary)]">${p.construction}</td>
+              </tr>
+              <tr>
+                <td class="font-bold text-[var(--text-muted)]">Yarn Composition</td>
+                <td>${p.composition}</td>
+              </tr>
+              <tr>
+                <td class="font-bold text-[var(--text-muted)]">Target GSM</td>
+                <td class="font-mono font-bold">${p.gsm} GSM (±5% Tolerance)</td>
+              </tr>
+              <tr>
+                <td class="font-bold text-[var(--text-muted)]">Finish Type</td>
+                <td>${p.finish}</td>
+              </tr>
+              <tr>
+                <td class="font-bold text-[var(--text-muted)]">Color Range</td>
+                <td>${p.colors.join(', ')}</td>
+              </tr>
+              <tr>
+                <td class="font-bold text-[var(--text-muted)]">End-Use Application</td>
+                <td>${p.application}</td>
+              </tr>
+              <tr>
+                <td class="font-bold text-[var(--text-muted)]">Minimum Order (MOQ)</td>
+                <td>${p.moq}</td>
+              </tr>
+              <tr>
+                <td class="font-bold text-[var(--text-muted)]">Standard Lead Time</td>
+                <td>${p.leadTime}</td>
+              </tr>
+              <tr>
+                <td class="font-bold text-[var(--text-muted)]">Certifications</td>
+                <td>
+                  <div class="flex flex-wrap gap-1.5">
+                    ${p.certifications.map((c) => `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-[var(--bg-input)] text-[#00E599] border border-[var(--border-subtle)]">${c}</span>`).join('')}
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4">
+          <a href="/request-sample?product=${encodeURIComponent(p.name)}" class="pill-btn-outline py-3 text-xs text-center">
+            <span>Request Swatch Sample</span>
+          </a>
+          <a href="/request-quote?product=${encodeURIComponent(p.name)}&gsm=${p.gsm}&composition=${encodeURIComponent(p.composition)}" class="pill-btn-emerald py-3 text-xs text-center">
+            <span>Book Capacity for ${p.code}</span>
+          </a>
+        </div>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="pt-2 flex flex-wrap gap-3">
-        <a href="/request-quote?product=${encodeURIComponent(p.name)}" class="pill-btn-emerald">
-          <span>Request Program Quote</span>
-          <i class="fa-solid fa-arrow-right text-xs"></i>
-        </a>
-        <a href="/request-sample?product=${encodeURIComponent(p.name)}" class="pill-btn-outline">
-          <span>Request Sample</span>
-        </a>
-        <a href="/api/products/${p.slug}/spec" class="px-5 py-3 rounded-full bg-white/[0.04] border border-white/[0.1] text-xs font-bold text-[#CBD5E1] hover:text-white hover:border-white/20 transition-colors inline-flex items-center gap-2" download="${p.code}-spec.txt">
-          <i class="fa-solid fa-download text-xs text-[#00E599]"></i>
-          <span>Download Spec</span>
-        </a>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Related Products -->
-  <div class="max-w-[1440px] mx-auto px-5 lg:px-10 mt-20 pt-12 border-t border-white/[0.08]">
-    <div class="flex items-center justify-between mb-8">
-      <div>
-        <span class="kicker-pill mb-2">Complementary Lines</span>
-        <h2 class="text-2xl sm:text-3xl font-bold font-display text-white">Related Export Programs</h2>
-      </div>
-      <a href="/products" class="text-xs font-bold text-[#00E599] hover:underline flex items-center gap-1.5">
-        View All <i class="fa-solid fa-arrow-right text-[10px]"></i>
-      </a>
-    </div>
-
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      ${raw(products.filter((x) => x.slug !== p.slug).slice(0, 3).map(productCardHtml).join(''))}
     </div>
   </div>
 </section>
 `
 
-export const ComparePage = (slugs: string[]) => {
-  const items = slugs.map((s) => products.find((p) => p.slug === s)).filter(Boolean) as Product[]
-  const rows: [string, (p: Product) => string][] = [
-    ['Category', (p) => p.category],
-    ['Construction', (p) => p.construction],
-    ['Composition', (p) => p.composition],
-    ['GSM', (p) => `${p.gsm} GSM`],
-    ['Finish', (p) => p.finish],
-    ['Certifications', (p) => p.certifications.join(', ')],
-    ['Application', (p) => p.application],
-    ['MOQ', (p) => p.moq],
-    ['Lead Time', (p) => p.leadTime],
-  ]
+// ============ PRODUCT COMPARE ============
+export const ComparePage = (items: string[]) => {
+  const selected = products.filter((p) => items.includes(p.slug))
   return html`
-<section class="relative bg-[#060B10] pt-32 pb-14 border-b border-white/[0.08]">
+<section class="relative bg-[var(--bg-canvas)] pt-32 pb-14 border-b border-[var(--border-subtle)] transition-colors">
   <div class="max-w-[1440px] mx-auto px-5 lg:px-10">
-    <span class="kicker-pill mb-4">Technical Evaluation</span>
-    <h1 class="text-3xl sm:text-5xl font-extrabold font-display text-white">Program Comparison</h1>
-    <p class="mt-3 text-[#788A9C] text-sm">Compare technical fabrications, yarn blends, and certifications side-by-side.</p>
+    <span class="kicker-pill mb-3">Specification Comparison</span>
+    <h1 class="text-3xl sm:text-5xl font-extrabold font-display text-[var(--text-primary)]">
+      Compare <span class="text-[#00E599]">Knitwear Specs</span>
+    </h1>
+    <p class="mt-2 text-xs sm:text-sm text-[var(--text-muted)]">Side-by-side technical evaluation for sourcing managers.</p>
   </div>
 </section>
 
-<section class="bg-[#08111A] py-14 lg:py-20 min-h-[60vh]">
-  <div class="max-w-[1440px] mx-auto px-5 lg:px-10">
-    ${items.length === 0 ? raw(`
-      <div class="glass-panel border border-dashed border-white/[0.15] p-16 text-center max-w-xl mx-auto rounded-2xl">
-        <i class="fa-solid fa-scale-balanced text-4xl text-[#788A9C]"></i>
-        <p class="text-xl font-bold font-display text-white mt-4">No programs selected</p>
-        <p class="text-xs text-[#788A9C] mt-2">Select up to 3 programs from our export catalog to evaluate specs side by side.</p>
-        <a href="/products" class="mt-6 inline-block pill-btn-emerald text-xs">Browse Export Catalog</a>
-      </div>`) : raw(`
-      <div class="glass-panel overflow-x-auto border border-white/[0.08] rounded-2xl shadow-2xl">
-        <table class="w-full text-xs min-w-[700px]">
-          <caption class="sr-only">Side-by-side product comparison</caption>
+<section class="bg-[var(--bg-canvas)] py-12 lg:py-20 min-h-[60vh] transition-colors">
+  <div class="max-w-[1440px] mx-auto px-5 lg:px-10 overflow-x-auto">
+    ${selected.length === 0 ? html`
+      <div class="editorial-card p-16 text-center space-y-4 max-w-lg mx-auto">
+        <i class="fa-solid fa-scale-balanced text-3xl text-[var(--text-muted)]"></i>
+        <h3 class="text-lg font-bold font-display text-[var(--text-primary)]">No products selected for comparison</h3>
+        <p class="text-xs text-[var(--text-muted)]">Check the "Compare" box on any product in our catalog to evaluate specifications side-by-side.</p>
+        <a href="/products" class="pill-btn-emerald text-xs mt-2">Browse Catalog</a>
+      </div>
+    ` : html`
+      <div class="editorial-card overflow-hidden">
+        <table class="spec-table">
           <thead>
-            <tr class="border-b border-white/[0.08] bg-white/[0.02]">
-              <th class="p-6 text-left text-[11px] uppercase tracking-wider text-[#788A9C] font-semibold w-48 align-bottom">Specification</th>
-              ${items.map((p) => `
-                <th class="p-6 text-left align-bottom">
-                  <div class="aspect-[4/3] rounded-xl overflow-hidden mb-4 bg-[#0A131C] border border-white/[0.06]">
-                    <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover" loading="lazy" />
+            <tr>
+              <th class="w-1/4">Specification</th>
+              ${selected.map((p) => html`
+                <th class="w-1/3">
+                  <div class="space-y-1">
+                    <span class="text-base font-bold text-[var(--text-primary)] block">${p.name}</span>
+                    <span class="text-[10px] font-mono text-[#00E599]">${p.code}</span>
                   </div>
-                  <a href="/products/${p.slug}" class="text-base font-bold text-white hover:text-[#00E599] transition-colors">${p.name}</a>
-                  <p class="text-[10px] font-mono text-[#00E599] mt-1 font-medium">${p.code}</p>
-                </th>`).join('')}
+                </th>
+              `)}
             </tr>
           </thead>
-          <tbody class="divide-y divide-white/[0.04]">
-            ${rows.map(([label, fn]) => `
-              <tr class="hover:bg-white/[0.01]">
-                <th scope="row" class="p-5 text-left text-[10px] uppercase tracking-wider text-[#788A9C] font-semibold bg-white/[0.01] align-top">${label}</th>
-                ${items.map((p) => `<td class="p-5 text-[#CBD5E1] align-top font-medium">${fn(p)}</td>`).join('')}
-              </tr>`).join('')}
+          <tbody>
             <tr>
-              <td class="p-6"></td>
-              ${items.map((p) => `
-                <td class="p-6">
-                  <a href="/request-quote?product=${encodeURIComponent(p.name)}" class="pill-btn-emerald py-2 px-5 text-xs w-full text-center">
-                    Request Quote
+              <td class="font-bold text-[var(--text-muted)]">Category</td>
+              ${selected.map((p) => html`<td class="font-semibold">${p.category}</td>`)}
+            </tr>
+            <tr>
+              <td class="font-bold text-[var(--text-muted)]">Weight (GSM)</td>
+              ${selected.map((p) => html`<td class="font-mono font-bold text-[#00E599]">${p.gsm} GSM</td>`)}
+            </tr>
+            <tr>
+              <td class="font-bold text-[var(--text-muted)]">Construction</td>
+              ${selected.map((p) => html`<td>${p.construction}</td>`)}
+            </tr>
+            <tr>
+              <td class="font-bold text-[var(--text-muted)]">Composition</td>
+              ${selected.map((p) => html`<td>${p.composition}</td>`)}
+            </tr>
+            <tr>
+              <td class="font-bold text-[var(--text-muted)]">Finish</td>
+              ${selected.map((p) => html`<td>${p.finish}</td>`)}
+            </tr>
+            <tr>
+              <td class="font-bold text-[var(--text-muted)]">Standard MOQ</td>
+              ${selected.map((p) => html`<td>${p.moq}</td>`)}
+            </tr>
+            <tr>
+              <td class="font-bold text-[var(--text-muted)]">Production Lead Time</td>
+              ${selected.map((p) => html`<td>${p.leadTime}</td>`)}
+            </tr>
+            <tr>
+              <td class="font-bold text-[var(--text-muted)]">Certifications</td>
+              ${selected.map((p) => html`<td>${p.certifications.join(' · ')}</td>`)}
+            </tr>
+            <tr>
+              <td class="font-bold text-[var(--text-muted)]">Commercial Action</td>
+              ${selected.map((p) => html`
+                <td>
+                  <a href="/request-quote?product=${encodeURIComponent(p.name)}" class="pill-btn-emerald py-1.5 px-4 text-xs">
+                    Quote
                   </a>
-                </td>`).join('')}
+                </td>
+              `)}
             </tr>
           </tbody>
         </table>
-      </div>`)}
+      </div>
+    `}
   </div>
-</section>`
+</section>
+`
 }
+

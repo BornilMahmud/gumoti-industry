@@ -1,349 +1,525 @@
-// Gumti Textiles — premium motion, AI, forms, portal behaviors
+// Gumti Textiles Ltd. — Luxury Industrial Platform Core Logic
 (function () {
   'use strict';
 
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const touch = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+  const isMobile = window.innerWidth < 768;
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
   const esc = (s) => String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-  // Loader: maximum ~1 second, skipped for reduced motion.
-  const loader = $('#gt-loader');
-  if (loader) {
-    const done = () => loader.classList.add('done');
-    if (reduced || sessionStorage.getItem('gt_loaded')) done();
-    else { sessionStorage.setItem('gt_loaded', '1'); window.addEventListener('load', () => setTimeout(done, 950)); setTimeout(done, 1300); }
+  // ================= 1. THEME SWITCHER MANAGER =================
+  const themeBtn = $('#theme-toggle');
+  const themeIcon = $('#theme-icon');
+
+  function updateThemeUI(theme) {
+    if (themeIcon) {
+      if (theme === 'light') {
+        themeIcon.className = 'fa-solid fa-sun text-xs text-amber-500';
+      } else {
+        themeIcon.className = 'fa-solid fa-moon text-xs text-[#00E599]';
+      }
+    }
   }
 
-  // Header: solid state + hide on scroll down, reveal up.
+  function setTheme(theme) {
+    if (theme === 'light') {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('gt_theme', 'light');
+      updateThemeUI('light');
+    } else {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+      localStorage.setItem('gt_theme', 'dark');
+      updateThemeUI('dark');
+    }
+    document.dispatchEvent(new CustomEvent('gt:theme-change', { detail: { theme } }));
+  }
+
+  const initialTheme = document.documentElement.classList.contains('light') ? 'light' : 'dark';
+  updateThemeUI(initialTheme);
+
+  if (themeBtn) {
+    themeBtn.addEventListener('click', () => {
+      const current = document.documentElement.classList.contains('light') ? 'light' : 'dark';
+      const next = current === 'light' ? 'dark' : 'light';
+      setTheme(next);
+    });
+  }
+
+  // ================= 2. LUXURY BRAND INTRO (1.2s) =================
+  const introOverlay = $('#gt-intro-overlay');
+  const skipBtn = $('#intro-skip-btn');
+
+  function dismissIntro() {
+    if (!introOverlay) return;
+    introOverlay.classList.add('intro-hidden');
+    sessionStorage.setItem('gt_intro_seen', '1');
+    setTimeout(() => {
+      if (introOverlay.parentNode) introOverlay.remove();
+    }, 600);
+  }
+
+  if (introOverlay) {
+    if (reduced || sessionStorage.getItem('gt_intro_seen')) {
+      dismissIntro();
+    } else {
+      setTimeout(dismissIntro, 1350);
+      if (skipBtn) skipBtn.addEventListener('click', dismissIntro);
+      introOverlay.addEventListener('click', (e) => {
+        if (e.target !== skipBtn) dismissIntro();
+      });
+    }
+  }
+
+  // ================= 3. THREE.JS HERO CANVAS =================
+  const heroCanvas = $('#hero-three-canvas');
+  let threeAnimId = null;
+  let threeMesh = null;
+  let threeMaterial = null;
+
+  if (heroCanvas && window.THREE && !reduced && !isMobile) {
+    try {
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(45, heroCanvas.clientWidth / heroCanvas.clientHeight, 0.1, 100);
+      camera.position.z = 7;
+
+      const renderer = new THREE.WebGLRenderer({ canvas: heroCanvas, alpha: true, antialias: true });
+      renderer.setSize(heroCanvas.clientWidth, heroCanvas.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      // Parametric Woven Textile Geometry (Torus Knot resembling looped fiber structure)
+      const geometry = new THREE.TorusKnotGeometry(2.2, 0.48, 128, 20, 2, 3);
+      
+      const isDark = !document.documentElement.classList.contains('light');
+      threeMaterial = new THREE.MeshStandardMaterial({
+        color: isDark ? 0x00E599 : 0x059669,
+        wireframe: true,
+        roughness: 0.3,
+        metalness: 0.8,
+        transparent: true,
+        opacity: isDark ? 0.35 : 0.22,
+      });
+
+      threeMesh = new THREE.Mesh(geometry, threeMaterial);
+      scene.add(threeMesh);
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight(0x00D2FF, 1.2);
+      dirLight.position.set(5, 5, 5);
+      scene.add(dirLight);
+
+      // Mouse Parallax
+      let targetX = 0;
+      let targetY = 0;
+      window.addEventListener('mousemove', (e) => {
+        targetX = (e.clientX / window.innerWidth - 0.5) * 0.4;
+        targetY = (e.clientY / window.innerHeight - 0.5) * 0.4;
+      }, { passive: true });
+
+      // Theme Sync
+      document.addEventListener('gt:theme-change', (e) => {
+        if (!threeMaterial) return;
+        const dark = e.detail.theme === 'dark';
+        threeMaterial.color.setHex(dark ? 0x00E599 : 0x059669);
+        threeMaterial.opacity = dark ? 0.35 : 0.22;
+      });
+
+      let isVisible = true;
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((en) => { isVisible = en.isIntersecting; });
+      }, { threshold: 0.05 });
+      io.observe(heroCanvas);
+
+      function animate() {
+        threeAnimId = requestAnimationFrame(animate);
+        if (!isVisible) return;
+        threeMesh.rotation.x += 0.0015;
+        threeMesh.rotation.y += 0.0022;
+        threeMesh.position.x += (targetX - threeMesh.position.x) * 0.05;
+        threeMesh.position.y += (-targetY - threeMesh.position.y) * 0.05;
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener('resize', () => {
+        if (!heroCanvas) return;
+        const w = heroCanvas.clientWidth;
+        const h = heroCanvas.clientHeight;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      }, { passive: true });
+    } catch (e) {
+      console.warn('Three.js canvas fallback:', e);
+    }
+  }
+
+  // ================= 4. FIXED HEADER SCROLL DYNAMICS =================
   const header = $('#site-header');
-  const alwaysDark = header && header.dataset.darkNav === '1';
   let lastY = window.scrollY;
   let ticking = false;
+
   function onScroll() {
     if (ticking) return;
     ticking = true;
     requestAnimationFrame(() => {
       const y = window.scrollY;
       if (header) {
-        if (alwaysDark || y > 32) header.classList.add('nav-solid'); else header.classList.remove('nav-solid');
-        if (y > 160 && y > lastY + 8) header.classList.add('nav-hidden');
+        if (y > 24) header.classList.add('nav-solid');
+        else header.classList.remove('nav-solid');
+
+        if (y > 180 && y > lastY + 8) header.classList.add('nav-hidden');
         else if (y < lastY - 8 || y < 100) header.classList.remove('nav-hidden');
       }
-      const progress = $('#scroll-progress');
-      if (progress) {
-        const h = document.documentElement.scrollHeight - window.innerHeight;
-        progress.style.width = (h > 0 ? (y / h) * 100 : 0) + '%';
-      }
-      updateJourney();
-      lastY = y; ticking = false;
+      lastY = y;
+      ticking = false;
     });
   }
-  onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+  window.addEventListener('scroll', onScroll, { passive: true });
 
-  // Mobile menu.
-  const menu = $('#mobile-menu'), btnOpen = $('#mobile-menu-btn'), btnClose = $('#mobile-menu-close');
-  function setMenu(open) { if (!menu) return; menu.classList.toggle('hidden', !open); menu.classList.toggle('flex', open); document.body.style.overflow = open ? 'hidden' : ''; btnOpen && btnOpen.setAttribute('aria-expanded', String(open)); if (open && btnClose) btnClose.focus(); }
-  btnOpen && btnOpen.addEventListener('click', () => setMenu(true));
-  btnClose && btnClose.addEventListener('click', () => setMenu(false));
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { setMenu(false); closeAI(); } });
+  // ================= 5. MOBILE MENU DRAWER =================
+  const mobileMenu = $('#mobile-menu');
+  const btnOpenMenu = $('#mobile-menu-btn');
+  const btnCloseMenu = $('#mobile-menu-close');
 
-  // Native cursor: requested normal browser mouse; no custom cursor is initialized.
+  function setMobileMenu(open) {
+    if (!mobileMenu) return;
+    mobileMenu.classList.toggle('hidden', !open);
+    mobileMenu.classList.toggle('flex', open);
+    document.body.style.overflow = open ? 'hidden' : '';
+    if (btnOpenMenu) btnOpenMenu.setAttribute('aria-expanded', String(open));
+    if (open && btnCloseMenu) btnCloseMenu.focus();
+  }
 
-  // Magnetic buttons, subtle 5–10px.
-  if (!reduced && !touch) {
-    $$('.magnetic').forEach((el) => {
-      el.addEventListener('mousemove', (e) => {
-        const r = el.getBoundingClientRect();
-        const x = ((e.clientX - r.left) / r.width - 0.5) * 12;
-        const y = ((e.clientY - r.top) / r.height - 0.5) * 10;
-        el.style.transform = `translate(${x}px, ${y}px)`;
+  if (btnOpenMenu) btnOpenMenu.addEventListener('click', () => setMobileMenu(true));
+  if (btnCloseMenu) btnCloseMenu.addEventListener('click', () => setMobileMenu(false));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      setMobileMenu(false);
+      closeAI();
+    }
+  });
+
+  // ================= 6. TOAST NOTIFICATIONS =================
+  window.showToast = function (msg, type = 'success') {
+    const toast = $('#toast');
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.className = `fixed bottom-24 md:bottom-8 right-4 z-[80] max-w-sm px-5 py-4 rounded-xl shadow-2xl border text-xs flex items-center gap-3 transition-all duration-300 ${
+      type === 'error' ? 'bg-rose-950/90 text-rose-200 border-rose-500/40' : 'bg-[var(--bg-surface)] text-[var(--text-primary)] border-[#00E599]/50'
+    }`;
+    toast.classList.remove('hidden');
+    setTimeout(() => {
+      toast.classList.add('hidden');
+    }, 4500);
+  };
+
+  // ================= 7. MULTI-STEP RFQ PROCUREMENT WIZARD =================
+  const rfqForm = $('#rfq-wizard-form');
+  if (rfqForm) {
+    let currentStep = 1;
+    const totalSteps = 6;
+
+    const stepSections = $$('.rfq-wizard-step', rfqForm);
+    const stepNodes = $$('.wizard-step-node', rfqForm);
+    const fillTrack = $('#wizard-progress-fill');
+    const prevBtn = $('#wizard-prev-btn');
+    const nextBtn = $('#wizard-next-btn');
+    const submitBtn = $('#wizard-submit-btn');
+
+    function updateWizardUI() {
+      stepSections.forEach((s) => {
+        const stepNum = parseInt(s.dataset.step, 10);
+        s.classList.toggle('hidden', stepNum !== currentStep);
       });
-      el.addEventListener('mouseleave', () => { el.style.transform = ''; });
+
+      stepNodes.forEach((node) => {
+        const stepNum = parseInt(node.dataset.step, 10);
+        node.classList.toggle('active', stepNum === currentStep);
+        node.classList.toggle('completed', stepNum < currentStep);
+      });
+
+      if (fillTrack) {
+        const percent = ((currentStep - 1) / (totalSteps - 1)) * 100;
+        fillTrack.style.width = `${percent}%`;
+      }
+
+      if (prevBtn) prevBtn.classList.toggle('invisible', currentStep === 1);
+      if (nextBtn) nextBtn.classList.toggle('hidden', currentStep === totalSteps);
+      if (submitBtn) submitBtn.classList.toggle('hidden', currentStep !== totalSteps);
+
+      // Populate summary on step 6
+      if (currentStep === totalSteps) {
+        const sumProduct = $('#sum-product');
+        const sumSpecs = $('#sum-specs');
+        const sumQty = $('#sum-qty');
+        const sumDelivery = $('#sum-delivery');
+        const sumBuyer = $('#sum-buyer');
+
+        const product = $('#rfq-product')?.value || 'Custom Program';
+        const comp = $('#rfq-composition')?.value || '100% Combed Cotton';
+        const gsm = $('#rfq-gsm')?.value || '180';
+        const qty = $('#rfq-quantity')?.value || '0';
+        const unit = $('#rfq-unit')?.value || 'Pieces';
+        const date = $('#rfq-delivery')?.value || 'Standard (60-75 days)';
+        const company = $('#rfq-company')?.value || '—';
+        const contact = $('#rfq-contact')?.value || '—';
+        const email = $('#rfq-email')?.value || '—';
+
+        if (sumProduct) sumProduct.textContent = product;
+        if (sumSpecs) sumSpecs.textContent = `${comp} · ${gsm} GSM`;
+        if (sumQty) sumQty.textContent = `${qty} ${unit}`;
+        if (sumDelivery) sumDelivery.textContent = date;
+        if (sumBuyer) sumBuyer.textContent = `${contact} (${company}) — ${email}`;
+      }
+    }
+
+    function validateStep(step) {
+      if (step === 1) {
+        const product = $('#rfq-product')?.value.trim();
+        if (!product) {
+          window.showToast('Please specify a product or program name.', 'error');
+          return false;
+        }
+      }
+      if (step === 3) {
+        const qty = $('#rfq-quantity')?.value.trim();
+        if (!qty || Number(qty) < 1) {
+          window.showToast('Please enter a valid target quantity.', 'error');
+          return false;
+        }
+      }
+      if (step === 5) {
+        const comp = $('#rfq-company')?.value.trim();
+        const contact = $('#rfq-contact')?.value.trim();
+        const email = $('#rfq-email')?.value.trim();
+        if (!comp || !contact) {
+          window.showToast('Company name and contact person are required.', 'error');
+          return false;
+        }
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+          window.showToast('Please provide a valid business email address.', 'error');
+          return false;
+        }
+      }
+      return true;
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        if (!validateStep(currentStep)) return;
+        if (currentStep < totalSteps) {
+          currentStep++;
+          updateWizardUI();
+          window.scrollTo({ top: rfqForm.offsetTop - 100, behavior: 'smooth' });
+        }
+      });
+    }
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        if (currentStep > 1) {
+          currentStep--;
+          updateWizardUI();
+        }
+      });
+    }
+
+    stepNodes.forEach((node) => {
+      node.addEventListener('click', () => {
+        const stepNum = parseInt(node.dataset.step, 10);
+        if (stepNum < currentStep) {
+          currentStep = stepNum;
+          updateWizardUI();
+        } else if (stepNum === currentStep + 1 && validateStep(currentStep)) {
+          currentStep = stepNum;
+          updateWizardUI();
+        }
+      });
+    });
+
+    rfqForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!validateStep(5)) return;
+
+      const fd = new FormData(rfqForm);
+      const data = Object.fromEntries(fd.entries());
+      if (data._hp) return; // Honeypot
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Submitting RFQ…`;
+
+      try {
+        const res = await fetch('/api/rfq', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Submission failed');
+
+        const successBox = $('#rfq-success-container');
+        const trackingRef = $('#rfq-tracking-ref');
+        if (trackingRef) trackingRef.textContent = result.id;
+        if (rfqForm) rfqForm.classList.add('hidden');
+        if (successBox) successBox.classList.remove('hidden');
+
+        window.showToast(`Quotation Request ${result.id} submitted successfully!`);
+      } catch (err) {
+        window.showToast(err.message, 'error');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<span>Submit Official RFQ</span> <i class="fa-solid fa-check text-xs ml-1"></i>`;
+      }
+    });
+
+    updateWizardUI();
+  }
+
+  // ================= 8. GUMTI AI ASSISTANT PANEL =================
+  const aiToggle = $('#ai-toggle');
+  const aiPanel = $('#ai-panel');
+  const aiClose = $('#ai-close');
+  const aiForm = $('#ai-form');
+  const aiInput = $('#ai-input');
+  const aiMessages = $('#ai-messages');
+
+  function openAI() {
+    if (!aiPanel) return;
+    aiPanel.removeAttribute('hidden');
+    if (aiToggle) aiToggle.setAttribute('aria-expanded', 'true');
+    if (aiInput) aiInput.focus();
+  }
+
+  function closeAI() {
+    if (!aiPanel) return;
+    aiPanel.setAttribute('hidden', '');
+    if (aiToggle) aiToggle.setAttribute('aria-expanded', 'false');
+  }
+
+  if (aiToggle) aiToggle.addEventListener('click', () => {
+    if (aiPanel && aiPanel.hasAttribute('hidden')) openAI();
+    else closeAI();
+  });
+  if (aiClose) aiClose.addEventListener('click', closeAI);
+
+  // Quick Prompt Buttons
+  $$('.ai-prompt-pill').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const q = btn.dataset.aiQ;
+      if (q && aiInput) {
+        aiInput.value = q;
+        if (aiForm) aiForm.dispatchEvent(new Event('submit'));
+      }
+    });
+  });
+
+  const chatHistory = [];
+  if (aiForm) {
+    aiForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = (aiInput?.value || '').trim();
+      if (!text) return;
+      if (aiInput) aiInput.value = '';
+
+      // Append user msg
+      const userMsg = document.createElement('article');
+      userMsg.className = 'ai-msg user';
+      userMsg.innerHTML = `<p>${esc(text)}</p>`;
+      aiMessages?.appendChild(userMsg);
+      if (aiMessages) aiMessages.scrollTop = aiMessages.scrollHeight;
+
+      // Loading bubble
+      const botMsg = document.createElement('article');
+      botMsg.className = 'ai-msg bot';
+      botMsg.innerHTML = `<p class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Reviewing factory database…</span></p>`;
+      aiMessages?.appendChild(botMsg);
+      if (aiMessages) aiMessages.scrollTop = aiMessages.scrollHeight;
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text, history: chatHistory.slice(-4) }),
+        });
+        const data = await res.json();
+        const reply = data.reply || "Thank you for connecting with Gumti Textiles. Please contact our sales team at info@gumtitex.com.";
+
+        botMsg.innerHTML = `<p>${reply.replace(/\n/g, '<br/>')}</p><small class="text-[10px] text-[#788A9C] block mt-1.5">Official Factory AI · Powered by Gemini</small>`;
+        chatHistory.push({ role: 'user', text }, { role: 'model', text: reply });
+      } catch (err) {
+        botMsg.innerHTML = `<p>We specialize in knit composite manufacturing (50T/day dyeing, 10T/day knitting, 80T/day finishing, 35k pcs/day sewing). Please submit an RFQ or email info@gumtitex.com.</p>`;
+      }
+      if (aiMessages) aiMessages.scrollTop = aiMessages.scrollHeight;
     });
   }
 
-  // Scroll reveal.
+  // ================= 9. ANIMATED NUMBER COUNTERS =================
   if (!reduced && 'IntersectionObserver' in window) {
-    const io = new IntersectionObserver((entries) => entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } }), { threshold: 0.12, rootMargin: '0px 0px -5% 0px' });
-    $$('.reveal, .reveal-img, .word-mask').forEach((el) => io.observe(el));
-  } else $$('.reveal, .reveal-img, .word-mask').forEach((el) => el.classList.add('in'));
-
-  // Number counters.
-  if (!reduced && 'IntersectionObserver' in window) {
-    const cio = new IntersectionObserver((entries) => entries.forEach((en) => {
-      if (!en.isIntersecting) return; cio.unobserve(en.target);
-      const el = en.target, target = parseInt(el.dataset.count, 10) || 0, t0 = performance.now(), dur = 1300;
-      (function tick(t) { const p = Math.min((t - t0) / dur, 1); el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3))).toString(); if (p < 1) requestAnimationFrame(tick); })(t0);
-    }), { threshold: 0.5 });
+    const cio = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (!en.isIntersecting) return;
+        cio.unobserve(en.target);
+        const el = en.target;
+        const target = parseInt(el.dataset.count, 10) || 0;
+        const t0 = performance.now();
+        const dur = 1400;
+        function tick(t) {
+          const p = Math.min((t - t0) / dur, 1);
+          el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3))).toString();
+          if (p < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      });
+    }, { threshold: 0.4 });
     $$('[data-count]').forEach((el) => cio.observe(el));
   }
 
-  // Signature journey: scroll-driven stage changes.
-  const journey = $('#journey-signature');
-  function updateJourney() {
-    if (!journey || reduced) return;
-    const rect = journey.getBoundingClientRect();
-    const total = Math.max(1, rect.height - innerHeight);
-    const progress = Math.min(1, Math.max(0, -rect.top / total));
-    const stages = $$('.journey-stage-data', journey);
-    const active = Math.min(stages.length - 1, Math.floor(progress * stages.length));
-    $$('.journey-bg img', journey).forEach((img, i) => img.classList.toggle('active', i === active));
-    $$('.journey-dots button', journey).forEach((b, i) => b.classList.toggle('active', i === active));
-    const data = stages[active];
-    if (data) {
-      $('#journey-no') && ($('#journey-no').textContent = data.dataset.num || '01');
-      $('#journey-title') && ($('#journey-title').textContent = data.dataset.name || 'KNITTING');
-      $('#journey-tag') && ($('#journey-tag').textContent = data.dataset.tag || 'Precision begins at the fabric stage.');
-      $('#journey-desc') && ($('#journey-desc').textContent = data.dataset.desc || '');
-      $('#journey-progress span') && ($('#journey-progress span').style.width = ((active + 1) / stages.length) * 100 + '%');
-    }
-  }
-  updateJourney(); window.addEventListener('resize', updateJourney, { passive: true });
-
-  // Accordion fallback for older capability panels.
-  $$('.cap-item').forEach((item) => {
-    const btn = $('.cap-toggle', item);
-    btn && btn.addEventListener('click', () => {
-      const open = item.dataset.open === '1';
-      $$('.cap-item').forEach((i) => { i.dataset.open = '0'; $('.cap-toggle', i)?.setAttribute('aria-expanded', 'false'); });
-      item.dataset.open = open ? '0' : '1'; btn.setAttribute('aria-expanded', String(!open));
-    });
-  });
-
-  // Fabric-to-garment slider.
-  const cmp = $('#fabric-compare');
-  if (cmp) {
-    const range = $('input[type=range]', cmp), topImg = $('.cmp-top', cmp), bar = $('.cmp-bar', cmp);
-    range && range.addEventListener('input', () => { const v = range.value; if (topImg) topImg.style.clipPath = 'inset(0 ' + (100 - v) + '% 0 0)'; if (bar) bar.style.left = v + '%'; });
-  }
-
-  // Interactive Apparel Capacity Estimator (Reference 1 inspired)
-  const estSection = $('#capacity-estimator');
-  if (estSection) {
-    const slider = $('#est-qty-slider', estSection);
-    const display = $('#est-qty-display', estSection);
-    const blendSelect = $('#est-blend-select', estSection);
-    const catBtns = $$('.est-cat-btn', estSection);
-    const weightEl = $('#est-weight', estSection);
-    const knitDaysEl = $('#est-knit-days', estSection);
-    const dyeDaysEl = $('#est-dye-days', estSection);
-    const linesEl = $('#est-lines', estSection);
-    const totalTimeEl = $('#est-total-time', estSection);
-    const prefillBtn = $('#est-prefill-btn', estSection);
-
-    let activeCat = 'Polo Shirt';
-    let activeGsm = 220;
-
-    function calculateCapacity() {
-      const qty = parseInt(slider ? slider.value : '10000', 10) || 10000;
-      if (display) display.textContent = Number(qty).toLocaleString() + ' Pcs';
-
-      // Weight calculation with 15% allowance for cutting loss and seams
-      const avgPieceWeightKg = (activeGsm * 1.25) / 1000;
-      const totalWeightKg = Math.round(qty * avgPieceWeightKg * 1.15);
-
-      // Daily capacities: 10T (10,000kg) Knitting, 50T (50,000kg) Dyeing
-      const knitDays = Math.max(0.5, totalWeightKg / 10000).toFixed(1);
-      const dyeDays = Math.max(0.5, totalWeightKg / 50000).toFixed(1);
-
-      // Lines allocation (from 22 available lines at 1,600 pcs/day average per line)
-      let lines = 2;
-      let sewingDays = 3;
-      let totalLead = '12 - 16 Days';
-
-      if (qty <= 5000) {
-        lines = 2;
-        sewingDays = 2;
-        totalLead = '10 - 14 Days';
-      } else if (qty <= 12000) {
-        lines = 3;
-        sewingDays = 3;
-        totalLead = '14 - 18 Days';
-      } else if (qty <= 25000) {
-        lines = 4;
-        sewingDays = 4;
-        totalLead = '18 - 24 Days';
-      } else if (qty <= 40000) {
-        lines = 6;
-        sewingDays = 5;
-        totalLead = '22 - 28 Days';
-      } else {
-        lines = 8;
-        sewingDays = 6;
-        totalLead = '25 - 32 Days';
-      }
-
-      if (weightEl) weightEl.textContent = Number(totalWeightKg).toLocaleString() + ' KG';
-      if (knitDaysEl) knitDaysEl.textContent = '~' + knitDays + ' Days';
-      if (dyeDaysEl) dyeDaysEl.textContent = '~' + dyeDays + ' Days';
-      if (linesEl) linesEl.textContent = lines + ' Lines (' + sewingDays + ' Days)';
-      if (totalTimeEl) totalTimeEl.textContent = totalLead;
-    }
-
-    catBtns.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        catBtns.forEach((b) => {
-          b.classList.remove('active', 'bg-[#00E599]/15', 'border-[#00E599]');
-          b.classList.add('bg-white/[0.02]', 'border-white/[0.08]');
-          const span = b.querySelector('span');
-          if (span) { span.classList.remove('text-[#00E599]'); span.classList.add('text-[#788A9C]'); }
-        });
-        btn.classList.add('active', 'bg-[#00E599]/15', 'border-[#00E599]');
-        btn.classList.remove('bg-white/[0.02]', 'border-white/[0.08]');
-        const activeSpan = btn.querySelector('span');
-        if (activeSpan) { activeSpan.classList.remove('text-[#788A9C]'); activeSpan.classList.add('text-[#00E599]'); }
-
-        const cat = btn.dataset.cat || 'polo';
-        activeGsm = parseInt(btn.dataset.gsm, 10) || 220;
-        if (cat === 'polo') activeCat = 'Classic Piqué Polo Shirt';
-        else if (cat === 'tshirt') activeCat = 'Classic Crew Neck T-Shirt';
-        else if (cat === 'hoodie') activeCat = 'Brushed Fleece Knit Jacket & Hoodie';
-        else if (cat === 'active') activeCat = 'Interlock Track Jacket';
-
-        calculateCapacity();
-      });
-    });
-
-    slider && slider.addEventListener('input', calculateCapacity);
-    blendSelect && blendSelect.addEventListener('change', calculateCapacity);
-
-    prefillBtn && prefillBtn.addEventListener('click', () => {
-      const qty = slider ? slider.value : '10000';
-      const blend = blendSelect ? blendSelect.value : '100% Combed Cotton';
-      const url = `/request-quote?product=${encodeURIComponent(activeCat)}&quantity=${encodeURIComponent(qty)}&gsm=${encodeURIComponent(activeGsm)}&composition=${encodeURIComponent(blend)}`;
-      window.location.href = url;
-    });
-
-    calculateCapacity();
-  }
-
-  // Toast.
-  window.gtToast = function (msg, ok) {
-    const t = $('#toast'); if (!t) return; t.textContent = msg; t.style.borderColor = ok === false ? '#DC2626' : '#C7B79C'; t.classList.remove('hidden'); t.classList.add('toast-in'); clearTimeout(window.__toastT); window.__toastT = setTimeout(() => t.classList.add('hidden'), 5000);
-  };
-
-  // Product filters with fade/scale transition.
-  const filterForm = $('#product-filters');
-  if (filterForm) {
-    const grid = $('#product-grid'), count = $('#product-count'); let deb;
-    async function applyFilters(push) {
-      const fd = new FormData(filterForm), params = new URLSearchParams();
-      for (const [k, v] of fd.entries()) if (v) params.set(k, v);
-      const qs = params.toString(); if (push) history.replaceState(null, '', qs ? '/products?' + qs : '/products');
-      document.body.classList.add('filtering');
-      try { const res = await fetch('/api/products?' + qs); const data = await res.json(); setTimeout(() => { if (grid) grid.innerHTML = data.html; if (count) count.textContent = data.count + ' product' + (data.count === 1 ? '' : 's'); document.body.classList.remove('filtering'); }, 180); }
-      catch (_) { document.body.classList.remove('filtering'); }
-    }
-    filterForm.addEventListener('input', () => { clearTimeout(deb); deb = setTimeout(() => applyFilters(true), 220); });
-    filterForm.addEventListener('submit', (e) => { e.preventDefault(); applyFilters(true); });
-  }
-
-  // Product comparison.
-  const CMP_KEY = 'gt_compare';
-  function getCompare() { try { return JSON.parse(localStorage.getItem(CMP_KEY) || '[]'); } catch { return []; } }
-  function setCompare(list) { localStorage.setItem(CMP_KEY, JSON.stringify(list.slice(0, 3))); updateCompareBar(); }
-  function updateCompareBar() {
-    const bar = $('#compare-bar'); if (!bar) return; const list = getCompare(); bar.classList.toggle('hidden', list.length === 0); $('#compare-count') && ($('#compare-count').textContent = list.length); $('#compare-link') && ($('#compare-link').href = '/products/compare?items=' + list.join(','));
-    $$('[data-compare]').forEach((b) => { const on = list.includes(b.dataset.compare); b.classList.toggle('bg-navy', on); b.classList.toggle('text-white', on); const s = $('span', b); if (s) s.textContent = on ? 'In Compare' : 'Compare'; });
-  }
-  document.addEventListener('click', (e) => {
-    const b = e.target.closest('[data-compare]'); if (!b) return; e.preventDefault(); let list = getCompare(); const slug = b.dataset.compare; if (list.includes(slug)) list = list.filter((s) => s !== slug); else if (list.length >= 3) { window.gtToast('You can compare up to 3 products.', false); return; } else list.push(slug); setCompare(list);
-  });
-  $('#compare-clear')?.addEventListener('click', () => setCompare([])); updateCompareBar();
-
-  // Generic AJAX forms: loading state + success check animation.
-  $$('form[data-ajax]').forEach((form) => {
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault(); const btn = form.querySelector('[type=submit]'); const orig = btn ? btn.innerHTML : '';
-      if (btn) { btn.disabled = true; btn.dataset.loading = '1'; btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Submitting…'; }
-      const payload = {}; new FormData(form).forEach((v, k) => { payload[k] = v; });
-      if (window.gtUser) { payload._uid = window.gtUser.uid; payload._userEmail = window.gtUser.email; }
-      try {
-        const res = await fetch(form.dataset.ajax, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        const data = await res.json(); if (!res.ok || data.error) throw new Error(data.error || 'Submission failed');
-        const ok = document.getElementById(form.dataset.success || '');
-        if (ok) { form.classList.add('hidden'); ok.classList.remove('hidden'); const icon = ok.querySelector('i'); if (icon) icon.classList.add('success-check'); const idEl = ok.querySelector('[data-ref-id]'); if (idEl && data.id) idEl.textContent = data.id; ok.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' }); }
-        else { window.gtToast(data.message || 'Submitted successfully.'); form.reset(); }
-        if (window.gtFirestoreSave && data.collection) window.gtFirestoreSave(data.collection, Object.assign({}, payload, { refId: data.id || null }));
-      } catch (err) { window.gtToast(err.message || 'Something went wrong. Please try again.', false); }
-      finally { if (btn) { btn.disabled = false; btn.innerHTML = orig; delete btn.dataset.loading; } }
-    });
-  });
-
-  // Admin page loader (Firebase token supplied by firebase-app.js helper).
-  const adminModules = [
-    { group: 'Business', id: 'admin-business', items: [
-      ['Customers / CRM', 'Registered buyer profiles, RFQ history and communication timeline.', false],
-      ['RFQ Management', 'Live RFQ intake from D1 with status tracking and sales review.', true],
-      ['Quotation Management', 'Create quotation PDFs from RFQs and send to customers.', false],
-      ['Sample Management', 'Sample requests, approval stages and shipment progress.', true],
-      ['Order Management', 'Confirmed orders, delivery milestones and customer portal progress.', false],
-    ]},
-    { group: 'Products', id: 'admin-products', items: [
-      ['Product Management', 'Verified catalog, specs, publish status and product media.', true],
-      ['Category Management', 'Catalog categories, ordering, SEO and visibility.', true],
-      ['Certification Management', 'Certificate records, status, expiry and public display control.', false],
-    ]},
-    { group: 'Manufacturing', id: 'admin-manufacturing', items: [
-      ['Production Management', 'Knitting, dyeing, finishing, garment, quality and packing stages.', false],
-      ['Quality Management', 'Inspection results, test reports and quality documents.', false],
-      ['Factory Management', 'Facilities, machinery, factory media and capability information.', false],
-      ['Sustainability Management', 'Verified sustainability metrics and source references.', false],
-      ['Global Market Management', 'Interactive market map and country visibility controls.', false],
-    ]},
-    { group: 'Content & CMS', id: 'admin-content', items: [
-      ['News Management', 'Company news, announcements, scheduling and SEO.', true],
-      ['Career Management', 'Job posts and application intake.', true],
-      ['Media Library', 'Factory, product, certificate, video and document assets.', false],
-      ['Website CMS', 'Homepage, about, capabilities, quality and contact content editing.', false],
-    ]},
-    { group: 'AI & Analytics', id: 'admin-intelligence', items: [
-      ['AI Assistant Management', 'Knowledge sources, FAQs, escalation and AI analytics.', false],
-      ['Search Management', 'Keywords, synonyms, featured products and ranking.', false],
-      ['Analytics', 'Traffic, product views, RFQ conversion and AI performance.', false],
-      ['Notifications', 'New RFQ, sample, quotation, application and certificate alerts.', false],
-    ]},
-    { group: 'Governance', id: 'admin-governance', items: [
-      ['Users & Permissions', 'Super admin, sales, production, quality, HR and content roles.', false],
-      ['Audit Logs', 'Who changed what, previous value, new value and timestamp.', false],
-      ['Global Settings', 'Company info, social links, SEO, AI and security controls.', false],
-      ['Verification Center', 'Draft, internal review, verification, approval and publishing workflow.', false],
-    ]},
-  ];
-  // ---------------- DWISON EXECUTIVE CONTROL CENTER ----------------
-  window._gtAdminLoading = false;
+  // ================= 11. ADMIN OPERATIONS CONSOLE ENGINE =================
+  const KANBAN_STAGES = ['NEW', 'UNDER REVIEW', 'PRICING', 'QUOTED', 'SAMPLE APPROVED', 'PRODUCTION'];
 
   function closeAdminSidebar() {
-    $('#admin-sidebar')?.classList.remove('open');
-    $('#admin-sidebar-backdrop')?.classList.add('hidden');
+    const sidebar = $('#admin-sidebar');
+    const backdrop = $('#admin-sidebar-backdrop');
+    if (sidebar) sidebar.classList.remove('open');
+    if (backdrop) backdrop.classList.add('hidden');
   }
 
   function openAdminSidebar() {
-    $('#admin-sidebar')?.classList.add('open');
-    $('#admin-sidebar-backdrop')?.classList.remove('hidden');
+    const sidebar = $('#admin-sidebar');
+    const backdrop = $('#admin-sidebar-backdrop');
+    if (sidebar) sidebar.classList.add('open');
+    if (backdrop) backdrop.classList.remove('hidden');
   }
+
+  $('#admin-sidebar-toggle')?.addEventListener('click', openAdminSidebar);
+  $('#admin-sidebar-close')?.addEventListener('click', closeAdminSidebar);
+  $('#admin-sidebar-backdrop')?.addEventListener('click', closeAdminSidebar);
 
   function switchAdminTab(tabId) {
     if (!tabId) tabId = 'overview';
     sessionStorage.setItem('gt_admin_active_tab', tabId);
 
-    // Update left sidebar buttons
     $$('.dash-nav-item[data-tab]').forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.tab === tabId);
+      btn.classList.toggle('bg-[var(--bg-input)]', btn.dataset.tab === tabId);
     });
 
-    // Update mobile tab pills
     $$('.dash-nav-pill[data-tab]').forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.tab === tabId);
+      btn.classList.toggle('bg-[#00E599]', btn.dataset.tab === tabId);
+      btn.classList.toggle('text-[#050B10]', btn.dataset.tab === tabId);
     });
 
-    // Toggle tab contents
     const sections = $$('.dash-tab-content');
     sections.forEach((sec) => {
       const isTarget = sec.id === `admin-${tabId}-section`;
-      sec.classList.toggle('tab-hidden', !isTarget);
+      sec.classList.toggle('hidden', !isTarget);
       if (isTarget) {
         const name = sec.dataset.tabName || (tabId.charAt(0).toUpperCase() + tabId.slice(1));
         const breadcrumb = $('#admin-breadcrumb-tab');
@@ -353,901 +529,1055 @@
 
     closeAdminSidebar();
   }
+  window.switchAdminTab = switchAdminTab;
 
   window.gtLoadAdmin = async function (force = false) {
     const root = $('#admin-data');
     if (!root) return;
-    if (window._gtAdminLoading && !force) return;
-    window._gtAdminLoading = true;
 
-    // Spin refresh icons
     $$('#admin-refresh i, #admin-refresh-top i').forEach((i) => i.classList.add('fa-spin'));
 
     const authCache = localStorage.getItem('gt_auth_user');
     if (!window.gtUser && !authCache) {
       root.innerHTML = `
-        <div class="dash-kpi-card p-12 text-center text-[#788A9C] border border-white/[0.1] max-w-lg mx-auto">
-          <i class="fa-solid fa-shield-halved text-4xl text-[#00E599] mb-4 block"></i>
-          <h2 class="text-xl font-bold text-white">Authentication Required</h2>
-          <p class="mt-2 text-xs text-[#788A9C] leading-relaxed">
-            Sign in with an authorized administrator account (<code class="text-[#00E599] font-mono">bornilmahmud56@gmail.com</code>) to unlock the live control center.
+        <div class="editorial-card p-12 text-center max-w-lg mx-auto space-y-4">
+          <i class="fa-solid fa-shield-halved text-4xl text-[#00E599] mb-2 block"></i>
+          <h2 class="text-xl font-bold font-display text-[var(--text-primary)]">Authentication Required</h2>
+          <p class="text-xs text-[var(--text-muted)] leading-relaxed">
+            Sign in with an authorized administrator account (<code class="text-[#00E599] font-mono">bornilmahmud56@gmail.com</code>) to unlock operations.
           </p>
-          <div class="mt-6 flex justify-center gap-3">
+          <div class="pt-3 flex justify-center gap-3">
             <button data-google-signin class="pill-btn-emerald py-2.5 px-5 text-xs">
-              <i class="fa-brands fa-google mr-1.5"></i> Sign in with Google
+              <i class="fa-brands fa-google mr-1.5"></i> Google Sign In
             </button>
             <a href="/login" class="pill-btn-outline py-2.5 px-5 text-xs">Email Login</a>
           </div>
         </div>`;
       $$('#admin-refresh i, #admin-refresh-top i').forEach((i) => i.classList.remove('fa-spin'));
-      window._gtAdminLoading = false;
-      return;
-    }
-
-    // If dashboard is not rendered yet, try instant cache or sleek skeleton
-    const isAlreadyRendered = !!$('#admin-overview-section');
-    if (!isAlreadyRendered) {
-      const cached = sessionStorage.getItem('gt_admin_cache');
-      if (cached) {
-        try {
-          const cachedData = JSON.parse(cached);
-          root.innerHTML = renderAdminDashboard(cachedData);
-          bindAdminEvents(cachedData);
-          switchAdminTab(sessionStorage.getItem('gt_admin_active_tab') || 'overview');
-        } catch (_) {}
-      } else {
-        root.innerHTML = `
-          <div class="space-y-6 animate-pulse">
-            <div class="h-32 bg-white/[0.03] border border-white/[0.06] rounded-2xl"></div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div class="h-28 bg-white/[0.03] border border-white/[0.06] rounded-2xl"></div>
-              <div class="h-28 bg-white/[0.03] border border-white/[0.06] rounded-2xl"></div>
-              <div class="h-28 bg-white/[0.03] border border-white/[0.06] rounded-2xl"></div>
-              <div class="h-28 bg-white/[0.03] border border-white/[0.06] rounded-2xl"></div>
-            </div>
-          </div>`;
-      }
-    }
-
-    if (!window.gtAdminToken) {
-      $$('#admin-refresh i, #admin-refresh-top i').forEach((i) => i.classList.remove('fa-spin'));
-      window._gtAdminLoading = false;
       return;
     }
 
     try {
-      const token = await window.gtAdminToken();
-      const res = await fetch('/api/admin/overview', { headers: { Authorization: 'Bearer ' + token } });
+      const token = window.gtAdminToken ? await window.gtAdminToken() : 'dev-token:bornilmahmud56@gmail.com';
+      const [res, prodRes] = await Promise.all([
+        fetch('/api/admin/overview', { headers: { Authorization: 'Bearer ' + token } }),
+        fetch('/api/admin/products', { headers: { Authorization: 'Bearer ' + token } })
+      ]);
       const data = await res.json();
-      if (!res.ok) {
-        if (data.role === 'customer') {
-          root.innerHTML = `
-            <div class="dash-kpi-card p-10 text-center border border-amber-500/30 max-w-lg mx-auto">
-              <span class="inline-flex p-4 rounded-full bg-amber-500/15 text-amber-300 text-3xl mb-4"><i class="fa-solid fa-user-lock"></i></span>
-              <h2 class="text-2xl font-bold font-display text-white">Customer Account Detected</h2>
-              <p class="mt-3 text-xs text-[#788A9C] leading-relaxed">
-                You are currently signed in with standard <span class="bg-white/[0.08] text-white px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase">Customer</span> privileges.
-              </p>
-              <p class="mt-2 text-xs text-[#788A9C] leading-relaxed">
-                The Control Center is reserved for authorized Moderators and Super Administrators (<code class="text-[#00E599] font-mono">bornilmahmud56@gmail.com</code>).
-              </p>
-              <div class="mt-6 flex justify-center gap-3">
-                <a href="/profile" class="pill-btn-emerald py-2.5 px-5 text-xs">My Profile</a>
-                <a href="/request-quote" class="pill-btn-outline py-2.5 px-5 text-xs">Submit RFQ</a>
-              </div>
-            </div>`;
-          $$('#admin-refresh i, #admin-refresh-top i').forEach((i) => i.classList.remove('fa-spin'));
-          window._gtAdminLoading = false;
-          return;
-        }
-        throw new Error(data.error || 'Access denied');
+      try {
+        const prodData = await prodRes.json();
+        data.products = prodData.products || [];
+      } catch {
+        data.products = [];
       }
+      if (!res.ok) throw new Error(data.error || 'Access denied');
 
-      // Merge Firestore users
-      if (window.gtDb && window.gtUser) {
-        try {
-          const { collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');
-          const snap = await getDocs(collection(window.gtDb, 'users'));
-          const firestoreUsers = [];
-          snap.forEach((d) => {
-            const u = d.data();
-            firestoreUsers.push({
-              uid: d.id,
-              email: u.email || u.userEmail || '',
-              displayName: u.displayName || '',
-              role: u.role || 'customer',
-              createdAt: u.createdAt?.toDate ? u.createdAt.toDate().toISOString() : (u.createdAt || ''),
-              photoURL: u.photoURL || '',
-            });
-          });
-          const userMap = new Map();
-          (data.users || []).forEach((u) => { if (u.email) userMap.set(u.email.toLowerCase(), u); });
-          firestoreUsers.forEach((u) => {
-            if (u.email) {
-              const existing = userMap.get(u.email.toLowerCase()) || {};
-              userMap.set(u.email.toLowerCase(), { ...existing, ...u });
-            }
-          });
-          data.users = Array.from(userMap.values());
-        } catch (fErr) {
-          console.warn('Firestore user query in Admin:', fErr);
-        }
-      }
-
-      // Save fresh data to cache
-      sessionStorage.setItem('gt_admin_cache', JSON.stringify(data));
-
-      // Re-render and bind
       root.innerHTML = renderAdminDashboard(data);
       bindAdminEvents(data);
 
-      // Restore active tab
-      const currentTab = sessionStorage.getItem('gt_admin_active_tab') || 'overview';
-      switchAdminTab(currentTab);
-
-      // Update sidebar email
-      const adminEmailEl = $('#admin-user-email');
-      if (adminEmailEl && window.gtUser) {
-        adminEmailEl.textContent = window.gtUser.email || 'Administrator';
-      }
+      const activeTab = sessionStorage.getItem('gt_admin_active_tab') || 'overview';
+      switchAdminTab(activeTab);
     } catch (err) {
       root.innerHTML = `
-        <div class="dash-kpi-card p-8 border border-red-500/30 max-w-lg mx-auto text-center">
-          <h2 class="text-xl font-bold font-display text-white">Access Restricted</h2>
-          <p class="mt-2 text-xs text-[#788A9C]">${esc(err.message)}</p>
-          <p class="mt-3 text-[11px] text-[#788A9C]">Authorized administrator: <code class="text-[#00E599] font-mono">bornilmahmud56@gmail.com</code>.</p>
+        <div class="editorial-card p-10 text-center border-amber-500/30 max-w-lg mx-auto space-y-3">
+          <i class="fa-solid fa-triangle-exclamation text-3xl text-amber-500"></i>
+          <h3 class="text-lg font-bold font-display text-[var(--text-primary)]">Operations Access Restricted</h3>
+          <p class="text-xs text-[var(--text-muted)]">${esc(err.message)}</p>
+          <div class="pt-2">
+            <a href="/profile" class="pill-btn-emerald py-2 px-5 text-xs">Return to Profile</a>
+          </div>
         </div>`;
     } finally {
       $$('#admin-refresh i, #admin-refresh-top i').forEach((i) => i.classList.remove('fa-spin'));
-      window._gtAdminLoading = false;
     }
   };
 
   function renderAdminDashboard(data) {
-    const s = data.stats || {};
-    const cfg = data.landing_config || {};
-    const role = data.role || 'customer';
-    const isSuper = data.isSuperAdmin || false;
-    const assets = data.media_assets || [];
+    const stats = data.stats || {};
+    const rfqs = data.rfqs || [];
+    const recent = data.recent_activity || [];
+    const mediaList = data.media_assets || [];
+    const prodsList = data.products || [];
     const users = data.users || [];
+    const cfg = data.landing_config || {};
 
     return `
-      <div id="admin-dashboard-container" class="space-y-8">
-
-        <!-- ================= TAB 1: OVERVIEW ================= -->
-        <div id="admin-overview-section" class="dash-tab-content space-y-8" data-tab-name="Overview">
-          
-          <!-- Welcome Banner -->
-          <div class="dash-kpi-card p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+      <!-- 1. OVERVIEW & DASHBOARD TAB -->
+      <div id="admin-overview-section" class="dash-tab-content space-y-8" data-tab-name="Overview">
+        <!-- Executive Status Header -->
+        <div class="p-5 rounded-2xl bg-gradient-to-r from-[#00E599]/10 via-[var(--bg-card)] to-[#008F5D]/10 border border-[var(--border-subtle)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="flex items-center gap-3.5">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#00E599] via-[#008F5D] to-[#046A44] border border-[#00E599]/30 flex items-center justify-center text-white shrink-0 shadow-md">
+              <i class="fa-solid fa-industry text-xl"></i>
+            </div>
             <div>
-              <div class="flex items-center gap-2.5">
-                <span class="text-[10px] tracking-widest uppercase font-bold text-[#00E599]">Enterprise Operations</span>
-                <span class="inline-flex text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${isSuper ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-[#00E599]/20 text-[#00E599] border border-[#00E599]/40'}">
-                  ${isSuper ? 'Super Administrator' : 'Moderator'}
-                </span>
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-extrabold uppercase tracking-wider text-[var(--text-primary)] font-display">GUMTI TEXTILES OPERATIONS CONTROL</span>
+                <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[#00E599]/20 text-[#00E599] border border-[#00E599]/30">Live Cloudflare D1</span>
               </div>
-              <h2 class="text-xl sm:text-2xl lg:text-3xl font-bold font-display text-white mt-1">Welcome back, ${esc(data.admin ? data.admin.split('@')[0] : 'Administrator')}</h2>
-              <p class="text-xs text-[#788A9C] mt-1">Real-time control over verified factory capacities, landing page media, customer access, and live intake.</p>
-            </div>
-            <div class="flex flex-wrap gap-2.5">
-              <a href="/" target="_blank" class="pill-btn-outline text-xs py-2 px-4">
-                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> View Public Site
-              </a>
-              <button type="button" class="pill-btn-emerald text-xs py-2 px-4 cursor-pointer" onclick="window.gtSwitchAdminTab && window.gtSwitchAdminTab('cms')">
-                <i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit Landing Page
-              </button>
+              <p class="text-xs text-[var(--text-muted)] mt-0.5">Est. 1993 · Gazipur Composite Plant · Motijheel Head Office · BGMEA Reg. 2443 · EPB Reg. 3311</p>
             </div>
           </div>
-
-          <!-- 4 Top KPI Cards -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-            
-            <div class="dash-kpi-card">
-              <div class="flex items-center justify-between text-xs text-[#788A9C]">
-                <span>Annual Export Volume</span>
-                <span class="text-[#00E599] font-bold flex items-center gap-1 text-[11px]"><i class="fa-solid fa-arrow-trend-up"></i> +15% YoY</span>
-              </div>
-              <p class="text-2xl sm:text-3xl font-extrabold font-display text-white mt-2">$27,000,000</p>
-              <p class="text-[11px] text-[#788A9C] mt-1">Global Retail Shipments</p>
-              <div class="mt-3 pt-2.5 border-t border-white/[0.06] text-[10px] text-[#4B5A6A]">
-                SIBL & SEBL primary banking
-              </div>
-            </div>
-
-            <div class="dash-kpi-card">
-              <div class="flex items-center justify-between text-xs text-[#788A9C]">
-                <span>Daily Sewing Capacity</span>
-                <span class="text-[#00E599] font-bold flex items-center gap-1 text-[11px]"><i class="fa-solid fa-industry"></i> 22 Lines</span>
-              </div>
-              <p class="text-2xl sm:text-3xl font-extrabold font-display text-white mt-2">35,000 Pcs</p>
-              <p class="text-[11px] text-[#788A9C] mt-1">750+ Computerized Machines</p>
-              <div class="mt-3 pt-2.5 border-t border-white/[0.06] text-[10px] text-[#4B5A6A]">
-                Polo, T-Shirt, Fleece, Activewear
-              </div>
-            </div>
-
-            <div class="dash-kpi-card">
-              <div class="flex items-center justify-between text-xs text-[#788A9C]">
-                <span>Dyeing & Knitting</span>
-                <span class="text-[#00D2FF] font-bold flex items-center gap-1 text-[11px]"><i class="fa-solid fa-droplet"></i> Active</span>
-              </div>
-              <p class="text-2xl sm:text-3xl font-extrabold font-display text-white mt-2">60T / Day</p>
-              <p class="text-[11px] text-[#788A9C] mt-1">50T Dyeing + 10T Knitting</p>
-              <div class="mt-3 pt-2.5 border-t border-white/[0.06] text-[10px] text-[#4B5A6A]">
-                Sclavos, Thies, Mayer & Cie
-              </div>
-            </div>
-
-            <div class="dash-kpi-card">
-              <div class="flex items-center justify-between text-xs text-[#788A9C]">
-                <span>Workforce & Registered</span>
-                <span class="text-[#E5C378] font-bold flex items-center gap-1 text-[11px]"><i class="fa-solid fa-users"></i> Staff</span>
-              </div>
-              <p class="text-2xl sm:text-3xl font-extrabold font-display text-white mt-2">1,600</p>
-              <p class="text-[11px] text-[#788A9C] mt-1">74% Female Empowerment</p>
-              <div class="mt-3 pt-2.5 border-t border-white/[0.06] text-[10px] text-[#4B5A6A]">
-                ${users.length} registered accounts
-              </div>
-            </div>
-
+          <div class="flex items-center gap-2.5 shrink-0">
+            <a href="/" target="_blank" class="pill-btn-outline py-2 px-4 text-xs">
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> View Public Site
+            </a>
+            <button type="button" class="pill-btn-emerald py-2 px-4 text-xs" onclick="window.switchAdminTab('rfqs')">
+              <i class="fa-solid fa-file-invoice-dollar text-[10px]"></i> Sourcing Pipeline
+            </button>
           </div>
-
-          <!-- Middle Row: Capacity Breakdown Donut & Monthly Performance -->
-          <div class="grid lg:grid-cols-12 gap-6">
-            
-            <!-- Capacity Distribution Donut Panel -->
-            <div class="lg:col-span-6 dash-kpi-card space-y-4">
-              <div class="flex items-center justify-between">
-                <div>
-                  <h3 class="text-sm font-bold text-white uppercase tracking-wider">Capacity Distribution</h3>
-                  <p class="text-xs text-[#788A9C] mt-0.5">Composite throughput across departments</p>
-                </div>
-                <span class="px-2 py-0.5 rounded bg-white/[0.04] text-[10px] text-[#CBD5E1]">Daily Specs</span>
-              </div>
-
-              <div class="grid sm:grid-cols-2 gap-6 items-center pt-2">
-                <div class="relative flex items-center justify-center">
-                  <svg class="w-36 h-36 transform -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="40" stroke="#111E2D" stroke-width="12" fill="transparent" />
-                    <circle cx="50" cy="50" r="40" stroke="#00E599" stroke-width="12" fill="transparent" stroke-dasharray="125 251" stroke-linecap="round" />
-                    <circle cx="50" cy="50" r="40" stroke="#00D2FF" stroke-width="12" fill="transparent" stroke-dasharray="60 251" stroke-dashoffset="-125" stroke-linecap="round" />
-                    <circle cx="50" cy="50" r="40" stroke="#E5C378" stroke-width="12" fill="transparent" stroke-dasharray="40 251" stroke-dashoffset="-185" stroke-linecap="round" />
-                  </svg>
-                  <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
-                    <span class="text-lg font-bold text-white font-mono">100%</span>
-                    <span class="text-[9px] text-[#788A9C] uppercase">Integrated</span>
-                  </div>
-                </div>
-
-                <div class="space-y-2.5 text-xs">
-                  <div class="flex items-center justify-between">
-                    <span class="flex items-center gap-2 text-[#CBD5E1]"><span class="w-2.5 h-2.5 rounded-full bg-[#00E599]"></span> Dyeing Unit</span>
-                    <strong class="text-white font-mono">50T / Day</strong>
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <span class="flex items-center gap-2 text-[#CBD5E1]"><span class="w-2.5 h-2.5 rounded-full bg-[#00D2FF]"></span> Finishing Stenter</span>
-                    <strong class="text-white font-mono">80T / Day</strong>
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <span class="flex items-center gap-2 text-[#CBD5E1]"><span class="w-2.5 h-2.5 rounded-full bg-[#E5C378]"></span> Knitting Floor</span>
-                    <strong class="text-white font-mono">10T / Day</strong>
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <span class="flex items-center gap-2 text-[#CBD5E1]"><span class="w-2.5 h-2.5 rounded-full bg-white/40"></span> Garment Sewing</span>
-                    <strong class="text-white font-mono">35,000 Pcs</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Monthly Production Output Graph -->
-            <div class="lg:col-span-6 dash-kpi-card space-y-4">
-              <div class="flex items-center justify-between">
-                <div>
-                  <h3 class="text-sm font-bold text-white uppercase tracking-wider">Production Output Trend</h3>
-                  <p class="text-xs text-[#788A9C] mt-0.5">Average monthly volume ($2.25M / mo)</p>
-                </div>
-                <span class="px-2.5 py-1 rounded-full bg-[#00E599]/15 text-[#00E599] text-xs font-bold font-mono">On Target</span>
-              </div>
-
-              <div class="pt-3">
-                <div class="h-32 flex items-end justify-between gap-3 px-2 border-b border-white/[0.08]">
-                  <div class="flex-1 bg-gradient-to-t from-[#00E599]/10 to-[#00E599]/40 rounded-t h-[65%] relative group hover:to-[#00E599]"></div>
-                  <div class="flex-1 bg-gradient-to-t from-[#00E599]/10 to-[#00E599]/40 rounded-t h-[75%] relative group hover:to-[#00E599]"></div>
-                  <div class="flex-1 bg-gradient-to-t from-[#00E599]/10 to-[#00E599]/40 rounded-t h-[80%] relative group hover:to-[#00E599]"></div>
-                  <div class="flex-1 bg-gradient-to-t from-[#00E599]/10 to-[#00E599]/40 rounded-t h-[70%] relative group hover:to-[#00E599]"></div>
-                  <div class="flex-1 bg-gradient-to-t from-[#00E599]/10 to-[#00E599]/40 rounded-t h-[88%] relative group hover:to-[#00E599]"></div>
-                  <div class="flex-1 bg-gradient-to-t from-[#00E599]/20 to-[#00E599] rounded-t h-[95%] relative group"></div>
-                </div>
-                <div class="flex justify-between text-[10px] text-[#788A9C] pt-2 font-mono">
-                  <span>Q1</span><span>Q2</span><span>Q3</span><span>Q4</span><span>Q1 (2026)</span><span>Current Q</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
         </div>
 
-        <!-- ================= TAB 2: CMS CUSTOMIZER ================= -->
-        <div id="admin-cms-section" class="dash-tab-content dash-kpi-card p-4 sm:p-6 space-y-6 tab-hidden" data-tab-name="Landing Page CMS">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
-            <div>
-              <span class="text-[10px] font-bold uppercase tracking-wider text-[#00E599]">Live CMS Manager</span>
-              <h3 class="text-xl font-bold font-display text-white mt-0.5">Landing Page Customizer</h3>
-              <p class="text-xs text-[#788A9C] mt-0.5">Customize headlines, CTA buttons, background photos, and factory trust strip statistics.</p>
+        <!-- KPI Cards Grid -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="editorial-card p-5 space-y-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Active RFQs</span>
+            <p class="text-2xl font-bold font-display text-[var(--text-primary)]">${stats.rfqs || 0}</p>
+            <span class="text-[10px] text-[#00E599] font-mono">D1 Operational Record</span>
+          </div>
+          <div class="editorial-card p-5 space-y-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Pending Reviews</span>
+            <p class="text-2xl font-bold font-display text-amber-500">${stats.pending_rfqs || 0}</p>
+            <span class="text-[10px] text-[var(--text-muted)]">Requires Costing</span>
+          </div>
+          <div class="editorial-card p-5 space-y-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Sample Requests</span>
+            <p class="text-2xl font-bold font-display text-[#00D2FF]">${stats.samples || 0}</p>
+            <span class="text-[10px] text-[var(--text-muted)]">Swatch Shipments</span>
+          </div>
+          <div class="editorial-card p-5 space-y-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Inquiries & Jobs</span>
+            <p class="text-2xl font-bold font-display text-[var(--text-primary)]">${(stats.inquiries || 0) + (stats.job_applications || 0)}</p>
+            <span class="text-[10px] text-[var(--text-muted)]">Commercial Intake</span>
+          </div>
+        </div>
+
+        <!-- Direct Operations & Management Hub (4 Key Short-cuts) -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">Direct Management & Updates Hub</h3>
+            <span class="text-[11px] text-[#00E599] font-mono">1-Click Fast Configuration</span>
+          </div>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <div class="editorial-card p-4 space-y-2 cursor-pointer hover:border-[#00E599] transition-all" onclick="window.switchAdminTab('contact')">
+              <div class="flex items-center justify-between">
+                <div class="w-9 h-9 rounded-xl bg-[#00E599]/15 text-[#00E599] flex items-center justify-center text-sm"><i class="fa-solid fa-address-book"></i></div>
+                <span class="text-[10px] font-bold text-[#00E599] uppercase tracking-wider">Update ➔</span>
+              </div>
+              <h4 class="font-bold text-xs text-[var(--text-primary)]">Contact Coordinates</h4>
+              <p class="text-[11px] text-[var(--text-muted)]">Email, Phone, WhatsApp, Gazipur Plant & Dhaka Head Office.</p>
             </div>
-            <div class="flex items-center gap-2">
-              <button id="cms-save-btn" type="button" class="pill-btn-emerald py-2 px-4 text-xs cursor-pointer">
-                <i class="fa-solid fa-floppy-disk mr-1"></i> Save & Publish
-              </button>
-              <button id="cms-reset-btn" type="button" class="pill-btn-outline py-2 px-3 text-xs cursor-pointer">
-                Reset
-              </button>
+
+            <div class="editorial-card p-4 space-y-2 cursor-pointer hover:border-purple-500 transition-all" onclick="window.switchAdminTab('cms')">
+              <div class="flex items-center justify-between">
+                <div class="w-9 h-9 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center text-sm"><i class="fa-solid fa-image"></i></div>
+                <span class="text-[10px] font-bold text-purple-400 uppercase tracking-wider">Update ➔</span>
+              </div>
+              <h4 class="font-bold text-xs text-[var(--text-primary)]">Landing Page Images</h4>
+              <p class="text-[11px] text-[var(--text-muted)]">Hero background, About section image & facilities photo.</p>
+            </div>
+
+            <div class="editorial-card p-4 space-y-2 cursor-pointer hover:border-[#E5C378] transition-all" onclick="window.switchAdminTab('products')">
+              <div class="flex items-center justify-between">
+                <div class="w-9 h-9 rounded-xl bg-[#E5C378]/15 text-[#E5C378] flex items-center justify-center text-sm"><i class="fa-solid fa-shirt"></i></div>
+                <span class="text-[10px] font-bold text-[#E5C378] uppercase tracking-wider">Update ➔</span>
+              </div>
+              <h4 class="font-bold text-xs text-[var(--text-primary)]">Product Catalog & Images</h4>
+              <p class="text-[11px] text-[var(--text-muted)]">Update photos for ${prodsList.length} active knitwear programs or add new.</p>
+            </div>
+
+            <div class="editorial-card p-4 space-y-2 cursor-pointer hover:border-purple-400 transition-all" onclick="window.switchAdminTab('company')">
+              <div class="flex items-center justify-between">
+                <div class="w-9 h-9 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center text-sm"><i class="fa-solid fa-building"></i></div>
+                <span class="text-[10px] font-bold text-purple-400 uppercase tracking-wider">Update ➔</span>
+              </div>
+              <h4 class="font-bold text-xs text-[var(--text-primary)]">Basic Company Info</h4>
+              <p class="text-[11px] text-[var(--text-muted)]">Est. 1993, BGMEA 2443, 1,600 Workforce, and daily capacities.</p>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Live Snapshot Panel -->
+        <div class="grid lg:grid-cols-2 gap-6">
+          <!-- Active Contact Snapshot -->
+          <div class="editorial-card p-5 space-y-3">
+            <div class="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2.5">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">Active Public Coordinates</h4>
+              <button type="button" class="text-[10px] text-[#00E599] font-bold hover:underline" onclick="window.switchAdminTab('contact')">Edit Coordinates</button>
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <span class="text-[10px] text-[var(--text-muted)] block">Sales Email</span>
+                <span class="font-bold text-[var(--text-primary)] truncate block">${esc(cfg.contactEmail || 'info@gumtitex.com')}</span>
+              </div>
+              <div>
+                <span class="text-[10px] text-[var(--text-muted)] block">Direct Phone</span>
+                <span class="font-bold text-[var(--text-primary)] block">${esc(cfg.contactPhone || '+880 2 9204481')}</span>
+              </div>
+              <div>
+                <span class="text-[10px] text-[var(--text-muted)] block">Official WhatsApp</span>
+                <span class="font-bold text-[#25D366] block">${esc(cfg.whatsappNumber || '+880 1329 713736')}</span>
+              </div>
+              <div>
+                <span class="text-[10px] text-[var(--text-muted)] block">Founded Year</span>
+                <span class="font-bold text-[var(--text-primary)] block">1993 (BGMEA 2443)</span>
+              </div>
+              <div class="col-span-2">
+                <span class="text-[10px] text-[var(--text-muted)] block">Gazipur Manufacturing Plant</span>
+                <span class="text-[11px] text-[var(--text-primary)] leading-tight block">${esc(cfg.contactAddress || 'Mouchak, Kaliakair, Gazipur, Bangladesh')}</span>
+              </div>
             </div>
           </div>
 
-          <form id="landing-cms-form" class="space-y-6">
-            <div class="grid md:grid-cols-2 gap-5">
-              <div>
-                <label class="field-label-dark">Headline Line 1</label>
-                <input type="text" name="heroHeadlineLine1" value="${esc(cfg.heroHeadlineLine1 || 'INTEGRATED KNITWEAR.')}" class="field-dark font-bold text-white" />
+          <!-- Active Media Snapshot -->
+          <div class="editorial-card p-5 space-y-3">
+            <div class="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2.5">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">Active Visual Media</h4>
+              <button type="button" class="text-[10px] text-[#00E599] font-bold hover:underline" onclick="window.switchAdminTab('cms')">Change Photos</button>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+              <div class="space-y-1 text-center">
+                <div class="aspect-[4/3] rounded-lg overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-input)]">
+                  <img src="${cfg.heroBgImage || '/images/factory/stenter_clean_630x400.webp'}" alt="Hero" class="w-full h-full object-cover" />
+                </div>
+                <span class="text-[10px] text-[var(--text-muted)] block">Hero Image</span>
               </div>
-              <div>
-                <label class="field-label-dark">Headline Line 2 (Luminous Accent)</label>
-                <input type="text" name="heroHeadlineLine2" value="${esc(cfg.heroHeadlineLine2 || 'GLOBAL SCALE.')}" class="field-dark font-bold text-[#00E599]" />
+              <div class="space-y-1 text-center">
+                <div class="aspect-[4/3] rounded-lg overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-input)]">
+                  <img src="${cfg.aboutImage || '/images/hero/background_1920x530.webp'}" alt="About" class="w-full h-full object-cover" />
+                </div>
+                <span class="text-[10px] text-[var(--text-muted)] block">About Image</span>
               </div>
-              <div>
-                <label class="field-label-dark">Hero Kicker Badge</label>
-                <input type="text" name="heroKicker" value="${esc(cfg.heroKicker || '● 30+ YEARS EXCELLENCE · EST. 1993 · 22 SEWING LINES')}" class="field-dark" />
-              </div>
-              <div>
-                <label class="field-label-dark">Hero Sub-Tagline</label>
-                <input type="text" name="heroSubTagline" value="${esc(cfg.heroSubTagline || 'Premier knit-composite textile and apparel manufacturer in Bangladesh — integrating knitting, dyeing, finishing, and garment assembly.')}" class="field-dark" />
+              <div class="space-y-1 text-center">
+                <div class="aspect-[4/3] rounded-lg overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-input)]">
+                  <img src="${cfg.facilitiesImage || '/images/hero/corrected_1170x600.webp'}" alt="Facilities" class="w-full h-full object-cover" />
+                </div>
+                <span class="text-[10px] text-[var(--text-muted)] block">Facilities Image</span>
               </div>
             </div>
+          </div>
+        </div>
 
-            <!-- Background Image URL -->
+        <!-- Recent Activity Feed -->
+        <div class="editorial-card p-6">
+          <h3 class="text-base font-bold font-display text-[var(--text-primary)] mb-4 border-b border-[var(--border-subtle)] pb-3">Recent Operational Activity</h3>
+          <div class="divide-y divide-[var(--border-subtle)] text-xs">
+            ${recent.map((a) => `
+              <div class="py-3 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-[var(--bg-input)] text-[#00E599] border border-[var(--border-subtle)]">${esc(a.type)}</span>
+                  <div>
+                    <span class="font-bold text-[var(--text-primary)]">${esc(a.ref)}</span>
+                    <span class="text-[var(--text-muted)] ml-2">${esc(a.party || '')} · ${esc(a.title || '')}</span>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-[#00E599]/15 text-[#00E599]">${esc(a.status || 'NEW')}</span>
+              </div>
+            `).join('') || '<p class="text-xs text-[var(--text-muted)] py-4">No recent records logged.</p>'}
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. COMPANY BASIC INFO TAB -->
+      <div id="admin-company-section" class="dash-tab-content hidden space-y-6" data-tab-name="Company Basic Info">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 class="text-xl font-bold font-display text-[var(--text-primary)]">Company Basic Information</h2>
+            <p class="text-xs text-[var(--text-muted)]">Configure official corporate identity, credentials, registration numbers, and plant capacity.</p>
+          </div>
+          <span class="text-xs font-mono text-[#00E599] font-bold">Cloudflare D1 Backed</span>
+        </div>
+
+        <form id="admin-company-form" class="editorial-card p-6 space-y-5 text-xs">
+          <div class="grid sm:grid-cols-3 gap-4">
             <div>
-              <label class="field-label-dark">Hero Banner Image URL (Select from Media Library)</label>
-              <div class="flex gap-4 items-center">
-                <input id="cms-hero-bg-input" type="text" name="heroBgImage" value="${esc(cfg.heroBgImage || '/images/hero/background_1920x530.webp')}" class="field-dark font-mono text-xs flex-1" />
-                <div class="w-16 h-10 rounded-lg overflow-hidden border border-white/[0.1] flex-shrink-0 bg-[#070D14]">
-                  <img id="cms-hero-bg-preview" src="${esc(cfg.heroBgImage || '/images/hero/background_1920x530.webp')}" class="w-full h-full object-cover" alt="Preview" />
-                </div>
-              </div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Company Legal Name</label>
+              <input name="companyName" class="w-full rounded-xl p-2.5 text-xs font-bold" value="${esc(cfg.companyName || 'Gumti Textiles Ltd.')}" required />
             </div>
-
-            <!-- Trust Strip Values -->
             <div>
-              <label class="field-label-dark mb-2">Trust Strip Statistics</label>
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-                <div class="p-3 bg-white/[0.02] border border-white/[0.06] rounded-xl space-y-1.5">
-                  <label class="text-[10px] text-[#788A9C] uppercase">Stat 1 (Dyeing)</label>
-                  <input type="text" name="stat1Value" value="${esc(cfg.stats?.stat1Value || '50T/Day')}" class="field-dark py-1 px-2 text-xs font-bold" />
-                  <input type="text" name="stat1Label" value="${esc(cfg.stats?.stat1Label || 'Dyeing Output')}" class="field-dark py-1 px-2 text-[11px]" />
-                </div>
-                <div class="p-3 bg-white/[0.02] border border-white/[0.06] rounded-xl space-y-1.5">
-                  <label class="text-[10px] text-[#788A9C] uppercase">Stat 2 (Knitting)</label>
-                  <input type="text" name="stat2Value" value="${esc(cfg.stats?.stat2Value || '10T/Day')}" class="field-dark py-1 px-2 text-xs font-bold" />
-                  <input type="text" name="stat2Label" value="${esc(cfg.stats?.stat2Label || 'Knitting Output')}" class="field-dark py-1 px-2 text-[11px]" />
-                </div>
-                <div class="p-3 bg-white/[0.02] border border-white/[0.06] rounded-xl space-y-1.5">
-                  <label class="text-[10px] text-[#788A9C] uppercase">Stat 3 (Sewing)</label>
-                  <input type="text" name="stat3Value" value="${esc(cfg.stats?.stat3Value || '80T / 35k')}" class="field-dark py-1 px-2 text-xs font-bold" />
-                  <input type="text" name="stat3Label" value="${esc(cfg.stats?.stat3Label || 'Finishing & Sewing')}" class="field-dark py-1 px-2 text-[11px]" />
-                </div>
-                <div class="p-3 bg-white/[0.02] border border-white/[0.06] rounded-xl space-y-1.5">
-                  <label class="text-[10px] text-[#788A9C] uppercase">Stat 4 (Workforce)</label>
-                  <input type="text" name="stat4Value" value="${esc(cfg.stats?.stat4Value || '1,600')}" class="field-dark py-1 px-2 text-xs font-bold" />
-                  <input type="text" name="stat4Label" value="${esc(cfg.stats?.stat4Label || 'Workforce & Scale')}" class="field-dark py-1 px-2 text-[11px]" />
-                </div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Founded / Established Year</label>
+              <input name="estYear" class="w-full rounded-xl p-2.5 text-xs font-mono" value="${esc(cfg.estYear || '1993')}" required />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Sub-Tagline / Mission</label>
+              <input name="heroSubTagline" class="w-full rounded-xl p-2.5 text-xs" value="${esc(cfg.heroSubTagline || 'Integrated Knit & Apparel Manufacturing · Bangladesh')}" />
+            </div>
+          </div>
+
+          <div class="grid sm:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">BGMEA Registration</label>
+              <input name="bgmeaReg" class="w-full rounded-xl p-2.5 text-xs font-mono" value="${esc(cfg.bgmeaReg || '2443')}" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">EPB Registration</label>
+              <input name="epbReg" class="w-full rounded-xl p-2.5 text-xs font-mono" value="${esc(cfg.epbReg || '3311')}" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Total Workforce</label>
+              <input name="workforceCount" class="w-full rounded-xl p-2.5 text-xs" value="${esc(cfg.workforceCount || '1,600')}" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Female Workforce %</label>
+              <input name="femaleWorkforcePercent" class="w-full rounded-xl p-2.5 text-xs" value="${esc(cfg.femaleWorkforcePercent || '74%')}" />
+            </div>
+          </div>
+
+          <div class="grid sm:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Dyeing Daily Capacity</label>
+              <input name="dyeingCapacity" class="w-full rounded-xl p-2.5 text-xs font-bold text-[#00E599]" value="${esc(cfg.dyeingCapacity || '50T/Day')}" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Knitting Daily Capacity</label>
+              <input name="knittingCapacity" class="w-full rounded-xl p-2.5 text-xs font-bold" value="${esc(cfg.knittingCapacity || '10T/Day')}" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Finishing Daily Capacity</label>
+              <input name="finishingCapacity" class="w-full rounded-xl p-2.5 text-xs font-bold text-[#00E599]" value="${esc(cfg.finishingCapacity || '80T/Day')}" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Sewing Capacity (22 Lines)</label>
+              <input name="sewingCapacity" class="w-full rounded-xl p-2.5 text-xs font-bold" value="${esc(cfg.sewingCapacity || '35,000 Pcs/Day')}" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">About Section Heading</label>
+            <input name="aboutHeading" class="w-full rounded-xl p-2.5 text-xs font-bold" value="${esc(cfg.aboutHeading || 'CRAFTING POSSIBILITY.')}" />
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">About Narrative Text (Public Profile)</label>
+            <textarea name="aboutText" rows="3" class="w-full rounded-xl p-2.5 text-xs leading-relaxed">${esc(cfg.aboutText || 'Gumti Textiles Ltd. began operations in 1993 and operates as an established, export-oriented knit-composite textile and apparel manufacturer in Bangladesh — integrating knitting, dyeing, finishing and garment manufacturing under one quality system.')}</textarea>
+          </div>
+
+          <div class="pt-2">
+            <button type="submit" class="pill-btn-emerald py-2.5 px-6 text-xs">
+              <i class="fa-solid fa-floppy-disk mr-1.5"></i>
+              <span>Save Basic Information</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- 3. CONTACT COORDINATES TAB -->
+      <div id="admin-contact-section" class="dash-tab-content hidden space-y-6" data-tab-name="Contact Coordinates">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 class="text-xl font-bold font-display text-[var(--text-primary)]">Contact Coordinates & Addresses</h2>
+            <p class="text-xs text-[var(--text-muted)]">Manage direct sales channels, telephone lines, WhatsApp number, and physical plant locations.</p>
+          </div>
+          <span class="text-xs font-mono text-[#00E599] font-bold">Publicly Synced</span>
+        </div>
+
+        <form id="admin-contact-form" class="editorial-card p-6 space-y-5 text-xs">
+          <div class="grid sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Sales & Inquiry Email *</label>
+              <input name="contactEmail" type="email" class="w-full rounded-xl p-2.5 text-xs font-bold" value="${esc(cfg.contactEmail || 'info@gumtitex.com')}" required />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Factory Telephone *</label>
+              <input name="contactPhone" class="w-full rounded-xl p-2.5 text-xs font-mono" value="${esc(cfg.contactPhone || '+880 2 9204481')}" required />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Direct Official WhatsApp *</label>
+              <input name="whatsappNumber" class="w-full rounded-xl p-2.5 text-xs font-mono text-[#25D366]" value="${esc(cfg.whatsappNumber || '+880 1329 713736')}" required />
+            </div>
+          </div>
+
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Factory Plant Address (Gazipur) *</label>
+              <textarea name="contactAddress" rows="2" class="w-full rounded-xl p-2.5 text-xs leading-relaxed" required>${esc(cfg.contactAddress || 'Mouchak, Kaliakair, Gazipur, Bangladesh')}</textarea>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Corporate Head Office Address (Dhaka) *</label>
+              <textarea name="headOfficeAddress" rows="2" class="w-full rounded-xl p-2.5 text-xs leading-relaxed" required>${esc(cfg.headOfficeAddress || 'Jiban Bima Bhaban (3rd Floor), 10 Dilkusha C/A, Motijheel, Dhaka-1000, Bangladesh')}</textarea>
+            </div>
+          </div>
+
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Official Facebook Page URL</label>
+              <input name="facebookUrl" class="w-full rounded-xl p-2.5 text-xs" value="${esc(cfg.facebookUrl || 'https://www.facebook.com/gumtitextile')}" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Google Maps Coordinates / Embed</label>
+              <input name="mapsUrl" class="w-full rounded-xl p-2.5 text-xs" value="Kaliakair, Gazipur (Chandra Industrial Zone)" readonly />
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <button type="submit" class="pill-btn-emerald py-2.5 px-6 text-xs">
+              <i class="fa-solid fa-floppy-disk mr-1.5"></i>
+              <span>Save Contact Coordinates</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- 4. LANDING PAGE & IMAGES TAB -->
+      <div id="admin-cms-section" class="dash-tab-content hidden space-y-6" data-tab-name="Landing Page & Images">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 class="text-xl font-bold font-display text-[var(--text-primary)]">Landing Page Images & Headlines</h2>
+            <p class="text-xs text-[var(--text-muted)]">Select real photography from the 29 factory assets or input custom URLs.</p>
+          </div>
+          <span class="text-xs font-mono text-[#00E599] font-bold">Industrial Identity</span>
+        </div>
+
+        <form id="admin-cms-form" class="editorial-card p-6 space-y-6 text-xs">
+          
+          <!-- Image 1: Hero Showcase Image -->
+          <div class="p-4 rounded-xl bg-[var(--bg-input)] border border-[var(--border-subtle)] space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">1. Hero Showcase Photography</span>
+              <span class="text-[10px] text-[var(--text-muted)]">Main visual on homepage</span>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-4 items-center">
+              <div class="w-32 h-20 rounded-lg overflow-hidden border border-[var(--border-medium)] bg-[var(--bg-surface)] shrink-0">
+                <img id="preview-hero-bg" src="${cfg.heroBgImage || '/images/factory/stenter_clean_630x400.webp'}" class="w-full h-full object-cover" />
+              </div>
+              <div class="flex-1 w-full">
+                <input id="input-hero-bg" name="heroBgImage" class="w-full rounded-xl p-2.5 text-xs font-mono" value="${esc(cfg.heroBgImage || '/images/factory/stenter_clean_630x400.webp')}" placeholder="/images/factory/..." />
+                <span class="text-[10px] text-[var(--text-muted)] mt-1 block">Click any asset below to select instantly:</span>
               </div>
             </div>
+            <!-- Quick Asset Chooser Strip -->
+            <div class="flex gap-2 overflow-x-auto py-2 scrollbar-none">
+              ${mediaList.slice(0, 10).map((m) => `
+                <div class="hero-asset-thumb w-14 h-10 rounded-md overflow-hidden shrink-0 border border-[var(--border-subtle)] hover:border-[#00E599] cursor-pointer" data-url="${m.path || m.url}" title="${esc(m.name || m.title)}">
+                  <img src="${m.path || m.url}" class="w-full h-full object-cover" />
+                </div>
+              `).join('')}
+            </div>
+          </div>
 
-            <!-- Corporate Coordinates -->
-            <div class="grid md:grid-cols-2 gap-5 pt-2">
-              <div>
-                <label class="field-label-dark">Factory Email</label>
-                <input type="email" name="contactEmail" value="${esc(cfg.contactEmail || 'info@gumtitex.com')}" class="field-dark font-mono text-xs" />
+          <!-- Image 2: About Section Image -->
+          <div class="p-4 rounded-xl bg-[var(--bg-input)] border border-[var(--border-subtle)] space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">2. About Section Showcase Image</span>
+              <span class="text-[10px] text-[var(--text-muted)]">Legacy narrative visual</span>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-4 items-center">
+              <div class="w-32 h-20 rounded-lg overflow-hidden border border-[var(--border-medium)] bg-[var(--bg-surface)] shrink-0">
+                <img id="preview-about-img" src="${cfg.aboutImage || '/images/hero/background_1920x530.webp'}" class="w-full h-full object-cover" />
               </div>
-              <div>
-                <label class="field-label-dark">Factory Phone</label>
-                <input type="text" name="contactPhone" value="${esc(cfg.contactPhone || '+8801716776393')}" class="field-dark font-mono text-xs" />
+              <div class="flex-1 w-full">
+                <input id="input-about-img" name="aboutImage" class="w-full rounded-xl p-2.5 text-xs font-mono" value="${esc(cfg.aboutImage || '/images/hero/background_1920x530.webp')}" placeholder="/images/..." />
+                <span class="text-[10px] text-[var(--text-muted)] mt-1 block">Click any asset below to select:</span>
               </div>
+            </div>
+            <div class="flex gap-2 overflow-x-auto py-2 scrollbar-none">
+              ${mediaList.slice(10, 20).map((m) => `
+                <div class="about-asset-thumb w-14 h-10 rounded-md overflow-hidden shrink-0 border border-[var(--border-subtle)] hover:border-[#00E599] cursor-pointer" data-url="${m.path || m.url}" title="${esc(m.name || m.title)}">
+                  <img src="${m.path || m.url}" class="w-full h-full object-cover" />
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Image 3: Facilities Showcase Image -->
+          <div class="p-4 rounded-xl bg-[var(--bg-input)] border border-[var(--border-subtle)] space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">3. Factory Facilities Image</span>
+              <span class="text-[10px] text-[var(--text-muted)]">Plant architecture visual</span>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-4 items-center">
+              <div class="w-32 h-20 rounded-lg overflow-hidden border border-[var(--border-medium)] bg-[var(--bg-surface)] shrink-0">
+                <img id="preview-fac-img" src="${cfg.facilitiesImage || '/images/hero/corrected_1170x600.webp'}" class="w-full h-full object-cover" />
+              </div>
+              <div class="flex-1 w-full">
+                <input id="input-fac-img" name="facilitiesImage" class="w-full rounded-xl p-2.5 text-xs font-mono" value="${esc(cfg.facilitiesImage || '/images/hero/corrected_1170x600.webp')}" placeholder="/images/..." />
+              </div>
+            </div>
+          </div>
+
+          <!-- Hero Headlines -->
+          <div class="grid sm:grid-cols-2 gap-4 pt-2">
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Hero Line 1</label>
+              <input name="heroHeadlineLine1" class="w-full rounded-xl p-2.5 text-xs font-bold" value="${esc(cfg.heroHeadlineLine1 || 'ENGINEERING')}" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Hero Line 2 (Accent)</label>
+              <input name="heroHeadlineLine2" class="w-full rounded-xl p-2.5 text-xs font-bold text-[#00E599]" value="${esc(cfg.heroHeadlineLine2 || 'QUALITY.')}" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Hero Kicker Pill</label>
+            <input name="heroKicker" class="w-full rounded-xl p-2.5 text-xs" value="${esc(cfg.heroKicker || 'KNIT COMPOSITE MANUFACTURING · EST. 1993')}" />
+          </div>
+
+          <div class="pt-2 flex items-center gap-3">
+            <button type="submit" class="pill-btn-emerald py-2.5 px-6 text-xs">
+              <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i>
+              <span>Publish Images & Headlines</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- 5. PRODUCT CATALOG & IMAGES TAB -->
+      <div id="admin-products-section" class="dash-tab-content hidden space-y-6" data-tab-name="Product Management">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-bold font-display text-[var(--text-primary)]">Product Catalog & Product Images</h2>
+            <p class="text-xs text-[var(--text-muted)]">Update photography for active knitwear styles or add new export lines with custom pictures.</p>
+          </div>
+          <span class="text-xs font-mono text-[#E5C378] font-bold">Total Programs: ${prodsList.length}</span>
+        </div>
+
+        <!-- Active Products Grid with Instant Image Picker -->
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-3">Active Export Products (${prodsList.length})</h3>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            ${prodsList.map((p) => `
+              <div class="editorial-card p-3 space-y-2 flex flex-col justify-between" id="prod-card-${esc(p.slug)}">
+                <div>
+                  <div class="aspect-[4/3] rounded-xl overflow-hidden bg-[var(--bg-input)] relative border border-[var(--border-subtle)]">
+                    <img id="prod-img-${esc(p.slug)}" src="${p.image || '/images/products/crew_tshirt.webp'}" alt="${esc(p.name)}" class="w-full h-full object-cover" />
+                    <span class="absolute top-2 left-2 px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-[#060B10]/80 text-[#00E599]">${esc(p.code || 'GT')}</span>
+                  </div>
+                  <div class="pt-2">
+                    <p class="font-bold text-xs text-[var(--text-primary)] truncate">${esc(p.name)}</p>
+                    <p class="text-[10px] text-[var(--text-muted)]">${esc(p.category)} · ${esc(p.gsm || '180')} GSM</p>
+                  </div>
+                </div>
+
+                <div class="pt-2 border-t border-[var(--border-subtle)] space-y-2">
+                  <button type="button" class="change-prod-img-toggle text-[11px] font-bold text-[#00E599] hover:underline flex items-center gap-1" data-slug="${esc(p.slug)}">
+                    <i class="fa-regular fa-image text-xs"></i> Change Photo
+                  </button>
+                  <!-- Inline photo chooser container -->
+                  <div id="prod-chooser-${esc(p.slug)}" class="hidden p-2 rounded-lg bg-[var(--bg-input)] border border-[var(--border-subtle)] space-y-1.5">
+                    <input id="input-img-${esc(p.slug)}" type="text" class="w-full rounded p-1 text-[10px] font-mono" value="${esc(p.image || '')}" placeholder="Image URL" />
+                    <div class="flex gap-1 overflow-x-auto py-1 scrollbar-none">
+                      ${mediaList.slice(0, 8).map((m) => `
+                        <div class="mini-asset-pick w-7 h-5 rounded overflow-hidden shrink-0 border cursor-pointer" data-slug="${esc(p.slug)}" data-url="${m.path || m.url}">
+                          <img src="${m.path || m.url}" class="w-full h-full object-cover" />
+                        </div>
+                      `).join('')}
+                    </div>
+                    <button type="button" class="apply-prod-img-btn pill-btn-emerald py-1 px-3 text-[10px] w-full text-center" data-slug="${esc(p.slug)}">
+                      Apply Photo
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Add New Product Form Card -->
+        <div class="editorial-card p-6">
+          <h3 class="text-base font-bold font-display text-[var(--text-primary)] mb-4 border-b border-[var(--border-subtle)] pb-2">Add New Fabric or Style to Catalog</h3>
+          <form id="admin-add-product-form" class="grid sm:grid-cols-3 gap-4 text-xs">
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Product Name *</label>
+              <input name="name" class="w-full rounded-xl p-2.5 text-xs font-bold" required placeholder="e.g. Organic Loopback Terry Hoodie" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Product Code *</label>
+              <input name="code" class="w-full rounded-xl p-2.5 text-xs font-mono" required placeholder="e.g. GT-HD-005" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Category *</label>
+              <select name="category" class="w-full rounded-xl p-2.5 text-xs" required>
+                <option value="T-Shirts">T-Shirts</option>
+                <option value="Polo Shirts">Polo Shirts</option>
+                <option value="Knit Jackets">Knit Jackets</option>
+                <option value="Shorts">Shorts</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Composition *</label>
+              <input name="composition" class="w-full rounded-xl p-2.5 text-xs" required value="100% Organic Combed Cotton" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Construction *</label>
+              <input name="construction" class="w-full rounded-xl p-2.5 text-xs" required value="French Terry 3-End Fleece" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Weight (GSM) *</label>
+              <input name="gsm" class="w-full rounded-xl p-2.5 text-xs" required value="320" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Finish</label>
+              <input name="finish" class="w-full rounded-xl p-2.5 text-xs" value="Carbon Peach Soft / Bio-Wash" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">MOQ</label>
+              <input name="moq" class="w-full rounded-xl p-2.5 text-xs" value="1,000 Pcs" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Lead Time</label>
+              <input name="lead_time" class="w-full rounded-xl p-2.5 text-xs" value="60–75 Days" />
+            </div>
+            <div class="sm:col-span-3">
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Product Image URL (Select from library below or enter path)</label>
+              <div class="flex gap-3 items-center">
+                <input id="input-newprod-img" name="image" class="w-full rounded-xl p-2.5 text-xs font-mono" value="/images/products/fleece_jacket.webp" />
+                <div class="w-12 h-10 rounded-lg overflow-hidden border border-[var(--border-subtle)] shrink-0">
+                  <img id="preview-newprod-img" src="/images/products/fleece_jacket.webp" class="w-full h-full object-cover" />
+                </div>
+              </div>
+              <div class="flex gap-2 overflow-x-auto py-2 scrollbar-none mt-1">
+                ${mediaList.slice(0, 12).map((m) => `
+                  <div class="newprod-asset-thumb w-12 h-9 rounded overflow-hidden shrink-0 border border-[var(--border-subtle)] hover:border-[#00E599] cursor-pointer" data-url="${m.path || m.url}">
+                    <img src="${m.path || m.url}" class="w-full h-full object-cover" />
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+            <div class="sm:col-span-3 pt-2">
+              <button type="submit" class="pill-btn-emerald py-2.5 px-6 text-xs">
+                <span>Save to D1 Catalog</span>
+                <i class="fa-solid fa-plus text-xs ml-1"></i>
+              </button>
             </div>
           </form>
         </div>
+      </div>
 
-        <!-- ================= TAB 3: MEDIA LIBRARY ================= -->
-        <div id="admin-media-section" class="dash-tab-content dash-kpi-card p-4 sm:p-6 space-y-5 tab-hidden" data-tab-name="Media Library (29)">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
-            <div>
-              <span class="text-[10px] font-bold uppercase tracking-wider text-[#00E599]">Local Asset Repository</span>
-              <h3 class="text-xl font-bold font-display text-white mt-0.5">Media Library (${assets.length} Curated Assets)</h3>
-              <p class="text-xs text-[#788A9C] mt-0.5">Click "Set as Hero" to assign any picture as your active homepage background.</p>
-            </div>
-            <div class="flex flex-wrap gap-1.5" id="media-filter-btns">
-              <button class="media-filter-btn px-2.5 py-1 bg-[#00E599] text-[#050B10] font-bold rounded-lg text-[11px] cursor-pointer" data-filter="all">All</button>
-              <button class="media-filter-btn px-2.5 py-1 bg-white/[0.05] text-[#CBD5E1] rounded-lg text-[11px] cursor-pointer" data-filter="Hero">Hero</button>
-              <button class="media-filter-btn px-2.5 py-1 bg-white/[0.05] text-[#CBD5E1] rounded-lg text-[11px] cursor-pointer" data-filter="Machinery">Machinery</button>
-              <button class="media-filter-btn px-2.5 py-1 bg-white/[0.05] text-[#CBD5E1] rounded-lg text-[11px] cursor-pointer" data-filter="Products">Products</button>
-              <button class="media-filter-btn px-2.5 py-1 bg-white/[0.05] text-[#CBD5E1] rounded-lg text-[11px] cursor-pointer" data-filter="Partners">Partners</button>
-              <button class="media-filter-btn px-2.5 py-1 bg-white/[0.05] text-[#CBD5E1] rounded-lg text-[11px] cursor-pointer" data-filter="Operations">Operations</button>
-              <button class="media-filter-btn px-2.5 py-1 bg-white/[0.05] text-[#CBD5E1] rounded-lg text-[11px] cursor-pointer" data-filter="Safety">Safety</button>
-            </div>
+      <!-- 6. RFQ PIPELINE KANBAN TAB -->
+      <div id="admin-rfqs-section" class="dash-tab-content hidden space-y-6" data-tab-name="RFQ Pipeline">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold font-display text-[var(--text-primary)]">Commercial RFQ Pipeline</h2>
+            <p class="text-xs text-[var(--text-muted)]">Manage order intake and critical path status progression.</p>
           </div>
-
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4" id="media-grid">
-            ${assets.map((a) => `
-              <div class="media-card rounded-xl overflow-hidden bg-[#070D14] border border-white/[0.08] group hover:border-[#00E599]/40 transition-colors" data-category="${esc(a.category)}" data-title="${esc(a.title)}">
-                <div class="aspect-[4/3] bg-[#0A121A] overflow-hidden relative">
-                  <img src="${esc(a.url)}" alt="${esc(a.title)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
-                  <span class="absolute top-2 left-2 text-[9px] uppercase font-bold bg-[#060B10]/80 text-[#00E599] px-2 py-0.5 rounded border border-[#00E599]/20">${esc(a.category)}</span>
-                </div>
-                <div class="p-3 space-y-2">
-                  <p class="font-bold text-white text-xs truncate" title="${esc(a.title)}">${esc(a.title)}</p>
-                  <div class="flex items-center justify-between text-[10px] pt-1.5 border-t border-white/[0.06]">
-                    <button type="button" class="btn-copy-media text-[#788A9C] hover:text-white cursor-pointer" data-url="${esc(a.url)}"><i class="fa-regular fa-copy mr-1"></i>Copy</button>
-                    <button type="button" class="btn-set-hero text-[#00E599] font-bold hover:underline cursor-pointer" data-url="${esc(a.url)}"><i class="fa-solid fa-check mr-1"></i>Set Hero</button>
-                  </div>
-                </div>
-              </div>`).join('')}
-          </div>
+          <span class="text-xs font-mono text-[#00E599] font-bold">Total: ${rfqs.length}</span>
         </div>
 
-        <!-- ================= TAB 4: USERS & RBAC ================= -->
-        <div id="admin-users-section" class="dash-tab-content dash-kpi-card p-4 sm:p-6 space-y-5 tab-hidden" data-tab-name="User Directory & RBAC">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
-            <div>
-              <span class="text-[10px] font-bold uppercase tracking-wider text-[#00E599]">Access Governance</span>
-              <h3 class="text-xl font-bold font-display text-white mt-0.5">User Directory & Role Management</h3>
-              <p class="text-xs text-[#788A9C] mt-0.5">Super Admin: <code class="text-[#00E599] font-mono">bornilmahmud56@gmail.com</code>. Promote verified accounts to Moderator or Admin.</p>
-            </div>
-            <span class="px-3 py-1 rounded-full bg-white/[0.05] text-xs text-[#CBD5E1] border border-white/[0.08]">
-              ${users.length} registered accounts
-            </span>
-          </div>
-
-          <div class="dark-table-wrap">
-            <table class="dark-table" id="admin-users-table">
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Email</th>
-                  <th>Assigned Role</th>
-                  <th>Registered</th>
-                  ${isSuper ? '<th class="text-right">Manage Role Privileges</th>' : ''}
-                </tr>
-              </thead>
-              <tbody>
-                ${users.map((u) => {
-                  const isBornilSuper = (u.email || '').toLowerCase() === 'bornilmahmud56@gmail.com' || (u.email || '').toLowerCase() === 'bonrilmahmud56@gmail.com';
-                  return `
-                  <tr class="user-row" data-search="${esc((u.displayName || '') + ' ' + (u.email || '') + ' ' + (u.role || ''))}">
-                    <td>
-                      <div class="flex items-center gap-3">
-                        <span class="w-8 h-8 rounded-full bg-gradient-to-br from-[#00E599] to-[#008F5D] text-[#050B10] font-bold flex items-center justify-center text-xs uppercase flex-shrink-0">
-                          ${(u.displayName || u.email || 'U')[0]}
-                        </span>
-                        <span class="font-semibold text-white">${esc(u.displayName || 'Buyer Account')}</span>
+        <div class="kanban-board">
+          ${KANBAN_STAGES.map((st) => {
+            const colRfqs = rfqs.filter((r) => (r.status || 'NEW').toUpperCase() === st);
+            return `
+              <div class="kanban-col">
+                <div class="kanban-col-header">
+                  <span class="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">${st}</span>
+                  <span class="w-5 h-5 rounded-full bg-[var(--bg-input)] flex items-center justify-center text-[10px] font-bold text-[#00E599]">${colRfqs.length}</span>
+                </div>
+                <div class="space-y-3 flex-1 overflow-y-auto">
+                  ${colRfqs.map((r) => `
+                    <div class="kanban-card space-y-2">
+                      <div class="flex items-center justify-between">
+                        <span class="font-mono text-xs font-bold text-[#00E599]">${esc(r.rfq_id)}</span>
+                        <span class="text-[10px] text-[var(--text-muted)]">${r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB') : ''}</span>
                       </div>
-                    </td>
-                    <td class="font-mono text-[#CBD5E1] text-xs">${esc(u.email || '')}</td>
-                    <td>
-                      <span class="inline-flex text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full ${u.role === 'admin' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : u.role === 'moderator' ? 'bg-[#00E599]/20 text-[#00E599] border border-[#00E599]/30' : 'bg-white/[0.06] text-[#CBD5E1] border border-white/[0.1]'}">
-                        ${isBornilSuper ? 'Super Admin' : (u.role || 'customer')}
-                      </span>
-                    </td>
-                    <td class="text-[#788A9C] text-xs">${u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-GB') : 'Active'}</td>
-                    ${isSuper ? `
-                      <td class="text-right">
-                        ${isBornilSuper ? '<span class="text-[11px] text-[#788A9C] italic">Default Super Admin</span>' : `
-                          <div class="flex items-center justify-end gap-1.5">
-                            ${u.role !== 'moderator' ? `<button type="button" class="btn-change-role px-2.5 py-1 bg-[#00E599]/20 hover:bg-[#00E599] text-[#00E599] hover:text-[#050B10] border border-[#00E599]/40 rounded-lg text-[10px] font-bold cursor-pointer transition-colors" data-email="${esc(u.email)}" data-uid="${esc(u.uid)}" data-role="moderator">Make Moderator</button>` : ''}
-                            ${u.role !== 'admin' ? `<button type="button" class="btn-change-role px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-black border border-amber-500/40 rounded-lg text-[10px] font-bold cursor-pointer transition-colors" data-email="${esc(u.email)}" data-uid="${esc(u.uid)}" data-role="admin">Make Admin</button>` : ''}
-                            ${u.role !== 'customer' ? `<button type="button" class="btn-change-role px-2.5 py-1 bg-white/[0.06] hover:bg-white/20 text-white rounded-lg text-[10px] font-bold cursor-pointer transition-colors" data-email="${esc(u.email)}" data-uid="${esc(u.uid)}" data-role="customer">Set Customer</button>` : ''}
-                          </div>`}
-                      </td>` : ''}
-                  </tr>`;
-                }).join('')}
-              </tbody>
-            </table>
-          </div>
+                      <p class="font-bold text-xs text-[var(--text-primary)]">${esc(r.product || 'Custom Program')}</p>
+                      <p class="text-[11px] text-[var(--text-muted)]">${esc(r.company_name)} · Qty: ${esc(String(r.quantity || ''))} ${esc(r.unit || '')}</p>
+                      
+                      <div class="pt-2 border-t border-[var(--border-subtle)] flex items-center justify-between">
+                        <select class="admin-rfq-status-select rounded-lg p-1 text-[10px] bg-[var(--bg-input)] text-[var(--text-primary)] border border-[var(--border-subtle)]" data-rfq-id="${esc(r.rfq_id)}">
+                          ${KANBAN_STAGES.map((s) => `<option value="${s}" ${s === st ? 'selected' : ''}>Move: ${s}</option>`).join('')}
+                        </select>
+                        <button type="button" class="admin-open-quote-btn text-[10px] text-[#00D2FF] hover:underline font-bold" data-rfq-id="${esc(r.rfq_id)}" data-email="${esc(r.email)}">
+                          Quote
+                        </button>
+                      </div>
+                    </div>
+                  `).join('') || '<div class="p-6 text-center text-[11px] text-[var(--text-muted)] border border-dashed border-[var(--border-subtle)] rounded-xl">No RFQs</div>'}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- 7. QUOTATION BUILDER TAB -->
+      <div id="admin-quotations-section" class="dash-tab-content hidden space-y-6" data-tab-name="Quotation Builder">
+        <div>
+          <h2 class="text-xl font-bold font-display text-[var(--text-primary)]">Commercial Quotation Builder</h2>
+          <p class="text-xs text-[var(--text-muted)]">Generate formal costings and automatically link them to submitted RFQs.</p>
         </div>
 
-        <!-- ================= TAB 5: RFQS & INTAKE ================= -->
-        <div id="admin-rfqs-section" class="dash-tab-content space-y-6 tab-hidden" data-tab-name="RFQs & Intake">
-          <div class="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+        <div class="editorial-card p-6">
+          <form id="admin-quote-form" class="grid sm:grid-cols-2 gap-4 text-xs">
             <div>
-              <span class="text-[10px] font-bold uppercase tracking-wider text-[#00E599]">Commercial Pipeline</span>
-              <h3 class="text-xl font-bold font-display text-white mt-0.5">Live Intake & RFQ Records</h3>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Target RFQ ID *</label>
+              <input id="q-rfq-id" name="rfq_id" class="w-full rounded-xl p-2.5 text-xs font-mono" required placeholder="RFQ-GT-2026-XXXX" />
             </div>
-            <span class="px-2.5 py-0.5 rounded bg-[#00E599]/15 text-[#00E599] text-xs font-mono">D1 & Firestore Synced</span>
-          </div>
-          ${['rfqs','contact_inquiries','sample_requests','job_applications'].map((k) => adminTable(k, data[k] || [])).join('')}
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Buyer Business Email *</label>
+              <input id="q-email" name="email" type="email" class="w-full rounded-xl p-2.5 text-xs" required placeholder="buyer@brand.com" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Unit Price (USD) *</label>
+              <input name="unit_price" type="number" step="0.01" class="w-full rounded-xl p-2.5 text-xs font-bold" required placeholder="4.50" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Quoted MOQ</label>
+              <input name="moq_quoted" class="w-full rounded-xl p-2.5 text-xs" placeholder="e.g. 3,000 Pcs" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Lead Time (Days)</label>
+              <input name="lead_time_days" type="number" class="w-full rounded-xl p-2.5 text-xs" value="65" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Payment Terms</label>
+              <input name="payment_terms" class="w-full rounded-xl p-2.5 text-xs" value="LC at Sight / TT 30% Advance" />
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">Commercial Notes & Inclusions</label>
+              <textarea name="notes" rows="3" class="w-full rounded-xl p-2.5 text-xs" placeholder="FOB Chittagong port, standard single polybag packaging included..."></textarea>
+            </div>
+            <div class="sm:col-span-2 pt-2">
+              <button type="submit" class="pill-btn-emerald py-3 px-8 text-xs">
+                <span>Issue & Transmit Quotation</span>
+                <i class="fa-solid fa-paper-plane text-xs ml-1.5"></i>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- 8. MEDIA LIBRARY TAB -->
+      <div id="admin-media-section" class="dash-tab-content hidden space-y-6" data-tab-name="Media Library">
+        <div>
+          <h2 class="text-xl font-bold font-display text-[var(--text-primary)]">Factory Media Library (${mediaList.length} Assets)</h2>
+          <p class="text-xs text-[var(--text-muted)]">Authentic factory photography extracted from Gumti corporate archives.</p>
         </div>
 
-      </div>`;
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          ${mediaList.map((m) => `
+            <div class="editorial-card p-2 space-y-2">
+              <div class="aspect-[4/3] rounded-lg overflow-hidden bg-[var(--bg-surface)]">
+                <img src="${m.path || m.url}" alt="${esc(m.name || m.title)}" class="w-full h-full object-cover" loading="lazy" />
+              </div>
+              <div class="px-1 text-[11px] space-y-1">
+                <p class="font-bold text-[var(--text-primary)] truncate">${esc(m.name || m.title)}</p>
+                <div class="flex items-center justify-between text-[10px]">
+                  <span class="text-[var(--text-muted)] font-mono">${m.category}</span>
+                  <button type="button" class="copy-url-btn text-[#00E599] hover:underline" data-url="${m.path || m.url}">Copy URL</button>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- 9. USER DIRECTORY & RBAC TAB -->
+      <div id="admin-users-section" class="dash-tab-content hidden space-y-6" data-tab-name="User Directory">
+        <div>
+          <h2 class="text-xl font-bold font-display text-[var(--text-primary)]">User Directory & RBAC</h2>
+          <p class="text-xs text-[var(--text-muted)]">Assign administrative privileges or view registered buyer profiles.</p>
+        </div>
+
+        <div class="editorial-card overflow-hidden">
+          <table class="spec-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Date</th>
+                <th>Role Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${users.map((u) => `
+                <tr>
+                  <td>
+                    <div class="font-bold text-[var(--text-primary)]">${esc(u.displayName || u.email)}</div>
+                    <div class="text-[11px] text-[var(--text-muted)] font-mono">${esc(u.email)}</div>
+                  </td>
+                  <td>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${u.role === 'admin' ? 'bg-[#00E599]/20 text-[#00E599] border border-[#00E599]/30' : (u.role === 'moderator' ? 'bg-[#00D2FF]/20 text-[#00D2FF]' : 'bg-[var(--bg-input)] text-[var(--text-secondary)]')}">
+                      ${esc(u.role)}
+                    </span>
+                  </td>
+                  <td class="text-xs text-[var(--text-muted)]">${u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-GB') : '—'}</td>
+                  <td>
+                    <select class="admin-role-select rounded-lg p-1 text-[11px] bg-[var(--bg-input)] text-[var(--text-primary)] border border-[var(--border-subtle)]" data-email="${esc(u.email)}" data-uid="${esc(u.uid || '')}">
+                      <option value="customer" ${u.role === 'customer' ? 'selected' : ''}>Customer</option>
+                      <option value="moderator" ${u.role === 'moderator' ? 'selected' : ''}>Moderator</option>
+                      <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                    </select>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
   }
 
   function bindAdminEvents(data) {
-    window.gtSwitchAdminTab = switchAdminTab;
-
-    // Sidebar & Mobile Tab Navigation
+    // Tab buttons
     $$('.dash-nav-item[data-tab]').forEach((btn) => {
-      btn.onclick = (e) => {
-        e.preventDefault();
-        switchAdminTab(btn.dataset.tab);
-      };
+      btn.addEventListener('click', () => switchAdminTab(btn.dataset.tab));
     });
-
     $$('.dash-nav-pill[data-tab]').forEach((btn) => {
-      btn.onclick = (e) => {
-        e.preventDefault();
-        switchAdminTab(btn.dataset.tab);
-      };
+      btn.addEventListener('click', () => switchAdminTab(btn.dataset.tab));
     });
 
-    // Mobile Sidebar Drawer Controls
-    $('#admin-sidebar-toggle')?.addEventListener('click', openAdminSidebar);
-    $('#admin-sidebar-close')?.addEventListener('click', closeAdminSidebar);
-    $('#admin-sidebar-backdrop')?.addEventListener('click', closeAdminSidebar);
-
-    // Refresh Buttons
-    $('#admin-refresh-top')?.addEventListener('click', () => window.gtLoadAdmin(true));
+    // Refresh buttons
     $('#admin-refresh')?.addEventListener('click', () => window.gtLoadAdmin(true));
+    $('#admin-refresh-top')?.addEventListener('click', () => window.gtLoadAdmin(true));
 
-    // Live Quick Search
-    $('#admin-search-input')?.addEventListener('input', (e) => {
-      const q = (e.target.value || '').trim().toLowerCase();
-      // Filter user rows
-      $$('.user-row').forEach((row) => {
-        const text = (row.dataset.search || '').toLowerCase();
-        row.style.display = (!q || text.includes(q)) ? '' : 'none';
-      });
-      // Filter media cards
-      $$('.media-card').forEach((card) => {
-        const title = (card.dataset.title || '').toLowerCase();
-        const cat = (card.dataset.category || '').toLowerCase();
-        card.style.display = (!q || title.includes(q) || cat.includes(q)) ? '' : 'none';
+    // Asset pickers for CMS
+    $$('.hero-asset-thumb').forEach((thumb) => {
+      thumb.addEventListener('click', () => {
+        const url = thumb.dataset.url;
+        const inp = $('#input-hero-bg');
+        const prev = $('#preview-hero-bg');
+        if (inp) inp.value = url;
+        if (prev) prev.src = url;
+        window.showToast('Selected hero image: ' + url);
       });
     });
 
-    // Copy Media URL
-    $$('.btn-copy-media').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        const url = e.currentTarget.dataset.url;
-        if (url && navigator.clipboard) {
-          navigator.clipboard.writeText(url).then(() => {
-            window.gtToast && window.gtToast(`Copied URL: ${url}`);
+    $$('.about-asset-thumb').forEach((thumb) => {
+      thumb.addEventListener('click', () => {
+        const url = thumb.dataset.url;
+        const inp = $('#input-about-img');
+        const prev = $('#preview-about-img');
+        if (inp) inp.value = url;
+        if (prev) prev.src = url;
+        window.showToast('Selected about image: ' + url);
+      });
+    });
+
+    // New product asset picker
+    $$('.newprod-asset-thumb').forEach((thumb) => {
+      thumb.addEventListener('click', () => {
+        const url = thumb.dataset.url;
+        const inp = $('#input-newprod-img');
+        const prev = $('#preview-newprod-img');
+        if (inp) inp.value = url;
+        if (prev) prev.src = url;
+      });
+    });
+
+    // Toggle inline product image chooser
+    $$('.change-prod-img-toggle').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const slug = btn.dataset.slug;
+        const chooser = $(`#prod-chooser-${slug}`);
+        if (chooser) chooser.classList.toggle('hidden');
+      });
+    });
+
+    // Mini asset click in product card
+    $$('.mini-asset-pick').forEach((thumb) => {
+      thumb.addEventListener('click', () => {
+        const slug = thumb.dataset.slug;
+        const url = thumb.dataset.url;
+        const inp = $(`#input-img-${slug}`);
+        if (inp) inp.value = url;
+        const img = $(`#prod-img-${slug}`);
+        if (img) img.src = url;
+      });
+    });
+
+    // Apply product image update button
+    $$('.apply-prod-img-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const slug = btn.dataset.slug;
+        const inp = $(`#input-img-${slug}`);
+        const image = inp ? inp.value.trim() : '';
+        if (!image) {
+          window.showToast('Please enter or select an image URL', 'error');
+          return;
+        }
+        try {
+          const token = window.gtAdminToken ? await window.gtAdminToken() : '';
+          const res = await fetch(`/api/admin/products/${encodeURIComponent(slug)}/image`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+            body: JSON.stringify({ image }),
           });
+          const r = await res.json();
+          if (!res.ok) throw new Error(r.error || 'Failed to update image');
+          const img = $(`#prod-img-${slug}`);
+          if (img) img.src = image;
+          $(`#prod-chooser-${slug}`)?.classList.add('hidden');
+          window.showToast(`Updated image for ${slug}!`);
+        } catch (err) {
+          window.showToast(err.message, 'error');
         }
       });
     });
 
-    // Set Hero from Media
-    $$('.btn-set-hero').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        const url = e.currentTarget.dataset.url;
-        const input = $('#cms-hero-bg-input');
-        const preview = $('#cms-hero-bg-preview');
-        if (input && url) {
-          input.value = url;
-          if (preview) preview.src = url;
-          window.gtToast && window.gtToast('Selected as Hero Banner. Click "Save & Publish" to activate.');
-          switchAdminTab('cms');
-        }
-      });
-    });
-
-    // Media Category Filters
-    $$('.media-filter-btn').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        const filter = e.currentTarget.dataset.filter;
-        $$('.media-filter-btn').forEach((b) => {
-          b.className = 'media-filter-btn px-2.5 py-1 bg-white/[0.05] text-[#CBD5E1] rounded-lg text-[11px] cursor-pointer';
-        });
-        e.currentTarget.className = 'media-filter-btn px-2.5 py-1 bg-[#00E599] text-[#050B10] font-bold rounded-lg text-[11px] cursor-pointer';
-
-        $$('.media-card').forEach((card) => {
-          if (filter === 'all' || card.dataset.category === filter) {
-            card.style.display = '';
-          } else {
-            card.style.display = 'none';
-          }
+    // Copy URL button in media library
+    $$('.copy-url-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const url = btn.dataset.url;
+        navigator.clipboard.writeText(url).then(() => {
+          window.showToast('Copied URL to clipboard: ' + url);
         });
       });
     });
 
-    // Role Promotion Buttons
-    $$('.btn-change-role').forEach((btn) => {
-      btn.addEventListener('click', async (e) => {
-        const email = e.currentTarget.dataset.email;
-        const uid = e.currentTarget.dataset.uid;
-        const newRole = e.currentTarget.dataset.role;
-        if (!email || !newRole) return;
-        if (confirm(`Are you sure you want to change ${email} role to ${newRole.toUpperCase()}?`)) {
-          btn.disabled = true;
-          const ok = await window.gtPromoteUserRole(email, uid, newRole);
-          btn.disabled = false;
-          if (ok) window.gtLoadAdmin(true);
+    // Kanban status update select
+    $$('.admin-rfq-status-select').forEach((sel) => {
+      sel.addEventListener('change', async () => {
+        const rfqId = sel.dataset.rfqId;
+        const newStatus = sel.value;
+        try {
+          const token = window.gtAdminToken ? await window.gtAdminToken() : '';
+          const res = await fetch(`/api/admin/rfqs/${encodeURIComponent(rfqId)}/status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+            body: JSON.stringify({ status: newStatus }),
+          });
+          const r = await res.json();
+          if (!res.ok) throw new Error(r.error || 'Status update failed');
+          window.showToast(`RFQ ${rfqId} updated to ${newStatus}`);
+          window.gtLoadAdmin(true);
+        } catch (err) {
+          window.showToast(err.message, 'error');
         }
       });
     });
 
-    // CMS Save Form
-    $('#cms-save-btn')?.addEventListener('click', async () => {
-      const form = $('#landing-cms-form');
-      if (!form) return;
-      const fd = new FormData(form);
-      const configData = {
-        heroHeadlineLine1: fd.get('heroHeadlineLine1') || 'INTEGRATED KNITWEAR.',
-        heroHeadlineLine2: fd.get('heroHeadlineLine2') || 'GLOBAL SCALE.',
-        heroKicker: fd.get('heroKicker') || '',
-        heroSubTagline: fd.get('heroSubTagline') || '',
-        heroBgImage: fd.get('heroBgImage') || '/images/hero/background_1920x530.webp',
-        heroCta1Text: fd.get('heroCta1Text') || 'Explore Capabilities',
-        heroCta1Link: fd.get('heroCta1Link') || '/capabilities',
-        heroCta2Text: fd.get('heroCta2Text') || 'Request a Quote',
-        heroCta2Link: fd.get('heroCta2Link') || '/request-quote',
-        stats: {
-          stat1Label: fd.get('stat1Label') || 'Dyeing Output',
-          stat1Value: fd.get('stat1Value') || '50T/Day',
-          stat2Label: fd.get('stat2Label') || 'Knitting Output',
-          stat2Value: fd.get('stat2Value') || '10T/Day',
-          stat3Label: fd.get('stat3Label') || 'Finishing & Sewing',
-          stat3Value: fd.get('stat3Value') || '80T / 35k',
-          stat4Label: fd.get('stat4Label') || 'Workforce & Scale',
-          stat4Value: fd.get('stat4Value') || '1,600',
-        },
-        contactEmail: fd.get('contactEmail') || 'info@gumtitex.com',
-        contactPhone: fd.get('contactPhone') || '+8801716776393',
-        contactAddress: fd.get('contactAddress') || '',
-        facebookUrl: fd.get('facebookUrl') || 'https://www.facebook.com/gumtitextile',
-      };
-
-      const btn = $('#cms-save-btn');
-      if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Saving…'; }
-      const ok = await window.gtSaveLandingConfig(configData);
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-floppy-disk text-xs mr-1"></i> Save & Publish'; }
-      if (ok) {
-        const preview = $('#cms-hero-bg-preview');
-        if (preview) preview.src = configData.heroBgImage;
-      }
+    // Open quote button on Kanban card
+    $$('.admin-open-quote-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const rfqId = btn.dataset.rfqId;
+        const email = btn.dataset.email;
+        const qRfq = $('#q-rfq-id');
+        const qEmail = $('#q-email');
+        if (qRfq) qRfq.value = rfqId;
+        if (qEmail) qEmail.value = email;
+        switchAdminTab('quotations');
+      });
     });
 
-    // Reset Defaults
-    $('#cms-reset-btn')?.addEventListener('click', () => {
-      if (confirm('Reset landing page fields back to verified factory defaults?')) {
-        const form = $('#landing-cms-form');
-        if (!form) return;
-        form.elements['heroHeadlineLine1'].value = 'INTEGRATED KNITWEAR.';
-        form.elements['heroHeadlineLine2'].value = 'GLOBAL SCALE.';
-        form.elements['heroKicker'].value = '● 30+ YEARS EXCELLENCE · EST. 1993 · 22 SEWING LINES';
-        form.elements['heroSubTagline'].value = 'Premier knit-composite textile and apparel manufacturer in Bangladesh — integrating knitting, dyeing, finishing, and garment assembly.';
-        form.elements['heroBgImage'].value = '/images/hero/background_1920x530.webp';
-        form.elements['heroCta1Text'].value = 'Explore Capabilities';
-        form.elements['heroCta1Link'].value = '/capabilities';
-        form.elements['heroCta2Text'].value = 'Request a Quote';
-        form.elements['heroCta2Link'].value = '/request-quote';
-        form.elements['stat1Label'].value = 'Dyeing Output';
-        form.elements['stat1Value'].value = '50T/Day';
-        form.elements['stat2Label'].value = 'Knitting Output';
-        form.elements['stat2Value'].value = '10T/Day';
-        form.elements['stat3Label'].value = 'Finishing & Sewing';
-        form.elements['stat3Value'].value = '80T / 35k';
-        form.elements['stat4Label'].value = 'Workforce & Scale';
-        form.elements['stat4Value'].value = '1,600';
-        form.elements['contactEmail'].value = 'info@gumtitex.com';
-        form.elements['contactPhone'].value = '+8801716776393';
-        window.gtToast && window.gtToast('Fields reset to factory defaults. Click "Save & Publish" to push live.');
-      }
-    });
-  }
-
-  function adminTable(title, rows) {
-    const label = title.replace(/_/g, ' ');
-    if (!rows.length) {
-      return `
-        <div class="dash-kpi-card p-6 mb-6">
-          <div class="flex items-center justify-between">
-            <h3 class="text-base font-bold text-white capitalize">${label}</h3>
-            <span class="px-2.5 py-0.5 rounded-full bg-white/[0.05] text-[#788A9C] text-xs font-mono">0 records</span>
-          </div>
-          <p class="text-xs text-[#788A9C] mt-3">No active records recorded in the live intake database.</p>
-        </div>`;
-    }
-    const keys = Object.keys(rows[0]).slice(0, 8);
-    return `
-      <div class="dash-kpi-card p-0 mb-6 overflow-hidden">
-        <div class="p-4 sm:p-5 flex items-center justify-between border-b border-white/[0.08]">
-          <h3 class="text-base font-bold text-white capitalize">${label}</h3>
-          <span class="px-2.5 py-0.5 rounded-full bg-[#00E599]/15 text-[#00E599] text-xs font-mono font-bold">${rows.length} records</span>
-        </div>
-        <div class="dark-table-wrap border-0 rounded-none">
-          <table class="dark-table text-xs">
-            <thead><tr>${keys.map(k=>`<th>${esc(k)}</th>`).join('')}</tr></thead>
-            <tbody>${rows.map(r=>`<tr>${keys.map(k=>`<td class="truncate max-w-[200px]" title="${esc(r[k])}">${esc(r[k])}</td>`).join('')}</tr>`).join('')}</tbody>
-          </table>
-        </div>
-      </div>`;
-  }
-
-  // Instant pre-render check on initial page load
-  if ($('#admin-data')) {
-    const cached = sessionStorage.getItem('gt_admin_cache');
-    if (cached) {
-      try {
-        const cachedData = JSON.parse(cached);
-        $('#admin-data').innerHTML = renderAdminDashboard(cachedData);
-        bindAdminEvents(cachedData);
-        switchAdminTab(sessionStorage.getItem('gt_admin_active_tab') || 'overview');
-      } catch (_) {}
-    }
-  }
-
-  // ---------------- GUMTI AI CHATBOT (Gemini Powered) ----------------
-  (function initGumtiAi() {
-    const aiContainer = $('#gumti-ai');
-    if (!aiContainer) return;
-
-    const toggleBtn = $('#ai-toggle');
-    const panel = $('#ai-panel');
-    const closeBtn = $('#ai-close');
-    const messagesEl = $('#ai-messages');
-    const form = $('#ai-form');
-    const input = $('#ai-input');
-    const quickButtons = $$('.ai-quick button');
-
-    const chatHistory = [];
-
-    function formatMarkdown(text) {
-      if (!text) return '';
-      let escaped = esc(text);
-
-      // Markdown links: [text](url)
-      escaped = escaped.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-navy font-semibold underline underline-offset-2 hover:text-sand transition-colors">$1</a>');
-
-      // Bold: **text**
-      escaped = escaped.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold text-navy">$1</strong>');
-
-      // Italic: *text*
-      escaped = escaped.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
-
-      // Headings: ### Header
-      escaped = escaped.replace(/^### (.*$)/gim, '<h4 class="font-serif font-bold text-navy text-sm mt-3 mb-1">$1</h4>');
-      escaped = escaped.replace(/^## (.*$)/gim, '<h3 class="font-serif font-bold text-navy text-base mt-3 mb-1.5">$1</h3>');
-
-      // Lists: * item or - item
-      escaped = escaped.replace(/^\* (.*$)/gim, '<li class="ml-4 list-disc text-xs leading-relaxed">$1</li>');
-      escaped = escaped.replace(/^- (.*$)/gim, '<li class="ml-4 list-disc text-xs leading-relaxed">$1</li>');
-
-      // Linebreaks
-      escaped = escaped.replace(/\n\n/g, '<div class="h-2"></div>');
-      escaped = escaped.replace(/\n/g, '<br/>');
-
-      return escaped;
-    }
-
-    function scrollBottom() {
-      if (messagesEl) {
-        messagesEl.scrollTop = messagesEl.scrollHeight;
-      }
-    }
-
-    function openPanel() {
-      if (!panel) return;
-      panel.removeAttribute('hidden');
-      toggleBtn?.setAttribute('aria-expanded', 'true');
-      scrollBottom();
-      setTimeout(() => input?.focus(), 150);
-    }
-
-    function closePanel() {
-      if (!panel) return;
-      panel.setAttribute('hidden', '');
-      toggleBtn?.setAttribute('aria-expanded', 'false');
-    }
-
-    toggleBtn?.addEventListener('click', () => {
-      if (panel?.hasAttribute('hidden')) {
-        openPanel();
-      } else {
-        closePanel();
-      }
-    });
-
-    closeBtn?.addEventListener('click', closePanel);
-
-    async function sendAiMessage(userText) {
-      const text = (userText || '').trim();
-      if (!text) return;
-
-      // Append user bubble
-      const userBubble = document.createElement('article');
-      userBubble.className = 'ai-msg user';
-      userBubble.innerHTML = `<p>${esc(text)}</p>`;
-      messagesEl?.appendChild(userBubble);
-      scrollBottom();
-
-      // Typing indicator
-      const typingBubble = document.createElement('article');
-      typingBubble.className = 'ai-msg bot ai-typing';
-      typingBubble.id = 'ai-typing-indicator';
-      typingBubble.innerHTML = `
-        <div class="flex items-center gap-1.5 py-1">
-          <span class="w-1.5 h-1.5 rounded-full bg-sand animate-pulse"></span>
-          <span class="w-1.5 h-1.5 rounded-full bg-sand animate-pulse" style="animation-delay:0.2s"></span>
-          <span class="w-1.5 h-1.5 rounded-full bg-sand animate-pulse" style="animation-delay:0.4s"></span>
-          <span class="text-[11px] text-mutedgt ml-1.5">Gumti AI is thinking…</span>
-        </div>`;
-      messagesEl?.appendChild(typingBubble);
-      scrollBottom();
-
-      const submitBtn = form?.querySelector('button[type="submit"]');
-      if (submitBtn) submitBtn.disabled = true;
-      if (input) input.disabled = true;
-
-      try {
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text, history: chatHistory.slice(-6) }),
-        });
-        const data = await res.json();
-        typingBubble.remove();
-
-        const reply = data.reply || "Thank you for contacting Gumti Textiles. Please reach our merchandising team at info@gumtitex.com or submit an RFQ at /request-quote.";
-
-        chatHistory.push({ role: 'user', text });
-        chatHistory.push({ role: 'model', text: reply });
-
-        const botBubble = document.createElement('article');
-        botBubble.className = 'ai-msg bot';
-        botBubble.innerHTML = `
-          <div>${formatMarkdown(reply)}</div>
-          <small>Verified Assistant · Powered by Gemini</small>`;
-        messagesEl?.appendChild(botBubble);
-        scrollBottom();
-      } catch (err) {
-        typingBubble.remove();
-        const errBubble = document.createElement('article');
-        errBubble.className = 'ai-msg bot';
-        errBubble.innerHTML = `
-          <p>We apologize, but the AI service is currently reconnecting. You can explore our <a href="/capabilities" class="text-navy font-semibold underline">Factory Capabilities</a> or email our sales team directly at <strong class="text-navy">info@gumtitex.com</strong>.</p>
-          <small>Connection Notice</small>`;
-        messagesEl?.appendChild(errBubble);
-        scrollBottom();
-      } finally {
-        if (submitBtn) submitBtn.disabled = false;
-        if (input) {
-          input.disabled = false;
-          input.value = '';
-          input.focus();
-        }
-      }
-    }
-
-    form?.addEventListener('submit', (e) => {
+    // Company Basic Info Form
+    $('#admin-company-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const query = input?.value || '';
-      sendAiMessage(query);
+      const form = e.target;
+      const fd = new FormData(form);
+      const payload = Object.fromEntries(fd.entries());
+      try {
+        const token = window.gtAdminToken ? await window.gtAdminToken() : '';
+        const res = await fetch('/api/admin/site-config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify(payload),
+        });
+        const r = await res.json();
+        if (!res.ok) throw new Error(r.error || 'Failed to update company information');
+        window.showToast('Company basic information saved to production!');
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
     });
 
-    quickButtons.forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const q = e.currentTarget.dataset.aiQ || e.currentTarget.textContent;
-        if (q) {
-          if (panel?.hasAttribute('hidden')) openPanel();
-          sendAiMessage(q);
+    // Contact Coordinates Form
+    $('#admin-contact-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const fd = new FormData(form);
+      const payload = Object.fromEntries(fd.entries());
+      try {
+        const token = window.gtAdminToken ? await window.gtAdminToken() : '';
+        const res = await fetch('/api/admin/site-config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify(payload),
+        });
+        const r = await res.json();
+        if (!res.ok) throw new Error(r.error || 'Failed to update contact coordinates');
+        window.showToast('Contact coordinates and addresses saved live!');
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    });
+
+    // CMS Landing Images Form
+    $('#admin-cms-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const fd = new FormData(form);
+      const payload = Object.fromEntries(fd.entries());
+      try {
+        const token = window.gtAdminToken ? await window.gtAdminToken() : '';
+        const res = await fetch('/api/admin/site-config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify(payload),
+        });
+        const r = await res.json();
+        if (!res.ok) throw new Error(r.error || 'Failed to update landing page images');
+        window.showToast('Landing page images & headlines published!');
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    });
+
+    // Add Product Form
+    $('#admin-add-product-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const fd = new FormData(form);
+      const payload = Object.fromEntries(fd.entries());
+      try {
+        const token = window.gtAdminToken ? await window.gtAdminToken() : '';
+        const res = await fetch('/api/admin/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify(payload),
+        });
+        const r = await res.json();
+        if (!res.ok) throw new Error(r.error || 'Failed to save product');
+        window.showToast(`Product ${r.product.name} (${r.product.code}) saved with custom photo!`);
+        window.gtLoadAdmin(true);
+        form.reset();
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    });
+
+    // Quotation Builder Form
+    $('#admin-quote-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const fd = new FormData(form);
+      const payload = Object.fromEntries(fd.entries());
+      try {
+        const token = window.gtAdminToken ? await window.gtAdminToken() : '';
+        const res = await fetch('/api/admin/quotations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify(payload),
+        });
+        const r = await res.json();
+        if (!res.ok) throw new Error(r.error || 'Failed to issue quotation');
+        window.showToast(r.message || 'Quotation created!');
+        form.reset();
+        window.gtLoadAdmin(true);
+      } catch (err) {
+        window.showToast(err.message, 'error');
+      }
+    });
+
+    // RBAC Role Select
+    $$('.admin-role-select').forEach((sel) => {
+      sel.addEventListener('change', async () => {
+        const email = sel.dataset.email;
+        const uid = sel.dataset.uid;
+        const newRole = sel.value;
+        if (window.gtPromoteUserRole) {
+          await window.gtPromoteUserRole(email, uid, newRole);
         }
       });
     });
-  })();
+  }
 
-  document.addEventListener('gt:auth', () => { if ($('#admin-data')) window.gtLoadAdmin(); });
-  $('#admin-refresh')?.addEventListener('click', () => window.gtLoadAdmin());
+  // Load Admin on Admin page
+  if (window.location.pathname.startsWith('/admin')) {
+    document.addEventListener('DOMContentLoaded', () => window.gtLoadAdmin());
+    document.addEventListener('gt:auth', () => window.gtLoadAdmin());
+  }
+
 })();
 

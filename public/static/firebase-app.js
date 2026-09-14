@@ -464,46 +464,120 @@ window.gtFirestoreSave = async function (collectionName, data) {
   }
 }
 
-// ---------- Portal: load user's RFQs / inquiries ----------
+// ---------- Portal: load user's RFQs / inquiries with Multi-Stage Timeline ----------
+const STAGES = ['NEW', 'UNDER REVIEW', 'PRICING', 'QUOTED', 'SAMPLE APPROVED', 'PRODUCTION']
+
 async function loadPortalData(user) {
   const rfqList = document.getElementById('portal-rfq-list')
   if (!rfqList) return
+
+  let rfqs = []
   try {
     const res = await fetch('/api/rfq?email=' + encodeURIComponent(user.email || ''))
     const data = await res.json()
     if (data.rfqs && data.rfqs.length) {
-      rfqList.innerHTML = data.rfqs.map((r) => `
-        <article class="bg-white border border-sand/40 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
-          <div>
-            <p class="font-semibold text-navy text-sm">${r.rfq_id}</p>
-            <p class="text-xs text-mutedgt mt-1">${escapeHtml(r.product || '')} · Qty: ${escapeHtml(String(r.quantity || '—'))} ${escapeHtml(r.unit || '')}</p>
-            <p class="text-xs text-mutedgt">${new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-          </div>
-          <span class="inline-flex self-start sm:self-center text-[11px] tracking-widest uppercase px-3 py-1.5 ${statusColor(r.status)}">${r.status}</span>
-        </article>`).join('')
-      return
+      rfqs = data.rfqs
     }
   } catch (_) { /* secondary: Firestore */ }
 
-  try {
-    const qs = await getDocs(query(collection(db, 'rfqs'), where('uid', '==', user.uid), orderBy('createdAt', 'desc')))
-    if (!qs.empty) {
-      rfqList.innerHTML = ''
-      qs.forEach((doc) => {
-        const r = doc.data()
-        rfqList.innerHTML += `<article class="bg-white border border-sand/40 p-5 shadow-sm">
-          <p class="font-semibold text-navy text-sm">${escapeHtml(r.refId || doc.id)}</p>
-          <p class="text-xs text-mutedgt mt-1">${escapeHtml(r.product || '')} · Qty: ${escapeHtml(String(r.quantity || '—'))}</p>
-        </article>`
-      })
-      return
+  if (!rfqs.length) {
+    try {
+      const qs = await getDocs(query(collection(db, 'rfqs'), where('uid', '==', user.uid), orderBy('createdAt', 'desc')))
+      if (!qs.empty) {
+        rfqs = qs.docs.map((d) => ({ ...d.data(), rfq_id: d.data().refId || d.id }))
+      }
+    } catch (_) {}
+  }
+
+  // Update metric counters
+  const totalEl = document.getElementById('portal-stat-rfqs')
+  const pricingEl = document.getElementById('portal-stat-pricing')
+  const quotesEl = document.getElementById('portal-stat-quotes')
+  const prodEl = document.getElementById('portal-stat-production')
+
+  if (totalEl) totalEl.textContent = rfqs.length.toString()
+  if (pricingEl) pricingEl.textContent = rfqs.filter((r) => r.status === 'PRICING' || r.status === 'UNDER REVIEW').length.toString()
+  if (quotesEl) quotesEl.textContent = rfqs.filter((r) => r.status === 'QUOTED' || r.status === 'QUOTATION SENT').length.toString()
+  if (prodEl) prodEl.textContent = rfqs.filter((r) => r.status === 'PRODUCTION' || r.status === 'SAMPLE APPROVED').length.toString()
+
+  if (!rfqs.length) {
+    rfqList.innerHTML = `
+      <div class="p-12 text-center text-xs text-[var(--text-muted)] border border-dashed border-[var(--border-subtle)] rounded-xl space-y-3">
+        <i class="fa-solid fa-file-invoice text-3xl text-[var(--text-muted)]"></i>
+        <p class="font-bold text-[var(--text-primary)]">No active RFQs registered to this account</p>
+        <p class="max-w-md mx-auto">Book dedicated production capacity or request fabric swatches through our guided procurement wizard.</p>
+        <div class="pt-2">
+          <a href="/request-quote" class="pill-btn-emerald py-2 px-5 text-xs">Request Production Quote</a>
+        </div>
+      </div>`
+    return
+  }
+
+  rfqList.innerHTML = rfqs.map((r) => {
+    const curStatus = (r.status || 'NEW').toUpperCase()
+    let curIdx = STAGES.indexOf(curStatus)
+    if (curIdx === -1) {
+      if (curStatus.includes('REVIEW')) curIdx = 1
+      else if (curStatus.includes('PRIC')) curIdx = 2
+      else if (curStatus.includes('QUOTE')) curIdx = 3
+      else if (curStatus.includes('SAMPLE') || curStatus.includes('APPROV')) curIdx = 4
+      else if (curStatus.includes('PROD')) curIdx = 5
+      else curIdx = 0
     }
-  } catch (_) {}
-  rfqList.innerHTML = '<div class="border border-dashed border-sand/60 p-8 text-center text-sm text-mutedgt">No RFQs yet. <a href="/request-quote" class="text-navy underline underline-offset-4 font-semibold">Submit your first RFQ</a>.</div>'
+
+    const createdDate = r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recent'
+
+    return `
+      <article class="editorial-card p-6 space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--border-subtle)] pb-4">
+          <div>
+            <div class="flex items-center gap-3">
+              <span class="text-sm font-mono font-bold text-[#00E599]">${escapeHtml(r.rfq_id)}</span>
+              <span class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${statusBadgeClass(curStatus)}">${escapeHtml(curStatus)}</span>
+            </div>
+            <p class="text-base font-bold font-display text-[var(--text-primary)] mt-1">${escapeHtml(r.product || 'Custom Program')}</p>
+            <p class="text-xs text-[var(--text-muted)] mt-0.5">Quantity: ${escapeHtml(String(r.quantity || '—'))} ${escapeHtml(r.unit || 'Pcs')} · Target Delivery: ${escapeHtml(r.delivery_date || 'Standard')} · Submitted: ${createdDate}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <a href="https://wa.me/8801329713736?text=Inquiry%20regarding%20RFQ%20${encodeURIComponent(r.rfq_id)}" target="_blank" rel="noopener" class="pill-btn-outline py-1.5 px-3.5 text-xs">
+              <i class="fa-brands fa-whatsapp text-sm text-[#25D366] mr-1"></i>
+              <span>Merchandiser</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- 6-Stage Timeline -->
+        <div>
+          <span class="text-[10px] uppercase font-bold text-[var(--text-muted)] tracking-wider block mb-2">Milestone Critical Path</span>
+          <div class="rfq-timeline">
+            ${STAGES.map((s, idx) => {
+              const isCompleted = idx < curIdx
+              const isActive = idx === curIdx
+              const cls = isCompleted ? 'completed' : (isActive ? 'active' : '')
+              return `
+                <div class="timeline-step ${cls}">
+                  <div class="timeline-dot">
+                    ${isCompleted ? '<i class="fa-solid fa-check text-[9px]"></i>' : (isActive ? '<span class="w-2 h-2 rounded-full bg-[#050B10]"></span>' : String(idx + 1))}
+                  </div>
+                  <span class="timeline-text">${s}</span>
+                </div>
+              `
+            }).join('')}
+          </div>
+        </div>
+      </article>
+    `
+  }).join('')
 }
 
-function statusColor(s) {
-  const m = { NEW: 'bg-sand/30 text-navy', 'UNDER REVIEW': 'bg-blue-100 text-blue-900', PRICING: 'bg-amber-100 text-amber-900', 'QUOTATION SENT': 'bg-emerald-100 text-emerald-900', APPROVED: 'bg-emerald-200 text-emerald-900', REJECTED: 'bg-red-100 text-red-900' }
-  return m[s] || 'bg-sand/30 text-navy'
+function statusBadgeClass(s) {
+  if (s === 'PRODUCTION' || s === 'COMPLETED') return 'bg-[#00E599]/20 text-[#00E599] border border-[#00E599]/40'
+  if (s === 'QUOTED' || s === 'SAMPLE APPROVED') return 'bg-[#00D2FF]/20 text-[#00D2FF] border border-[#00D2FF]/40'
+  if (s === 'PRICING' || s === 'UNDER REVIEW') return 'bg-[#E5C378]/20 text-[#E5C378] border border-[#E5C378]/40'
+  return 'bg-[var(--bg-input)] text-[var(--text-muted)] border border-[var(--border-subtle)]'
 }
-function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])) }
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+}
+
