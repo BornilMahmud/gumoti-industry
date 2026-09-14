@@ -6,7 +6,7 @@
 - **Visual Direction**: Luxury fashion brand meets advanced industrial manufacturing. Deep Navy `#071A2B`, Midnight `#0B1117`, Warm Ivory `#F5F1E8`, Textile Sand `#C7B79C`, Fraunces + Inter typography, cinematic scroll and interaction system.
 
 ## URLs
-- **Sandbox Preview**: https://3000-itgaur1qw6hqpqrimeclm-ad490db5.sandbox.novita.ai
+- **Sandbox Preview**:https://gumoti-industry.vercel.app/
 - **GitHub**: https://github.com/BornilMahmud/gumoti-industry
 - **Production**: not yet deployed (Cloudflare Pages ready)
 - **Facebook**: https://www.facebook.com/gumtitextile
